@@ -35,4 +35,7 @@ frontend/.vscode/
 *.swp
 *.swo
 .env
-.env.local
+# Secretos y Códigos
+recovery-codes.txt
+*recovery-codes*
+
