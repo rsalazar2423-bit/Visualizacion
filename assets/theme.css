@@ -1,0 +1,61 @@
+/* ==========================================================================
+   THEME.CSS — SISTEMA CROMÁTICO ECOGRID COLOMBIA (CLEAN-TECH & BIODIVERSIDAD)
+   Colores modernos, vibrantes y representativos inspirados en el logotipo.
+   ========================================================================== */
+
+:root {
+    /* Tipografía nativa estándar (máximo 3 fuentes) */
+    --font-sans: system-ui, Arial, sans-serif;
+
+    /* --- TEMA CLARO (SINCRONIZADO AL 100% CON EL LOGO) --- */
+    --bg: #F4F8F6;
+    --card: #FFFFFF;             /* Coincide 100% con el fondo de logo_light */
+    --card-hover: #EEF7F3;
+    --border: #DCEBE3;
+    --border-subtle: #EAF4EE;
+    --text: #05261F;             /* Verde petróleo institucional del texto */
+    --text-muted: #4B6358;       /* Salvia equilibrado */
+    --shadow: 0 4px 18px rgba(5, 38, 31, 0.05);
+
+    /* Acentos Vivos del Logotipo */
+    --c-mint: #0D9763;          /* Esmeralda vibrante de la hoja */
+    --c-mint-light: #E7FAF2;    /* Fondo suave de pastillas */
+    --c-amber: #D97706;         /* Oro solar del rayo */
+    --c-terracotta: #E11D48;    /* Frambuesa alerta moderno */
+
+    /* Navegación y Sidebar */
+    --sidebar-bg: #FFFFFF;
+    --sidebar-text: #05261F;
+    --sidebar-active: #E7FAF2;
+
+    /* Integración Oficial Dash */
+    --Dash-Fill-Inverse-Strong: var(--card);
+    --Dash-Stroke-Strong: var(--border);
+    --Dash-Text-Strong: var(--text);
+    --Dash-Text-Disabled: var(--text-muted);
+}
+
+[data-theme="dark"], #app-container[data-theme="dark"] {
+    /* --- TEMA OSCURO (SINCRONIZADO AL 100% CON EL LOGO #091928) --- */
+    --bg: #050E17;              /* Fondo exterior noche profunda */
+    --card: #091928;            /* Coincide 100% con el fondo de logo_dark */
+    --card-hover: #0F2338;
+    --border: #142B42;          /* Borde fino azul noche */
+    --border-subtle: #0D2032;
+    --text: #FFFFFF;             /* Blanco puro del texto del logo */
+    --text-muted: #8AA4B8;       /* Tono suave del subtítulo */
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+
+    /* Acentos Luminosos del Logotipo */
+    --c-mint: #10B981;          /* Esmeralda bioluminiscente del circuito */
+    --c-mint-light: rgba(16, 185, 129, 0.15);
+    --c-amber: #F59E0B;         /* Oro solar brillante */
+    --c-terracotta: #F43F5E;    /* Coral eléctrico */
+
+    /* Navegación y Sidebar */
+    --sidebar-bg: #061320;
+    --sidebar-text: #FFFFFF;
+    --sidebar-active: #0D2235;
+}
+
+

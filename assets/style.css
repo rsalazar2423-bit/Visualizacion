@@ -1,0 +1,223 @@
+/* ==========================================================================
+   STYLE.CSS — ARQUITECTURA LIMPIA CON NAVEGACIÓN DIRECTA (ECOGRID)
+   ========================================================================== */
+
+@import url('./theme.css');
+
+/* --- 1. RESET Y BASE --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #app-container, .app-main-layout {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+h1, h2, h3, h4 { font-family: var(--font-sans); color: var(--text); font-weight: 700; }
+p, label, .text-muted { color: var(--text-muted); }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; height: auto; }
+
+.main-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 92px 32px 40px;
+}
+
+/* --- 2. TARJETAS UNIVERSALES --- */
+.card {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+}
+.card h3 { font-size: 1.15rem; color: var(--text); margin-bottom: 4px; font-weight: 700; }
+.card p { font-size: 0.86rem; color: var(--text-muted); }
+
+/* --- 3. MÉTRICA GRANDE Y PALETA SEMÁNTICA --- */
+.metric { font-size: 2.3rem; font-weight: 800; line-height: 1.1; margin: 4px 0; color: var(--c-mint); }
+.c-mint { color: var(--c-mint) !important; }
+.c-amber { color: var(--c-amber) !important; }
+.c-terracotta { color: var(--c-terracotta) !important; }
+
+/* --- 4. GRILLAS Y LAYOUT --- */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.filter-bar { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+
+/* --- 5. BOTONES E INSIGNIAS --- */
+.btn {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s ease;
+}
+.btn:hover { border-color: var(--c-mint); color: var(--c-mint); }
+.btn-primary { background: var(--c-mint); color: #FFFFFF !important; border: none; }
+.btn-primary:hover { opacity: 0.92; color: #FFFFFF; }
+
+.badge {
+    background: var(--c-mint-light);
+    color: var(--c-mint);
+    border: 1px solid rgba(27, 94, 56, 0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+
+/* --- 5.1 UTILITARIOS DE ALINEACIÓN Y ESPACIADO --- */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 14px; }
+.flex-wrap { flex-wrap: wrap; }
+.mb-4 { margin-bottom: 16px; }
+.mb-6 { margin-bottom: 24px; }
+
+/* --- 6. TABLAS --- */
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); text-align: left; }
+th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; background: var(--card); border-bottom: 2px solid var(--border); }
+tr:hover td { background: var(--card-hover); }
+
+/* --- 7. SELECTORES Y DROPDOWNS --- */
+.dash-dropdown, select, input {
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px;
+    min-height: 40px;
+    min-width: 240px;
+}
+.dash-dropdown-content {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.dash-dropdown-option:hover {
+    background: var(--card-hover) !important;
+    color: var(--c-mint) !important;
+    border-radius: 6px;
+}
+
+/* --- 8. BARRA SUPERIOR Y MENÚ HAMBURGUESA (DRAWER) --- */
+.top-navbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 68px;
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; align-items: center; justify-content: space-between; z-index: 100;
+}
+.navbar-left { display: flex; align-items: center; gap: 14px; }
+.navbar-right { display: flex; align-items: center; gap: 12px; }
+.navbar-logo, .sidebar-logo { height: 38px; width: auto; object-fit: contain; }
+.logo-dark-theme { display: none !important; }
+.logo-light-theme { display: block !important; }
+[data-theme="dark"] .logo-dark-theme,
+#app-container[data-theme="dark"] .logo-dark-theme { display: block !important; }
+[data-theme="dark"] .logo-light-theme,
+#app-container[data-theme="dark"] .logo-light-theme { display: none !important; }
+
+.brand-wrap { display: flex; flex-direction: column; }
+.brand-name { font-weight: 800; font-size: 1.2rem; line-height: 1.1; }
+.brand-sub { font-size: 0.7rem; font-weight: 600; color: var(--c-mint); text-transform: uppercase; }
+
+.btn-icon {
+    font-size: 1.25rem;
+    padding: 6px 12px;
+    line-height: 1;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+/* --- 9. MENÚ LATERAL DESLIZABLE (DRAWER) --- */
+.drawer-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar {
+    position: fixed; top: 0; left: -320px; width: 300px; height: 100vh;
+    background: var(--card); border-right: 1px solid var(--border);
+    z-index: 999;
+    display: flex; flex-direction: column;
+    padding: 20px;
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.35);
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar.open {
+    left: 0;
+}
+.sidebar-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 16px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+.sidebar-brand { display: flex; align-items: center; gap: 12px; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.nav-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-muted);
+    padding: 0 8px; margin-bottom: 4px;
+}
+.nav-link-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 10px;
+    font-size: 0.92rem; font-weight: 600;
+    color: var(--text); background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+.nav-link-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--border);
+    color: var(--c-mint);
+}
+.nav-link-btn.active {
+    background: var(--c-mint-light);
+    color: var(--c-mint);
+    border-color: var(--c-mint);
+    font-weight: 700;
+}
+.sidebar-footer {
+    padding-top: 14px; border-top: 1px solid var(--border);
+    font-size: 0.74rem; color: var(--text-muted); line-height: 1.4;
+}
+
+.app-footer {
+    padding: 20px 32px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem; color: var(--text-muted); background: var(--card);
+}
+
+/* --- 10. RESPONSIVO --- */
+@media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .main-content { padding: 80px 16px 24px; }
+}
+

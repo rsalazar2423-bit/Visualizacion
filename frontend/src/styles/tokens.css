@@ -1,0 +1,78 @@
+:root {
+  /* Paleta Oficial EcoGrid (Clean-Tech & Biodiversidad DEC) */
+  --color-forest: #05261F;
+  --color-emerald: #0D9763;
+  --color-mint: #0D9763;
+  --color-mint-light: #E7FAF2;
+  --color-electric: #84CC16;
+  --color-amber: #D97706;
+  --color-amber-light: #F59E0B;
+  --color-terracotta: #E11D48;
+  --color-cyan: #0284C7;
+  --color-violet: #8B5CF6;
+  
+  /* Fuentes */
+  --font-family: 'Inter', system-ui, Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+
+  /* --- TEMA CLARO (SINCRONIZADO 100% CON LOGO LIGHT) --- */
+  --bg-app: #F4F8F6;
+  --bg-main: #F4F8F6;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #EEF7F3;
+  --bg-drawer: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-table-header: #E7FAF2;
+  --bg-table-stripe: #F9FCFA;
+  --bg-table-hover: #EEF7F3;
+
+  --text-primary: #05261F;
+  --text-secondary: #4B6358;
+  --text-muted: #64748B;
+  --text-light: #FFFFFF;
+
+  --border-subtle: #DCEBE3;
+  --border-focus: #0D9763;
+
+  --shadow-sm: 0 2px 8px rgba(5, 38, 31, 0.04);
+  --shadow-md: 0 4px 18px rgba(5, 38, 31, 0.07);
+  --shadow-lg: 0 10px 25px rgba(5, 38, 31, 0.1);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+[data-theme="dark"] {
+  /* --- TEMA OSCURO (SINCRONIZADO 100% CON LOGO DARK #091928) --- */
+  --bg-app: #050E17;
+  --bg-main: #050E17;
+  --bg-card: #091928;
+  --bg-card-hover: #0F2338;
+  --bg-drawer: #061320;
+  --bg-input: #0D2032;
+  --bg-table-header: #0D2032;
+  --bg-table-stripe: #091928;
+  --bg-table-hover: #142B42;
+
+  --color-mint: #10B981;
+  --color-mint-light: rgba(16, 185, 129, 0.15);
+  --color-amber: #F59E0B;
+  --color-terracotta: #F43F5E;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #8AA4B8;
+  --text-muted: #64748B;
+  --text-light: #FFFFFF;
+
+  --border-subtle: #142B42;
+  --border-focus: #10B981;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}

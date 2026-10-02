@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <!-- Filtros de sombra 3D e irradiación -->
+    <filter id="energy-shadow" x="-30%" y="-20%" width="160%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#78350F" flood-opacity="0.5"/>
+    </filter>
+    <filter id="energy-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <!-- Gradientes 3D para facetas del rayo -->
+    <linearGradient id="facet-bright" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="35%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <linearGradient id="facet-mid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="70%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+
+    <linearGradient id="facet-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="70%" stop-color="#92400E"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+
+    <radialGradient id="energy-aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Aura o Halo de Poder -->
+  <circle cx="60" cy="60" r="46" fill="url(#energy-aura)" />
+
+  <g filter="url(#energy-shadow)">
+    <!-- Bisel / Cara de Grosor 3D Lateral (Extrusión) -->
+    <path d="M68,14 L34,60 L56,60 L44,106 L84,54 L62,54 Z" 
+          fill="url(#facet-dark)" transform="translate(4, 5)" opacity="0.6"/>
+
+    <!-- Faceta Posterior con sombreado volumétrico -->
+    <path d="M68,14 L34,60 L56,60 L44,106 L84,54 L62,54 Z" 
+          fill="url(#facet-mid)" />
+
+    <!-- Faceta Superior Iluminada (Efecto 3D Cristal) -->
+    <path d="M68,14 L48,46 L60,46 L44,106 L84,54 L62,54 Z" 
+          fill="url(#facet-bright)" />
+
+    <!-- Línea de Cresta Especular Central (Highlight) -->
+    <path d="M68,14 L53,49 L62,54 L44,106" 
+          stroke="#FFFBEB" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9" filter="url(#energy-glow)"/>
+
+    <!-- Anillo orbital de transmisión de alta tensión -->
+    <ellipse cx="60" cy="62" rx="38" ry="12" 
+             stroke="#FDE68A" stroke-width="2" fill="none" stroke-dasharray="5 3" opacity="0.85" 
+             transform="rotate(-15, 60, 62)" filter="url(#energy-glow)"/>
+  </g>
+</svg>
