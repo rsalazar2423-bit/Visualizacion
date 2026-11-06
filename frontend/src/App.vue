@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import TopNavbar from './components/common/TopNavbar.vue';
 import SidebarDrawer from './components/common/SidebarDrawer.vue';
-import Footer from './components/common/Footer.vue';
 
 const isSidebarOpen = ref(false);
 
@@ -27,8 +26,6 @@ function closeSidebar() {
         </transition>
       </router-view>
     </main>
-
-    <Footer />
   </div>
 </template>
 

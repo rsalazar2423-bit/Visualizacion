@@ -572,7 +572,9 @@ watch(
 .historical-map-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
 }
 
 .header-actions-row {
@@ -606,13 +608,16 @@ watch(
 .map-body-grid {
   display: grid;
   grid-template-columns: 1fr 290px;
-  gap: 16px;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
   align-items: stretch;
 }
 
 .map-canvas {
   width: 100%;
-  height: 460px;
+  height: 100%;
+  min-height: 380px;
   background: var(--bg-subtle);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);

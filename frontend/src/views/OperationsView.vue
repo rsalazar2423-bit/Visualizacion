@@ -71,18 +71,20 @@ onMounted(async () => {
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'evolution' }"
+          title="Evolución Histórica (2008-2023)"
           @click="activeSubView = 'evolution'"
         >
-          <TrendingUp :size="14" />
-          <span>Dinámica Temporal (1 Gráfica)</span>
+          <TrendingUp :size="13" />
+          <span>1. Evolución</span>
         </button>
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'sla' }"
+          title="Cumplimiento SLA por Prioridad y Tipología"
           @click="activeSubView = 'sla'"
         >
-          <Target :size="14" />
-          <span>SLA & Tipología (2 Gráficas)</span>
+          <Target :size="13" />
+          <span>2. SLA y Tipología</span>
         </button>
       </nav>
     </header>
@@ -143,9 +145,9 @@ onMounted(async () => {
 .viewport-clean-view {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  height: calc(100vh - 120px);
-  max-height: calc(100vh - 120px);
+  gap: 8px;
+  height: 100%;
+  max-height: 100%;
   overflow: hidden; /* CERO SCROLL */
 }
 

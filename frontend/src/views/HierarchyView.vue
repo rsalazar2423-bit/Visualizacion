@@ -72,42 +72,46 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (Máximo 2 gráficas por hoja) -->
+      <!-- Pestañas de Hojas (Máximo 2 gráficas por hoja) - Nombres ultracompactos -->
       <nav class="subview-toggle">
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'map' }"
+          title="Mapa de Red Georreferenciada"
           @click="activeSubView = 'map'"
         >
-          <Compass :size="14" />
-          <span>1. Mapa Red (1 Gráfica)</span>
+          <Compass :size="13" />
+          <span>1. Mapa</span>
         </button>
 
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'bottlenecks' }"
+          title="Ranking y Cuellos de Botella"
           @click="activeSubView = 'bottlenecks'"
         >
-          <BarChart3 :size="14" />
-          <span>2. Cuellos de Botella (2 Gráficas)</span>
+          <BarChart3 :size="13" />
+          <span>2. Diagnóstico</span>
         </button>
 
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'hierarchy' }"
+          title="Composición y Jerarquía Técnica"
           @click="activeSubView = 'hierarchy'"
         >
-          <Layers :size="14" />
-          <span>3. Jerarquía (2 Gráficas)</span>
+          <Layers :size="13" />
+          <span>3. Jerarquía</span>
         </button>
 
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'audit' }"
+          title="Tabla de Detalle y Auditoría"
           @click="activeSubView = 'audit'"
         >
-          <FileText :size="14" />
-          <span>4. Auditoría (Tabla)</span>
+          <FileText :size="13" />
+          <span>4. Auditoría</span>
         </button>
       </nav>
     </header>
@@ -166,9 +170,9 @@ onMounted(async () => {
 .viewport-clean-view {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  height: calc(100vh - 120px);
-  max-height: calc(100vh - 120px);
+  gap: 8px;
+  height: 100%;
+  max-height: 100%;
   overflow: hidden; /* CERO SCROLL */
 }
 

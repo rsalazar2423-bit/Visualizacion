@@ -193,6 +193,8 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 <style scoped>
 .time-evolution-wrapper {
   width: 100%;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -205,6 +207,7 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
   flex-wrap: wrap;
   gap: 10px;
   padding-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .evolution-kpis {
@@ -259,6 +262,7 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 
 .chart-canvas-evolution {
   width: 100%;
-  height: 330px;
+  flex: 1;
+  min-height: 380px;
 }
 </style>
