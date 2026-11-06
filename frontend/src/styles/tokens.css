@@ -42,19 +42,22 @@
   --color-accent-soft: rgba(29, 78, 216, 0.1);
 
   /* =========================================================================
-     3. PALETA SEMÁNTICA ESTRICTA (EXCLUSIVA PARA CUMPLIMIENTO SLA Y ALERTAS)
+     3. PALETA SEMÁNTICA ESTRICTA (SLA Y SEÑALÉTICA OPERATIVA)
+     - Cumple Plazo: Teal Institucional (#0D9488)
+     - Advertencia / En Riesgo: Naranja Operativo (#EA580C)
+     - Alerta Máxima / Vencido: Rojo (#DC2626)
      ========================================================================= */
   /* Cumple Plazo / Oportuno */
-  --sla-success: #059669;
-  --sla-success-bg: rgba(5, 150, 105, 0.11);
-  --sla-success-border: rgba(5, 150, 105, 0.28);
+  --sla-success: #0D9488;
+  --sla-success-bg: rgba(13, 148, 136, 0.11);
+  --sla-success-border: rgba(13, 148, 136, 0.28);
 
-  /* En Seguimiento / Precaución (Tiempo Típico / Abiertos en plazo) */
-  --sla-warning: #D97706;
-  --sla-warning-bg: rgba(217, 119, 6, 0.11);
-  --sla-warning-border: rgba(217, 119, 6, 0.28);
+  /* En Seguimiento / Precaución (Naranja Operativo) */
+  --sla-warning: #EA580C;
+  --sla-warning-bg: rgba(234, 88, 12, 0.11);
+  --sla-warning-border: rgba(234, 88, 12, 0.28);
 
-  /* Excede Plazo / Abierto Vencido (Alerta Crítica) */
+  /* Excede Plazo / Abierto Vencido (Rojo de Alerta Crítica) */
   --sla-danger: #DC2626;
   --sla-danger-bg: rgba(220, 38, 38, 0.11);
   --sla-danger-border: rgba(220, 38, 38, 0.28);
@@ -65,14 +68,13 @@
   --sla-info-border: rgba(29, 78, 216, 0.28);
 
   /* =========================================================================
-     4. PALETA CATEGÓRICA ACOTADA (TIPOS DE AVISO — Sin colisión con SLA)
-     Familias cromáticas con distancia Delta-E > 25 para discriminación visual
+     4. PALETA CATEGÓRICA ACOTADA (100% Rampa Institucional Teal-Azul-Pizarra)
      ========================================================================= */
-  --cat-1: #3F6212; /* Vegetación: Verde Oliva Silvicultural (No compite con Esmeralda SLA) */
+  --cat-1: #0D9488; /* Vegetación: Teal Institucional (55% de avisos) */
   --cat-2: #1D4ED8; /* Construcciones: Azul Cobalto (Infraestructura / Ingeniería) */
-  --cat-3: #475569; /* Obras: Grafito / Acero Industrial (Rompe la sopa de azules) */
-  --cat-4: #6D28D9; /* Permiso Ingreso: Amatista Técnico / Predial */
-  --cat-5: #C2410C; /* Invasión / Explanación: Terracota Arcilla / Suelo (No compite con Ámbar SLA) */
+  --cat-3: #0284C7; /* Obras: Azul Cielo / Acero Técnico */
+  --cat-4: #475569; /* Permiso Ingreso: Pizarra Oscuro (Predial) */
+  --cat-5: #64748B; /* Invasión / Explanación: Pizarra Medio (Servidumbres) */
   --cat-6: #94A3B8; /* Otros: Pizarra Neutro */
 
   /* Geometría y Transiciones */
@@ -126,16 +128,19 @@
 
   /* =========================================================================
      3. PALETA SEMÁNTICA ESTRICTA (Modo Oscuro)
+     - Cumple: Teal Luminoso (#14B8A6)
+     - Advertencia: Naranja Operativo (#F97316)
+     - Alerta: Rojo (#EF4444)
      ========================================================================= */
-  --sla-success: #10B981;
-  --sla-success-bg: rgba(16, 185, 129, 0.15);
-  --sla-success-border: rgba(16, 185, 129, 0.32);
+  --sla-success: #14B8A6;
+  --sla-success-bg: rgba(20, 184, 166, 0.15);
+  --sla-success-border: rgba(20, 184, 166, 0.32);
 
-  --sla-warning: #F59E0B;
-  --sla-warning-bg: rgba(245, 158, 11, 0.15);
-  --sla-warning-border: rgba(245, 158, 11, 0.32);
+  --sla-warning: #F97316;
+  --sla-warning-bg: rgba(249, 115, 22, 0.15);
+  --sla-warning-border: rgba(249, 115, 22, 0.32);
 
-  --sla-danger: #EF4444; /* Rojo calibrado sin vibración óptica sobre fondo pizarra */
+  --sla-danger: #EF4444; /* Rojo calibrado de alta visibilidad */
   --sla-danger-bg: rgba(239, 68, 68, 0.16);
   --sla-danger-border: rgba(239, 68, 68, 0.35);
 
@@ -144,12 +149,12 @@
   --sla-info-border: rgba(96, 165, 250, 0.32);
 
   /* =========================================================================
-     4. PALETA CATEGÓRICA ACOTADA (Modo Oscuro — Familias diferenciadas)
+     4. PALETA CATEGÓRICA ACOTADA (Modo Oscuro — Rampa Teal-Azul-Pizarra)
      ========================================================================= */
-  --cat-1: #A3E635; /* Vegetación: Oliva suave silvicultural */
+  --cat-1: #14B8A6; /* Vegetación: Teal Luminoso */
   --cat-2: #60A5FA; /* Construcciones: Azul Cobalto */
-  --cat-3: #94A3B8; /* Obras: Grafito / Acero Industrial */
-  --cat-4: #A78BFA; /* Permiso Ingreso: Amatista Predial */
-  --cat-5: #FB923C; /* Invasión / Explanación: Terracota Arcilla */
-  --cat-6: #64748B; /* Otros: Pizarra Neutro */
+  --cat-3: #38BDF8; /* Obras: Azul Cielo / Acero */
+  --cat-4: #94A3B8; /* Permiso Ingreso: Pizarra Suave */
+  --cat-5: #64748B; /* Invasión / Explanación: Pizarra Medio */
+  --cat-6: #475569; /* Otros: Pizarra Profundo */
 }

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Target, PieChart, TrendingUp, X } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Target, PieChart, TrendingUp, X, LayoutGrid } from 'lucide-vue-next';
 import { useOperationsStore } from '../../stores/operationsStore';
 import TimeEvolutionChart from '../charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../charts/StackedBarChart.vue';
 import DonutChart from '../charts/DonutChart.vue';
 
 const opsStore = useOperationsStore();
+const activeTab = ref<'evolution' | 'breakdown' | 'all'>('evolution');
 </script>
 
 <template>
@@ -15,8 +17,44 @@ const opsStore = useOperationsStore();
       <b>Evolución Temporal, Cumplimiento por Prioridad y Composición</b>
     </div>
 
-    <!-- Fila 1: Evolución Histórica Ingresos vs. Cierres -->
-    <div class="card">
+    <!-- Pestañas Tácticas para Eliminar Scroll -->
+    <div class="tactical-tabs-nav" role="tablist">
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'evolution' }"
+        role="tab"
+        :aria-selected="activeTab === 'evolution'"
+        @click="activeTab = 'evolution'"
+      >
+        <TrendingUp :size="15" />
+        <span>1. Dinámica Temporal (Ingresos vs. Cierres)</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'breakdown' }"
+        role="tab"
+        :aria-selected="activeTab === 'breakdown'"
+        @click="activeTab = 'breakdown'"
+      >
+        <Target :size="15" />
+        <span>2. Compromisos SLA y Tipologías</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'all' }"
+        role="tab"
+        :aria-selected="activeTab === 'all'"
+        @click="activeTab = 'all'"
+      >
+        <LayoutGrid :size="15" />
+        <span>Vista Integral (Ambos Bloques)</span>
+      </button>
+    </div>
+
+    <!-- Bloque 1: Evolución Histórica Ingresos vs. Cierres -->
+    <div v-show="activeTab === 'evolution' || activeTab === 'all'" class="card tab-pane">
       <div class="chart-header-block">
         <div class="header-main-row">
           <div class="title-with-badge">
@@ -33,8 +71,8 @@ const opsStore = useOperationsStore();
       <TimeEvolutionChart />
     </div>
 
-    <!-- Fila 2: Cumplimiento por Prioridad (100% Apilada) + Composición por Tipología -->
-    <div class="grid-2">
+    <!-- Bloque 2: Cumplimiento por Prioridad (100% Apilada) + Composición por Tipología -->
+    <div v-show="activeTab === 'breakdown' || activeTab === 'all'" class="grid-2 tab-pane">
       <!-- Tarjeta 1: Gráfico de Cumplimiento de Plazo (SLA) -->
       <div class="card">
         <div class="chart-header-block">
@@ -89,3 +127,61 @@ const opsStore = useOperationsStore();
     </div>
   </section>
 </template>
+
+<style scoped>
+.tactical-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-subtle);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.tab-btn.active {
+  background: var(--bg-card);
+  color: var(--color-brand);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-subtle);
+  font-weight: 700;
+}
+
+.tab-pane {
+  animation: fadeIn 0.18s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.8;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

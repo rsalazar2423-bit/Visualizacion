@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { Compass } from 'lucide-vue-next';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { Compass, Maximize2 } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { useThemeStore } from '../../stores/themeStore';
@@ -8,14 +8,21 @@ import { getEChartsThemeTokens } from '../../constants/themeTokens';
 import MapLayerPills from '../map/MapLayerPills.vue';
 import MapSideSummary from '../map/MapSideSummary.vue';
 import MapTimelineBar from '../map/MapTimelineBar.vue';
+import ChartModal from '../common/ChartModal.vue';
 
 const territoryStore = useTerritoryStore();
 const themeStore = useThemeStore();
 
 const chartContainer = ref<HTMLDivElement | null>(null);
+const modalChartContainer = ref<HTMLDivElement | null>(null);
 let chartInstance: echarts.ECharts | null = null;
+let modalChartInstance: echarts.ECharts | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let modalResizeObserver: ResizeObserver | null = null;
 let mapRegistered = false;
+
+// Estado de Modal de Ampliación
+const isModalOpen = ref(false);
 
 // Estado de la Línea de Tiempo Histórica
 const timeMode = ref<'all' | 'cumulative' | 'single'>('cumulative');
@@ -150,11 +157,20 @@ async function ensureGeoJsonLoaded() {
   }
 }
 
-function renderMap() {
-  if (!chartInstance || !mapRegistered) return;
+const OPERATIVE_DEPTOS = [
+  'Bogotá, D.C.',
+  'Boyacá',
+  'Caldas',
+  'Cauca',
+  'Cundinamarca',
+  'Huila',
+  'Nariño',
+  'Risaralda',
+  'Tolima',
+  'Valle Del Cauca',
+];
 
-  const isDark = themeStore.isDark;
-  const tokens = getEChartsThemeTokens(isDark);
+function buildMapOption(tokens: any, isDark: boolean) {
   const pts = filteredPoints.value;
   const lines = territoryStore.data?.map_lines || [];
 
@@ -182,7 +198,7 @@ function renderMap() {
     coords: l.coords,
   }));
 
-  const option: any = {
+  return {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
@@ -215,30 +231,45 @@ function renderMap() {
     geo: {
       map: 'colombia_red',
       roam: true,
-      scaleLimit: { min: 0.85, max: 12 },
+      center: [-74.8, 4.3],
+      zoom: 1.25,
+      aspectScale: 0.88,
       label: {
-        show: true,
-        color: isDark ? 'rgba(248, 250, 252, 0.72)' : 'rgba(15, 23, 42, 0.68)',
-        fontSize: 10,
-        fontWeight: 700,
-        fontFamily: tokens.fontFamily,
+        show: false,
       },
       itemStyle: {
-        areaColor: isDark ? '#162032' : '#EEF2F6',
-        borderColor: isDark ? '#334155' : '#CBD5E1',
-        borderWidth: 1.2,
+        areaColor: isDark ? '#0B1120' : '#F1F5F9',
+        borderColor: isDark ? '#1E293B' : '#CBD5E1',
+        borderWidth: 0.8,
       },
       emphasis: {
         label: {
+          show: true,
           color: tokens.textColor,
-          fontWeight: 800,
+          fontWeight: 700,
+          fontSize: 11,
         },
         itemStyle: {
           areaColor: isDark ? '#1E293B' : '#E2E8F0',
           borderColor: tokens.brandColor,
-          borderWidth: 2,
+          borderWidth: 1.8,
         },
       },
+      regions: OPERATIVE_DEPTOS.map((name) => ({
+        name,
+        itemStyle: {
+          areaColor: isDark ? '#162238' : '#E0E7FF',
+          borderColor: isDark ? '#334155' : '#94A3B8',
+          borderWidth: 1.2,
+        },
+        emphasis: {
+          itemStyle: {
+            areaColor: isDark ? '#1E3A5F' : '#C7D2FE',
+            borderColor: tokens.brandColor,
+            borderWidth: 2,
+          },
+        },
+      })),
     },
     series: [
       {
@@ -248,83 +279,124 @@ function renderMap() {
         polyline: true,
         data: lineData,
         lineStyle: {
-          color: isDark ? 'rgba(45, 212, 191, 0.28)' : 'rgba(13, 148, 136, 0.32)',
-          width: 1.6,
+          color: isDark ? 'rgba(20, 184, 166, 0.75)' : 'rgba(13, 148, 136, 0.80)',
+          width: 2.2,
           type: 'solid',
         },
         silent: false,
         zlevel: 1,
       },
       {
-        name: 'Cumple Plazo',
+        name: 'Cumple Plazo (A Tiempo)',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 6.5,
+        symbolSize: 5,
         itemStyle: {
           color: tokens.sla.cumple,
-          opacity: 0.78,
-          borderColor: tokens.cardBg,
-          borderWidth: 0.8,
+          opacity: 0.85,
+          borderColor: isDark ? '#022C22' : '#FFFFFF',
+          borderWidth: 0.6,
         },
         data: cumplePoints,
         zlevel: 2,
       },
       {
-        name: 'Cerrado Fuera de Plazo',
+        name: 'Cerrados con Retraso',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 6.5,
+        symbolSize: 5,
         itemStyle: {
           color: tokens.sla.warning,
-          opacity: 0.78,
-          borderColor: tokens.cardBg,
-          borderWidth: 0.8,
+          opacity: 0.85,
+          borderColor: isDark ? '#451A03' : '#FFFFFF',
+          borderWidth: 0.6,
         },
         data: atrasadoPoints,
         zlevel: 2,
       },
       {
-        name: 'Abierto Vencido (Crítico)',
-        type: 'effectScatter',
+        name: 'Abiertos Vencidos (Alerta)',
+        type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 8.5,
-        showEffectOn: 'render',
-        rippleEffect: {
-          brushType: 'stroke',
-          scale: 2.4,
-          period: 4,
-        },
+        symbolSize: 6.5,
         itemStyle: {
           color: tokens.sla.excede,
           opacity: 0.95,
           borderColor: '#FFFFFF',
-          borderWidth: 1,
+          borderWidth: 1.2,
+          shadowColor: 'rgba(239, 68, 68, 0.45)',
+          shadowBlur: 4,
         },
         data: vencidoPoints,
         zlevel: 3,
       },
     ],
   };
+}
 
+function renderMap() {
+  if (!chartInstance || !mapRegistered) return;
+  const isDark = themeStore.isDark;
+  const tokens = getEChartsThemeTokens(isDark);
+  const option = buildMapOption(tokens, isDark);
   chartInstance.setOption(option, true);
+}
+
+function renderModalMap() {
+  if (!modalChartInstance || !mapRegistered) return;
+  const isDark = themeStore.isDark;
+  const tokens = getEChartsThemeTokens(isDark);
+  const option = buildMapOption(tokens, isDark);
+  modalChartInstance.setOption(option, true);
+}
+
+function attachChartEvents(inst: echarts.ECharts) {
+  inst.on('click', (params: any) => {
+    const raw = params.data?.raw;
+    if (raw?.depto) {
+      if (!territoryStore.selectedDepto) {
+        territoryStore.drillIntoDepto(raw.depto);
+      } else if (!territoryStore.selectedMunicipio && raw.mpio) {
+        territoryStore.drillIntoMunicipio(raw.depto, raw.mpio);
+      }
+    } else if (params.componentType === 'geo' && params.name) {
+      territoryStore.drillIntoDepto(params.name);
+    }
+  });
+}
+
+function openModal() {
+  isModalOpen.value = true;
+  nextTick(() => {
+    if (modalChartContainer.value && !modalChartInstance) {
+      modalChartInstance = echarts.init(modalChartContainer.value);
+      attachChartEvents(modalChartInstance);
+      modalResizeObserver = new ResizeObserver(() => {
+        modalChartInstance?.resize();
+      });
+      modalResizeObserver.observe(modalChartContainer.value);
+    }
+    renderModalMap();
+  });
+}
+
+function closeModal() {
+  isModalOpen.value = false;
+  if (modalResizeObserver) {
+    modalResizeObserver.disconnect();
+    modalResizeObserver = null;
+  }
+  if (modalChartInstance) {
+    modalChartInstance.dispose();
+    modalChartInstance = null;
+  }
 }
 
 onMounted(async () => {
   await ensureGeoJsonLoaded();
   if (chartContainer.value) {
     chartInstance = echarts.init(chartContainer.value);
-    chartInstance.on('click', (params: any) => {
-      const raw = params.data?.raw;
-      if (raw?.depto) {
-        if (!territoryStore.selectedDepto) {
-          territoryStore.drillIntoDepto(raw.depto);
-        } else if (!territoryStore.selectedMunicipio && raw.mpio) {
-          territoryStore.drillIntoMunicipio(raw.depto, raw.mpio);
-        }
-      } else if (params.componentType === 'geo' && params.name) {
-        territoryStore.drillIntoDepto(params.name);
-      }
-    });
+    attachChartEvents(chartInstance);
 
     resizeObserver = new ResizeObserver(() => {
       chartInstance?.resize();
@@ -338,12 +410,16 @@ onBeforeUnmount(() => {
   stopPlay();
   resizeObserver?.disconnect();
   chartInstance?.dispose();
+  closeModal();
 });
 
 watch(
   () => [territoryStore.data, themeStore.isDark, selectedYear.value, timeMode.value, layerFilter.value],
   () => {
     renderMap();
+    if (isModalOpen.value) {
+      renderModalMap();
+    }
   },
   { deep: true }
 );
@@ -362,17 +438,29 @@ watch(
           </h3>
         </div>
 
-        <!-- Filtro de Capas Semánticas (Componente SRP) -->
-        <MapLayerPills
-          v-model:layer-filter="layerFilter"
-          :total-count="yearStats.total"
-          :open-count="yearStats.abiertoVencido + yearStats.abiertoEnPlazo"
-          :overdue-count="yearStats.abiertoVencido"
-        />
+        <div class="header-actions-row">
+          <!-- Botón de Ampliación de Gráfica (Modal SRP) -->
+          <button
+            class="btn-expand"
+            title="Ampliar mapa a pantalla completa"
+            @click="openModal"
+          >
+            <Maximize2 :size="14" />
+            <span>Ampliar</span>
+          </button>
+
+          <!-- Filtro de Capas Semánticas (Componente SRP) -->
+          <MapLayerPills
+            v-model:layer-filter="layerFilter"
+            :total-count="yearStats.total"
+            :open-count="yearStats.abiertoVencido + yearStats.abiertoEnPlazo"
+            :overdue-count="yearStats.abiertoVencido"
+          />
+        </div>
       </div>
 
       <p class="chart-reseña">
-        Recorrido espacial e histórico sobre las 44 líneas de transmisión y 5.409 torres georreferenciadas. Usa el reproductor inferior para observar cómo evolucionó la concentración territorial de incidentes y dónde se acumulan los avisos abiertos vencidos.
+        Recorrido espacial e histórico sobre las 44 líneas de transmisión y 5.409 torres georreferenciadas. La silueta nacional completa sitúa los corredores operativos; haz zoom o usa el reproductor para auditar la evolución de avisos sin saturación visual.
       </p>
     </div>
 
@@ -400,6 +488,37 @@ watch(
       @select-year="selectYearTick"
       @slider-input="onSliderInput"
     />
+
+    <!-- Modal de Visualización a Gran Escala -->
+    <ChartModal
+      :is-open="isModalOpen"
+      title="Mapa Geográfico y Red de Transmisión (2008 – 2023)"
+      subtitle="Visualización ampliada de alta fidelidad con interactividad de zoom, arrastre y filtros temporales."
+      @close="closeModal"
+    >
+      <div class="modal-map-wrapper">
+        <div class="modal-map-body-grid">
+          <div ref="modalChartContainer" class="modal-map-canvas"></div>
+          <MapSideSummary
+            :time-mode="timeMode"
+            :selected-year="selectedYear"
+            :stats="yearStats"
+            :transmission-lines-count="(territoryStore.data?.map_lines || []).length"
+          />
+        </div>
+        <MapTimelineBar
+          :is-playing="isPlaying"
+          :time-mode="timeMode"
+          :selected-year="selectedYear"
+          :available-years="availableYears"
+          @toggle-play="togglePlay"
+          @reset-timeline="resetTimeline"
+          @set-mode="setMode"
+          @select-year="selectYearTick"
+          @slider-input="onSliderInput"
+        />
+      </div>
+    </ChartModal>
   </div>
 </template>
 
@@ -408,6 +527,34 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-expand:hover {
+  background: var(--bg-hover);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
 }
 
 .map-body-grid {
@@ -425,8 +572,34 @@ watch(
   border: 1px solid var(--border-subtle);
 }
 
+/* Estilos dentro del Modal */
+.modal-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+
+.modal-map-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  gap: 16px;
+  flex: 1;
+  min-height: 520px;
+}
+
+.modal-map-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
 @media (max-width: 960px) {
-  .map-body-grid {
+  .map-body-grid,
+  .modal-map-body-grid {
     grid-template-columns: 1fr;
   }
 }

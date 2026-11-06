@@ -134,7 +134,7 @@ export async function computeTerritorialData(params: {
         children.push({
           name: `Cumple (${cPct}%)`,
           value: cumple,
-          itemStyle: { color: CORPORATE_PALETTE.emerald },
+          itemStyle: { color: CORPORATE_PALETTE.brand },
         });
       }
       if (excede > 0) {

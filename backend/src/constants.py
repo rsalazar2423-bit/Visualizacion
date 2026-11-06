@@ -9,24 +9,24 @@ from __future__ import annotations
 from typing import Dict, List
 
 # 1. Paleta Corporativa y Semántica Estricta (SLA & Estado Operativo)
+# Rige el semáforo operativo: Teal (en norma) / Naranja (advertencia) / Rojo (alerta crítica)
 PALETTE: Dict[str, str] = {
     "forest": "#0F172A",       # Slate 900 (Superficie ejecutiva / texto primario)
-    "emerald": "#059669",      # SLA Cumple / Éxito (Tema Claro)
-    "mint": "#10B981",         # SLA Cumple / Éxito (Tema Oscuro / Acento)
+    "teal": "#0D9488",         # SLA Cumple / Éxito (Teal institucional)
+    "mint": "#14B8A6",         # SLA Cumple / Éxito (Modo oscuro)
     "electric": "#0D9488",     # Acento institucional EcoGrid (Teal 600)
-    "amber": "#D97706",        # SLA En Riesgo / Advertencia
-    "terracotta": "#DC2626",   # SLA Excede Plazo / Vencido Crítico
+    "orange": "#EA580C",       # SLA En Riesgo / Advertencia (Naranja Operativo)
+    "danger": "#DC2626",       # SLA Excede Plazo / Vencido Crítico (Rojo Alerta)
 }
 
-# 2. Paleta Categórica Armónica para Tipos de Aviso (Sin colisión con verde/rojo de SLA)
-# Distancia cromática Delta-E > 25 para evitar confusión visual con la marca o el SLA
+# 2. Paleta Categórica Armónica (100% Rampa Institucional Teal-Azul-Pizarra)
 TIPO_COLORS: Dict[str, str] = {
-    "Vegetación": "#3F6212",              # Verde Oliva silvicultural (No compite con Esmeralda SLA)
+    "Vegetación": "#0D9488",              # Teal Institucional (55% del volumen operativo)
     "Construcciones": "#1D4ED8",          # Azul Cobalto (Infraestructura / Ingeniería)
-    "Obras": "#475569",                   # Grafito / Acero Industrial (Rompe la sopa de azules)
-    "Permiso Ingreso": "#6D28D9",         # Amatista Técnico / Predial
-    "Invasión / Explanación": "#C2410C",  # Terracota Arcilla / Suelo (No compite con Ámbar SLA)
-    "Otros": "#94A3B8",                   # Pizarra Neutro (Categoría recesiva)
+    "Obras": "#0284C7",                   # Azul Cielo / Acero Técnico
+    "Permiso Ingreso": "#475569",         # Pizarra Oscuro (Predial / Administrativo)
+    "Invasión / Explanación": "#64748B",  # Pizarra Medio (Servidumbres / Terrenos)
+    "Otros": "#94A3B8",                   # Pizarra Claro (Categoría recesiva)
 }
 
 # 3. Orden canónico y rampa secuencial por horizonte de Plazos SLA

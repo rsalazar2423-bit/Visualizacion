@@ -1,64 +1,66 @@
 /**
  * themeTokens.ts — Fuente Única de la Verdad (DRY) para el Sistema de Diseño de Visualización.
  *
- * Se eliminaron todos los colores de "arcoíris" (violetas chillones, amarillos neón,
- * verdes lima, fucsias y 12 tonos inconexos de departamentos).
- *
- * Estructura cromática limpia en 3 familias:
- * 1. Semántica (SLA): Éxito (#059669 / #10B981), Advertencia (#D97706 / #F59E0B), Alerta (#DC2626 / #F43F5E).
- * 2. Categórica sobria (Tipos de Aviso): Gama fría ejecutiva (Teal, Cobalto, Acero, Índigo) + Ocre Tierra y Pizarra.
- * 3. Secuencial monocromática (Territorios y Plazos): Rampa de densidad Azul-Teal-Pizarra (cero carnaval).
+ * Sistema Cromático Restringido y Ejecutivo (Edward Tufte & Stephen Few):
+ * 1. Rampa Institucional (Analítica): Teal -> Azul Acero -> Pizarra (Norma 03).
+ * 2. Señalética Operativa Exclusiva:
+ *    - ROJO (#DC2626 / #EF4444): Alerta Máxima (Abiertos Vencidos / Incumplimiento Grave).
+ *    - NARANJA (#EA580C / #F97316): Advertencia (Cerrados con Retraso / En Riesgo).
+ * 3. CERO colores externos: Se eliminan violetas, olivas, amarillos y tonos no corporativos.
  */
 
 export const CORPORATE_PALETTE = {
   brand: '#0D9488',
   accent: '#1D4ED8',
-  emerald: '#059669',
-  amber: '#D97706',
+  orange: '#EA580C',
   danger: '#DC2626',
   slate: '#64748B',
 };
 
 /**
  * 1. Colores Semánticos Estrictos para SLA y Estado de Avisos
+ * Rige el Semáforo de Operación:
+ * - Cumple / Oportuno: Teal Institucional (#0D9488 / #14B8A6)
+ * - Precaución / Retraso: Naranja (#EA580C / #F97316)
+ * - Alerta Máxima / Vencido: Rojo (#DC2626 / #EF4444)
  */
 export function getSlaColors(isDark: boolean) {
   return {
-    cumple: isDark ? '#10B981' : '#059669',
-    cumpleSoft: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(5, 150, 105, 0.12)',
-    excede: isDark ? '#EF4444' : '#DC2626',
+    cumple: isDark ? '#14B8A6' : '#0D9488',
+    cumpleSoft: isDark ? 'rgba(20, 184, 166, 0.18)' : 'rgba(13, 148, 136, 0.12)',
+    warning: isDark ? '#F97316' : '#EA580C', // Naranja de advertencia
+    warningSoft: isDark ? 'rgba(249, 115, 22, 0.18)' : 'rgba(234, 88, 12, 0.12)',
+    excede: isDark ? '#EF4444' : '#DC2626', // Rojo de alerta crítica
     excedeSoft: isDark ? 'rgba(239, 68, 68, 0.18)' : 'rgba(220, 38, 38, 0.12)',
-    warning: isDark ? '#F59E0B' : '#D97706',
-    warningSoft: isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(217, 119, 6, 0.12)',
     abierto: isDark ? '#60A5FA' : '#1D4ED8',
     abiertoSoft: isDark ? 'rgba(96, 165, 250, 0.18)' : 'rgba(29, 78, 216, 0.12)',
-    cerrado: isDark ? '#2DD4BF' : '#0D9488',
+    cerrado: isDark ? '#94A3B8' : '#64748B',
     neutral: isDark ? '#94A3B8' : '#64748B',
   };
 }
 
 /**
- * 2. Paleta Categórica Sobria para Tipos de Aviso (Sin colisión con verde/rojo de SLA)
- * Familias cromáticas con distancia perceptual Delta-E > 25 (CIELAB)
+ * 2. Paleta Categórica para Tipos de Aviso (100% Rampa Institucional Teal-Azul-Pizarra)
+ * Cero colores de arcoíris: todas las categorías habitan la escala sobria.
  */
 export const TIPO_COLORS: Record<string, string> = {
-  'Vegetación': '#3F6212',             // Verde Oliva silvicultural (No compite con Esmeralda SLA)
+  'Vegetación': '#0D9488',             // Teal Corporativo (55% de los avisos)
   'Construcciones': '#1D4ED8',         // Azul Cobalto (Ingeniería y Estructuras)
-  'Obras': '#475569',                  // Grafito / Acero Industrial (Rompe la sopa de azules)
-  'Permiso Ingreso': '#6D28D9',        // Amatista Técnico / Predial
-  'Invasión / Explanación': '#C2410C', // Terracota Arcilloso / Suelo (No compite con Ámbar SLA)
-  'Otros': '#94A3B8',                  // Pizarra Neutro
+  'Obras': '#0284C7',                  // Azul Cielo / Acero Técnico
+  'Permiso Ingreso': '#475569',        // Pizarra Oscuro (Predial / Administrativo)
+  'Invasión / Explanación': '#64748B', // Pizarra Medio (Servidumbres / Terrenos)
+  'Otros': '#94A3B8',                  // Pizarra Claro (Recesivo)
 };
 
 export function getTipoColor(tipo: string, isDark = false): string {
   if (isDark) {
     const darkMap: Record<string, string> = {
-      'Vegetación': '#A3E635',
+      'Vegetación': '#14B8A6',
       'Construcciones': '#60A5FA',
-      'Obras': '#94A3B8',
-      'Permiso Ingreso': '#A78BFA',
-      'Invasión / Explanación': '#FB923C',
-      'Otros': '#64748B',
+      'Obras': '#38BDF8',
+      'Permiso Ingreso': '#94A3B8',
+      'Invasión / Explanación': '#64748B',
+      'Otros': '#475569',
     };
     return darkMap[tipo] || '#94A3B8';
   }
@@ -94,7 +96,7 @@ export const PRIO_COLORS: Record<string, string> = {
 
 /**
  * 4. Escala Secuencial Monocromática para Territorios (6 Peldaños de Densidad Perceptual)
- * Binea los territorios en 6 niveles reconocibles sin saturar la memoria de trabajo.
+ * Progresión continua Teal -> Azul Acero -> Pizarra (Norma 03)
  */
 export const DEPTO_PALETTE = [
   '#115E59', // Nivel 1 - Concentración Extrema (Teal 800)
@@ -108,12 +110,12 @@ export const DEPTO_PALETTE = [
 export function getSequentialTerritoryPalette(isDark: boolean): string[] {
   return isDark
     ? [
-        '#2DD4BF', // Nivel 1 - Extrema
-        '#14B8A6', // Nivel 2 - Muy Alta
-        '#38BDF8', // Nivel 3 - Alta
-        '#60A5FA', // Nivel 4 - Media
-        '#94A3B8', // Nivel 5 - Moderada
-        '#475569', // Nivel 6 - Mínima
+        '#2DD4BF', // Nivel 1 - Extrema (Teal 400)
+        '#14B8A6', // Nivel 2 - Muy Alta (Teal 500)
+        '#38BDF8', // Nivel 3 - Alta (Sky 400)
+        '#60A5FA', // Nivel 4 - Media (Blue 400)
+        '#94A3B8', // Nivel 5 - Moderada (Slate 400)
+        '#475569', // Nivel 6 - Mínima (Slate 600)
       ]
     : DEPTO_PALETTE;
 }
