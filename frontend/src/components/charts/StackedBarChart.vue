@@ -40,7 +40,8 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
       name: i.prioridad,
       value: i.cumple_pct,
       itemStyle: {
-        color: tokens.sla.cumple,
+        // GRIS PIZARRA NEUTRO: Actúa como fondo contextual pasivo (No compite con la alerta)
+        color: isDark ? '#334155' : '#E2E8F0',
         opacity,
         borderColor: isSelected ? tokens.accentSelect : tokens.cardBg,
         borderWidth: isSelected ? 2 : 1,
@@ -57,6 +58,7 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
       name: i.prioridad,
       value: i.excede_pct,
       itemStyle: {
+        // ROJO CARMÍN: El ÚNICO foco de atención cromático en la barra
         color: tokens.sla.excede,
         opacity,
         borderColor: isSelected ? tokens.accentSelect : tokens.cardBg,
@@ -80,7 +82,7 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily },
       formatter: (params: any) => formatStackedBarTooltip(params, items, selectedPrio, tokens),
     },
-    color: [tokens.sla.cumple, tokens.sla.excede],
+    color: [isDark ? '#334155' : '#E2E8F0', tokens.sla.excede],
     legend: {
       data: ['Cumple Plazo', 'Excede Plazo'],
       top: '0px',
@@ -132,7 +134,7 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
             if (val < 7) return '';
             return Number.isInteger(val) ? `${val}%` : `${val.toFixed(1)}%`;
           },
-          color: '#FFFFFF',
+          color: isDark ? '#94A3B8' : '#475569', // Texto gris legible sobre fondo gris
           fontSize: 11,
           fontWeight: 700,
           fontFamily: tokens.fontFamily,
