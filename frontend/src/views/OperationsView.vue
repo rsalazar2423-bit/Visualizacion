@@ -66,25 +66,25 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Pestañas de Hoja (Máximo 2 gráficas por hoja) -->
+      <!-- Pestañas de Hoja (Exactamente 2 gráficas por hoja para máxima dedicación analítica) -->
       <nav class="subview-toggle">
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'evolution' }"
-          title="Evolución Histórica (2008-2023)"
+          title="Evolución Histórica y Cumplimiento por Plazo SLA"
           @click="activeSubView = 'evolution'"
         >
           <TrendingUp :size="13" />
-          <span>1. Evolución</span>
+          <span>1. Dinámica & Plazos SLA (2 Gráficas)</span>
         </button>
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'sla' }"
-          title="Cumplimiento SLA por Prioridad y Tipología"
+          title="Composición Técnica de la Red"
           @click="activeSubView = 'sla'"
         >
           <Target :size="13" />
-          <span>2. SLA y Tipología</span>
+          <span>2. Composición Técnica (Dona)</span>
         </button>
       </nav>
     </header>
@@ -109,30 +109,30 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- ÁREA DE GRÁFICAS: AJUSTADA EXACTAMENTE AL VIEWPORT (0 SCROLL) -->
+    <!-- ÁREA DE GRÁFICAS: EXACTAMENTE 2 GRÁFICAS POR PANTALLA (CERO SCROLL) -->
     <main class="chart-viewport-stage">
-      <!-- HOJA 1: 1 Sola Gráfica Grande con botón para Ampliar -->
-      <section v-show="activeSubView === 'evolution'" class="stage-pane single-chart">
+      <!-- HOJA 1: 2 Gráficas en Paralelo (Evolución Temporal + Barras SLA 100%) -->
+      <section v-show="activeSubView === 'evolution'" class="stage-pane dual-charts">
         <ExpandableChartCard
-          title="Evolución de Avisos Ingresados vs. Cerrados y Tasa de Cumplimiento (2008 – 2023)"
-          subtitle="Análisis histórico de la demanda de incidentes frente a la capacidad de cierre anual"
+          title="Evolución de Avisos y Cumplimiento (2008 – 2023)"
+          subtitle="Demanda de incidentes frente a cierres anuales y tasa de atención oportuna"
         >
           <TimeEvolutionChart />
         </ExpandableChartCard>
-      </section>
 
-      <!-- HOJA 2: Exactamente 2 Gráficas en Paralelo (Ambas con botón para Ampliar) -->
-      <section v-show="activeSubView === 'sla'" class="stage-pane dual-charts">
         <ExpandableChartCard
           title="Cumplimiento de Plazo por Prioridad SLA (100%)"
           subtitle="Relación porcentual de atención oportuna frente a vencimiento"
         >
           <StackedBarChart />
         </ExpandableChartCard>
+      </section>
 
+      <!-- HOJA 2: Composición Técnica y Causas -->
+      <section v-show="activeSubView === 'sla'" class="stage-pane single-chart">
         <ExpandableChartCard
           title="Composición por Tipología Técnica"
-          subtitle="Distribución proporcional de causas de mantenimiento sobre la red"
+          subtitle="Distribución proporcional de causas de mantenimiento sobre la red de transmisión"
         >
           <DonutChart />
         </ExpandableChartCard>

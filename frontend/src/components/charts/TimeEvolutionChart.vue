@@ -99,12 +99,12 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'line',
         smooth: 0.25,
         symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { width: 2.2, color: tokens.sla.abierto },
-        itemStyle: { color: tokens.sla.abierto },
+        symbolSize: 5,
+        lineStyle: { width: 2, color: isDark ? '#94A3B8' : '#64748B' }, // Azul Acero Pizarra (Sobrio / Contexto)
+        itemStyle: { color: isDark ? '#94A3B8' : '#64748B' },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: tokens.sla.abiertoSoft },
+            { offset: 0, color: isDark ? 'rgba(148, 163, 184, 0.12)' : 'rgba(100, 116, 139, 0.08)' },
             { offset: 1, color: 'rgba(0,0,0,0)' },
           ]),
         },
@@ -116,18 +116,18 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         smooth: 0.25,
         symbol: 'circle',
         symbolSize: 6,
-        lineStyle: { width: 2.2, color: isDark ? '#38BDF8' : '#0284C7' },
-        itemStyle: { color: isDark ? '#38BDF8' : '#0284C7' },
+        lineStyle: { width: 2.4, color: isDark ? '#60A5FA' : '#1D4ED8' }, // Azul Corporativo Profundo
+        itemStyle: { color: isDark ? '#60A5FA' : '#1D4ED8' },
         data: cerrados,
       },
       {
         name: 'Abiertos Vencidos (del periodo)',
         type: 'bar',
-        barMaxWidth: 16,
+        barMaxWidth: 14,
         itemStyle: {
-          color: tokens.sla.excede,
+          color: tokens.sla.excede, // Carmín Ladrillo de Alarma
           borderRadius: [2, 2, 0, 0],
-          opacity: 0.75,
+          opacity: 0.85,
         },
         data: vencidos,
       },
@@ -138,8 +138,8 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         smooth: 0.25,
         symbol: 'diamond',
         symbolSize: 6,
-        lineStyle: { width: 2, type: 'dashed', color: tokens.sla.warning },
-        itemStyle: { color: tokens.sla.warning },
+        lineStyle: { width: 2, type: 'solid', color: isDark ? '#2DD4BF' : '#0F766E' }, // Teal Institucional Sobrio
+        itemStyle: { color: isDark ? '#2DD4BF' : '#0F766E' },
         data: overlayData,
       },
     ],

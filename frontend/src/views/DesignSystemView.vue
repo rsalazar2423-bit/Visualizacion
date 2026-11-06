@@ -8,15 +8,9 @@ import {
   PRIO_ORDER,
   PRIO_COLORS,
 } from '../constants/themeTokens';
-import {
-  SURFACE_TOKENS,
-  SEMANTIC_TOKENS,
-  DEPRECATED_COLORS,
-} from '../constants/designSystemCatalog';
+import { SEMANTIC_TOKENS } from '../constants/designSystemCatalog';
 import SemanticTokensGrid from '../components/design/SemanticTokensGrid.vue';
 import SequentialRampsGrid from '../components/design/SequentialRampsGrid.vue';
-import SurfaceTokensTable from '../components/design/SurfaceTokensTable.vue';
-import DeprecatedColorsPanel from '../components/design/DeprecatedColorsPanel.vue';
 
 const themeStore = useThemeStore();
 const copiedToken = ref<string | null>(null);
@@ -32,16 +26,16 @@ function copyValue(val: string) {
 
 <template>
   <div class="design-system-view">
-    <!-- Encabezado y Conmutador en Vivo -->
+    <!-- Encabezado Minimalista y Limpio -->
     <header class="ds-hero card">
       <div class="ds-hero-top">
         <div>
           <span class="badge">
             <Palette :size="13" /> Gobernanza Oficial de Color
           </span>
-          <h1 class="ds-title">Paleta de Colores Únicos Permitidos en EcoGrid</h1>
+          <h1 class="ds-title">Paleta Oficial y Armonía Cromática EcoGrid</h1>
           <p class="ds-subtitle">
-            Regla de oro: <b>ÚNICAMENTE se permiten la Rampa Base (Teal ➔ Azul ➔ Pizarra) + 1 ROJO de Alerta + 1 NARANJA de Advertencia.</b> Todos los demás colores están prohibidos y eliminados del sistema.
+            Sistema bicromático sobrio: <b>Rampa Base (Azul Acero y Pizarra)</b> para datos históricos, y <b>señalética de control exclusiva (Rojo Carmín y Ámbar Cobre)</b> para alertas de mora e incumplimiento.
           </p>
         </div>
 
@@ -52,7 +46,7 @@ function copyValue(val: string) {
         </button>
       </div>
 
-      <!-- Resumen Visual de los Únicos Colores Permitidos -->
+      <!-- Resumen Visual Limpio y Conciso -->
       <div class="palette-audit-summary card">
         <h3 class="audit-title">Elenco Cromático Oficial Cerrado (8 Tonos Totales)</h3>
         <div class="official-palette-strip">
@@ -76,29 +70,29 @@ function copyValue(val: string) {
 
           <!-- Rojo de Alerta -->
           <div class="swatch-group alert-group">
-            <span class="group-title">Rojo (Alerta Crítica / Vencidos)</span>
+            <span class="group-title">Rojo Carmín (Alerta Crítica / Vencidos)</span>
             <div
               class="swatch-cell single-alert danger"
-              :style="{ backgroundColor: themeStore.isDark ? '#EF4444' : '#DC2626' }"
-              @click="copyValue(themeStore.isDark ? '#EF4444' : '#DC2626')"
+              :style="{ backgroundColor: themeStore.isDark ? '#F43F5E' : '#BE123C' }"
+              @click="copyValue(themeStore.isDark ? '#F43F5E' : '#BE123C')"
             >
               <AlertOctagon :size="16" />
               <span>ROJO ÚNICO</span>
-              <code>{{ themeStore.isDark ? '#EF4444' : '#DC2626' }}</code>
+              <code>{{ themeStore.isDark ? '#F43F5E' : '#BE123C' }}</code>
             </div>
           </div>
 
           <!-- Naranja de Advertencia -->
           <div class="swatch-group alert-group">
-            <span class="group-title">Naranja (Advertencia / Retraso)</span>
+            <span class="group-title">Ámbar Cobre (Advertencia / Retraso)</span>
             <div
               class="swatch-cell single-alert warning"
-              :style="{ backgroundColor: themeStore.isDark ? '#F97316' : '#EA580C' }"
-              @click="copyValue(themeStore.isDark ? '#F97316' : '#EA580C')"
+              :style="{ backgroundColor: themeStore.isDark ? '#FBBF24' : '#D97706' }"
+              @click="copyValue(themeStore.isDark ? '#FBBF24' : '#D97706')"
             >
               <AlertTriangle :size="16" />
-              <span>NARANJA ÚNICO</span>
-              <code>{{ themeStore.isDark ? '#F97316' : '#EA580C' }}</code>
+              <span>ÁMBAR ÚNICO</span>
+              <code>{{ themeStore.isDark ? '#FBBF24' : '#D97706' }}</code>
             </div>
           </div>
         </div>
@@ -114,22 +108,11 @@ function copyValue(val: string) {
       :on-copy="copyValue"
     />
 
-    <!-- SECCIÓN 2: SEÑALÉTICA EXCLUSIVA (ROJO Y NARANJA) -->
+    <!-- SECCIÓN 2: SEÑALÉTICA EXCLUSIVA (ROJO Y ÁMBAR) -->
     <SemanticTokensGrid
       :tokens="SEMANTIC_TOKENS"
       :copied-token="copiedToken"
       :on-copy="copyValue"
-    />
-
-    <!-- SECCIÓN 3: SUPERFICIES Y FONDOS NEUTROS -->
-    <SurfaceTokensTable
-      :tokens="SURFACE_TOKENS"
-      :on-copy="copyValue"
-    />
-
-    <!-- SECCIÓN 4: COLORES PROHIBIDOS / DESCARTADOS (AUDITORÍA) -->
-    <DeprecatedColorsPanel
-      :colors="DEPRECATED_COLORS"
     />
   </div>
 </template>
