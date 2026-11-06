@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
+import { TrendingUp, Target, RefreshCw } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
-import OperationsFilterBar from '../components/operations/OperationsFilterBar.vue';
-import TypologyFilterPills from '../components/operations/TypologyFilterPills.vue';
-import OperationsKpiGrid from '../components/operations/OperationsKpiGrid.vue';
-import OperationsChartsGrid from '../components/operations/OperationsChartsGrid.vue';
+import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
+import StackedBarChart from '../components/charts/StackedBarChart.vue';
+import DonutChart from '../components/charts/DonutChart.vue';
 
 const opsStore = useOperationsStore();
+const activeSubView = ref<'evolution' | 'sla'>('evolution');
 
 onMounted(async () => {
   await opsStore.loadFilterOptions();
@@ -15,51 +16,310 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="operations-view">
-    <!-- Header -->
-    <header class="view-header">
-      <div class="badge badge-tag">Vista 01 · EcoGrid DEC</div>
-      <h1 class="view-title">Seguimiento de la Gestión Operativa y Cumplimiento de SLA</h1>
-      <p class="view-subtitle">
-        Estado general de la operación (abiertos vs. cerrados, a tiempo vs. vencidos), evolución temporal de ingresos frente a cierres y cumplimiento por prioridad.
-      </p>
+  <div class="viewport-clean-view">
+    <!-- BARRA SUPERIOR COMPACTA: Título, Filtros Mínimos y Selector de Hoja (1 solo renglón) -->
+    <header class="compact-control-bar card">
+      <div class="brand-zone">
+        <span class="badge badge-tag">01 · Operaciones</span>
+      </div>
+
+      <!-- Filtros mínimos esenciales -->
+      <div class="minimal-filters">
+        <select
+          :value="opsStore.selectedCte"
+          class="form-select-sm"
+          @change="opsStore.setCte(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="c in opsStore.filterOptions.ctes" :key="c" :value="c">
+            {{ c === 'Todos' ? 'Todas las CTEs' : `CTE ${c}` }}
+          </option>
+        </select>
+
+        <select
+          :value="opsStore.selectedDepto"
+          class="form-select-sm"
+          @change="opsStore.setDepto(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="d in opsStore.filterOptions.departamentos" :key="d" :value="d">
+            {{ d === 'Todos' ? 'Todos Deptos' : d }}
+          </option>
+        </select>
+
+        <select
+          :value="opsStore.selectedTipo"
+          class="form-select-sm"
+          @change="opsStore.setSingleTipo(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="t in opsStore.filterOptions.tipos" :key="t" :value="t">
+            {{ t === 'Todos' ? 'Todos los Tipos' : t }}
+          </option>
+        </select>
+
+        <button
+          v-if="opsStore.selectedCte !== 'Todos' || opsStore.selectedDepto !== 'Todos' || opsStore.selectedTipo !== 'Todos'"
+          class="btn-reset-icon"
+          title="Restablecer filtros"
+          @click="opsStore.resetFilters"
+        >
+          <RefreshCw :size="13" />
+        </button>
+      </div>
+
+      <!-- Pestañas de Hoja (Máximo 2 gráficas por hoja) -->
+      <nav class="subview-toggle">
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'evolution' }"
+          @click="activeSubView = 'evolution'"
+        >
+          <TrendingUp :size="14" />
+          <span>Dinámica Temporal (1 Gráfica)</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'sla' }"
+          @click="activeSubView = 'sla'"
+        >
+          <Target :size="14" />
+          <span>SLA & Tipología (2 Gráficas)</span>
+        </button>
+      </nav>
     </header>
 
-    <!-- Paso 1: Filtros de Control Operativo -->
-    <OperationsFilterBar />
+    <!-- KPIS COMPACTOS EN LÍNEA (4 indicadores en 1 sola fila delgada) -->
+    <div v-if="opsStore.data?.kpis" class="kpi-micro-row">
+      <div class="kpi-micro-chip">
+        <span class="chip-label">Cumplimiento:</span>
+        <b class="chip-val success-text">{{ opsStore.data.kpis.cumple_pct }}%</b>
+      </div>
+      <div class="kpi-micro-chip">
+        <span class="chip-label">Tiempo Típico:</span>
+        <b class="chip-val">{{ opsStore.data.kpis.tiempo_tipico_mediana ?? opsStore.data.kpis.dias_prom ?? 0 }} días</b>
+      </div>
+      <div class="kpi-micro-chip">
+        <span class="chip-label">Total Avisos:</span>
+        <b class="chip-val">{{ opsStore.data.kpis.total.toLocaleString() }}</b>
+      </div>
+      <div class="kpi-micro-chip danger-chip">
+        <span class="chip-label">Abiertos Vencidos:</span>
+        <b class="chip-val danger-text">{{ (opsStore.data.kpis.abiertos_vencidos ?? 0).toLocaleString() }}</b>
+      </div>
+    </div>
 
-    <!-- Selección Rápida por Tipología (Multi-Selección Interactiva) -->
-    <TypologyFilterPills />
+    <!-- ÁREA DE GRÁFICAS: AJUSTADA EXACTAMENTE AL VIEWPORT (0 SCROLL) -->
+    <main class="chart-viewport-stage">
+      <!-- HOJA 1: 1 Sola Gráfica Grande de Evolución Histórica -->
+      <section v-show="activeSubView === 'evolution'" class="stage-pane single-chart card">
+        <div class="pane-header">
+          <h3 class="pane-title">Evolución de Avisos Ingresados vs. Cerrados y Tasa de Cumplimiento (2008 – 2023)</h3>
+        </div>
+        <div class="pane-body">
+          <TimeEvolutionChart />
+        </div>
+      </section>
 
-    <!-- Paso 2: 4 Indicadores Principales (KPIs del Documento Rector) -->
-    <OperationsKpiGrid />
+      <!-- HOJA 2: Exactamente 2 Gráficas en Paralelo (SLA + Composición) -->
+      <section v-show="activeSubView === 'sla'" class="stage-pane dual-charts">
+        <div class="card chart-card">
+          <div class="pane-header">
+            <h3 class="pane-title">Cumplimiento de Plazo por Prioridad SLA (100%)</h3>
+          </div>
+          <div class="pane-body">
+            <StackedBarChart />
+          </div>
+        </div>
 
-    <!-- Paso 3: Gráficos Analíticos (Evolución Temporal + 100% Stacked SLA + Donut) -->
-    <OperationsChartsGrid />
+        <div class="card chart-card">
+          <div class="pane-header">
+            <h3 class="pane-title">Composición por Tipología Técnica</h3>
+          </div>
+          <div class="pane-body">
+            <DonutChart />
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 </template>
 
 <style scoped>
-.operations-view {
+.viewport-clean-view {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 10px;
+  height: calc(100vh - 120px);
+  max-height: calc(100vh - 120px);
+  overflow: hidden; /* CERO SCROLL */
 }
 
-.view-header {
-  margin-bottom: 4px;
+/* Barra Superior de Control */
+.compact-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
 }
 
-.view-title {
-  font-size: 1.8rem;
-  font-weight: 800;
+.brand-zone {
+  display: flex;
+  align-items: center;
+}
+
+.minimal-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 650px;
+}
+
+.form-select-sm {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  background: var(--bg-subtle);
   color: var(--text-primary);
-  margin: 8px 0 6px;
-  letter-spacing: -0.3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
 }
 
-.view-subtitle {
-  font-size: 0.95rem;
+.btn-reset-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
   color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-icon:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.subview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-subtle);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.toggle-btn.active {
+  background: var(--bg-card);
+  color: var(--color-brand);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Micro KPIs */
+.kpi-micro-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.kpi-micro-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.chip-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.chip-val {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.danger-chip {
+  border-color: var(--sla-danger-border);
+  background: var(--sla-danger-bg);
+}
+
+/* Escenario de Gráficas */
+.chart-viewport-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-pane.dual-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane-header {
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pane-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pane-body {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 10px;
 }
 </style>

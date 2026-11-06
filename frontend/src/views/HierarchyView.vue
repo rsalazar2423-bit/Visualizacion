@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Compass, BarChart3, Layers, FileText } from 'lucide-vue-next';
+import { Compass, BarChart3, Layers, FileText, RefreshCw } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
-import TerritoryFilters from '../components/territory/TerritoryFilters.vue';
-import TerritoryKpiGrid from '../components/territory/TerritoryKpiGrid.vue';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TerritoryDiagnosticsRow from '../components/territory/TerritoryDiagnosticsRow.vue';
 import TreemapPanel from '../components/territory/TreemapPanel.vue';
@@ -11,7 +9,7 @@ import SunburstPanel from '../components/territory/SunburstPanel.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
 
 const territoryStore = useTerritoryStore();
-const activeTab = ref<'map' | 'diagnostics' | 'hierarchy' | 'audit'>('map');
+const activeSubView = ref<'map' | 'bottlenecks' | 'hierarchy' | 'audit'>('map');
 
 onMounted(async () => {
   await territoryStore.loadFilterOptions();
@@ -20,192 +18,308 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="hierarchy-view">
-    <!-- Header ultracompacto -->
-    <header class="view-header">
-      <div class="header-inline">
-        <span class="badge badge-tag">Vista 02 · EcoGrid DEC</span>
-        <h1 class="view-title">Diagnóstico Territorial, Mapa Histórico y Desempeño Técnico</h1>
+  <div class="viewport-clean-view">
+    <!-- BARRA SUPERIOR COMPACTA: Título, Filtros Mínimos y Selector de Hoja (1 solo renglón) -->
+    <header class="compact-control-bar card">
+      <div class="brand-zone">
+        <span class="badge badge-tag">02 · Territorio</span>
       </div>
-      <p class="view-subtitle">
-        Georreferenciación histórica de avisos y líneas (2008–2023), identificación de sectores con mayores retrasos, tiempos de atención por tipo de incidente y auditoría de avisos.
-      </p>
+
+      <!-- Controles mínimos: 3 Selectores -->
+      <div class="minimal-filters">
+        <select
+          :value="territoryStore.selectedCte"
+          class="form-select-sm"
+          @change="territoryStore.setCte(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="c in territoryStore.filterOptions.ctes" :key="c" :value="c">
+            {{ c === 'Todos' ? 'Todas las CTEs' : `CTE ${c}` }}
+          </option>
+        </select>
+
+        <select
+          :value="territoryStore.selectedDepto || 'Todos'"
+          class="form-select-sm"
+          @change="territoryStore.setDepto(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="d in territoryStore.filterOptions.departamentos" :key="d" :value="d">
+            {{ d === 'Todos' ? 'Todos Deptos' : d }}
+          </option>
+        </select>
+
+        <select
+          :value="territoryStore.selectedMunicipio || 'Todos'"
+          class="form-select-sm"
+          @change="territoryStore.setCityDropdown(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="Todos">Todos Municipios</option>
+          <option
+            v-for="m in territoryStore.filterOptions.municipios"
+            :key="m.value"
+            :value="m.value"
+          >
+            {{ m.label }}
+          </option>
+        </select>
+
+        <button
+          v-if="territoryStore.selectedCte !== 'Todos' || territoryStore.selectedDepto || territoryStore.selectedMunicipio"
+          class="btn-reset-icon"
+          title="Restablecer filtros"
+          @click="territoryStore.resetAllFilters"
+        >
+          <RefreshCw :size="13" />
+        </button>
+      </div>
+
+      <!-- Pestañas de Hojas (Máximo 2 gráficas por hoja) -->
+      <nav class="subview-toggle">
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'map' }"
+          @click="activeSubView = 'map'"
+        >
+          <Compass :size="14" />
+          <span>1. Mapa Red (1 Gráfica)</span>
+        </button>
+
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'bottlenecks' }"
+          @click="activeSubView = 'bottlenecks'"
+        >
+          <BarChart3 :size="14" />
+          <span>2. Cuellos de Botella (2 Gráficas)</span>
+        </button>
+
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'hierarchy' }"
+          @click="activeSubView = 'hierarchy'"
+        >
+          <Layers :size="14" />
+          <span>3. Jerarquía (2 Gráficas)</span>
+        </button>
+
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'audit' }"
+          @click="activeSubView = 'audit'"
+        >
+          <FileText :size="14" />
+          <span>4. Auditoría (Tabla)</span>
+        </button>
+      </nav>
     </header>
 
-    <!-- Controles Mínimos: Filtros Territoriales en 1 sola fila compacta -->
-    <TerritoryFilters />
-
-    <!-- Resumen de Cobertura -->
-    <TerritoryKpiGrid />
-
-    <!-- Navegación por Pestañas Tácticas (Elimina el scroll vertical excesivo) -->
-    <div class="tactical-tabs-nav" role="tablist">
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'map' }"
-        role="tab"
-        :aria-selected="activeTab === 'map'"
-        @click="activeTab = 'map'"
-      >
-        <Compass :size="15" />
-        <span>1. Mapa de Red y Corredores</span>
-      </button>
-
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'diagnostics' }"
-        role="tab"
-        :aria-selected="activeTab === 'diagnostics'"
-        @click="activeTab = 'diagnostics'"
-      >
-        <BarChart3 :size="15" />
-        <span>2. Sectores Críticos & Tiempos</span>
-      </button>
-
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'hierarchy' }"
-        role="tab"
-        :aria-selected="activeTab === 'hierarchy'"
-        @click="activeTab = 'hierarchy'"
-      >
-        <Layers :size="15" />
-        <span>3. Estructura Jerárquica</span>
-      </button>
-
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'audit' }"
-        role="tab"
-        :aria-selected="activeTab === 'audit'"
-        @click="activeTab = 'audit'"
-      >
-        <FileText :size="15" />
-        <span>4. Auditoría de Avisos</span>
-      </button>
+    <!-- KPIS COMPACTOS EN LÍNEA (1 sola fila) -->
+    <div v-if="territoryStore.data?.kpis" class="kpi-micro-row">
+      <div class="kpi-micro-chip">
+        <span class="chip-label">Torres Activas:</span>
+        <b class="chip-val">{{ territoryStore.data.kpis.equipos.toLocaleString() }}</b>
+      </div>
+      <div class="kpi-micro-chip">
+        <span class="chip-label">Municipios:</span>
+        <b class="chip-val">{{ territoryStore.data.kpis.mpios.toLocaleString() }}</b>
+      </div>
+      <div class="kpi-micro-chip">
+        <span class="chip-label">Cumplimiento:</span>
+        <b class="chip-val success-text">{{ territoryStore.data.kpis.cumple_pct }}%</b>
+      </div>
+      <div class="kpi-micro-chip danger-chip">
+        <span class="chip-label">Abiertos Vencidos:</span>
+        <b class="chip-val danger-text">{{ (territoryStore.data.kpis.abiertos_vencidos ?? 0).toLocaleString() }}</b>
+      </div>
     </div>
 
-    <!-- Contenedor de la Pestaña Activa (Viewport-Fit) -->
-    <div class="tab-content-container">
-      <div v-show="activeTab === 'map'" class="tab-pane">
+    <!-- ÁREA DE GRÁFICAS (VIEWPORT-FIT / CERO SCROLL) -->
+    <main class="chart-viewport-stage">
+      <!-- HOJA 1: Mapa Geográfico de Torres y Red (1 Sola Gran Vista) -->
+      <section v-show="activeSubView === 'map'" class="stage-pane single-pane">
         <HistoricalMapChart />
-      </div>
+      </section>
 
-      <div v-show="activeTab === 'diagnostics'" class="tab-pane">
+      <!-- HOJA 2: Exactamente 2 Gráficas (Ranking de Sectores + Boxplot de Tiempos) -->
+      <section v-show="activeSubView === 'bottlenecks'" class="stage-pane">
         <TerritoryDiagnosticsRow />
-      </div>
+      </section>
 
-      <div v-show="activeTab === 'hierarchy'" class="tab-pane grid-2">
+      <!-- HOJA 3: Exactamente 2 Gráficas Jerárquicas (Treemap + Sunburst) -->
+      <section v-show="activeSubView === 'hierarchy'" class="stage-pane dual-charts">
         <TreemapPanel />
         <SunburstPanel />
-      </div>
+      </section>
 
-      <div v-show="activeTab === 'audit'" class="tab-pane">
-        <section class="step-section">
-          <div class="step-title-bar">
-            <span class="badge badge-step">AUDITORÍA</span>
-            <b>Detalle de Avisos por Municipio, Sector y Línea</b>
-          </div>
-          <TicketsTable
-            v-if="territoryStore.data"
-            :tickets="territoryStore.data.tickets"
-            :total-matches="territoryStore.data.total_tickets_matching"
-          />
-        </section>
-      </div>
-    </div>
+      <!-- HOJA 4: Tabla de Auditoría (Dedicada y con scroll propio interno) -->
+      <section v-show="activeSubView === 'audit'" class="stage-pane audit-pane card">
+        <TicketsTable
+          v-if="territoryStore.data"
+          :tickets="territoryStore.data.tickets"
+          :total-matches="territoryStore.data.total_tickets_matching"
+        />
+      </section>
+    </main>
   </div>
 </template>
 
 <style scoped>
-.hierarchy-view {
+.viewport-clean-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
+  height: calc(100vh - 120px);
+  max-height: calc(100vh - 120px);
+  overflow: hidden; /* CERO SCROLL */
 }
 
-.view-header {
-  margin-bottom: 0px;
-}
-
-.header-inline {
+/* Barra Superior de Control */
+.compact-control-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
 }
 
-.view-title {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0;
-  letter-spacing: -0.3px;
+.brand-zone {
+  display: flex;
+  align-items: center;
 }
 
-.view-subtitle {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-
-/* Barra de Pestañas Tácticas */
-.tactical-tabs-nav {
+.minimal-filters {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--bg-subtle);
-  padding: 6px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  overflow-x: auto;
+  flex: 1;
+  max-width: 650px;
 }
 
-.tab-btn {
+.form-select-sm {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-reset-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-icon:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.subview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-subtle);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
   background: transparent;
   color: var(--text-secondary);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 600;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
-.tab-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-card-hover);
-}
-
-.tab-btn.active {
+.toggle-btn.active {
   background: var(--bg-card);
   color: var(--color-brand);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-subtle);
   font-weight: 700;
+  box-shadow: var(--shadow-sm);
 }
 
-.tab-content-container {
-  min-height: 480px;
+/* Micro KPIs */
+.kpi-micro-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.tab-pane {
-  animation: fadeIn 0.18s ease-in-out;
+.kpi-micro-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0.8;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.chip-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.chip-val {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.danger-chip {
+  border-color: var(--sla-danger-border);
+  background: var(--sla-danger-bg);
+}
+
+/* Escenario de Gráficas */
+.chart-viewport-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-pane.dual-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.audit-pane {
+  padding: 12px;
+  overflow-y: auto;
 }
 </style>
