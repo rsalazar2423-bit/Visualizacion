@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Palette, Sun, Moon } from 'lucide-vue-next';
+import { Palette, Sun, Moon, AlertTriangle, AlertOctagon } from 'lucide-vue-next';
 import { useThemeStore } from '../stores/themeStore';
 import {
   DEPTO_PALETTE,
@@ -11,11 +11,9 @@ import {
 import {
   SURFACE_TOKENS,
   SEMANTIC_TOKENS,
-  CATEGORICAL_TOKENS,
   DEPRECATED_COLORS,
 } from '../constants/designSystemCatalog';
 import SemanticTokensGrid from '../components/design/SemanticTokensGrid.vue';
-import CategoricalTokensGrid from '../components/design/CategoricalTokensGrid.vue';
 import SequentialRampsGrid from '../components/design/SequentialRampsGrid.vue';
 import SurfaceTokensTable from '../components/design/SurfaceTokensTable.vue';
 import DeprecatedColorsPanel from '../components/design/DeprecatedColorsPanel.vue';
@@ -39,52 +37,75 @@ function copyValue(val: string) {
       <div class="ds-hero-top">
         <div>
           <span class="badge">
-            <Palette :size="13" /> Gobernanza Visual & Arquitectura Cromática
+            <Palette :size="13" /> Gobernanza Oficial de Color
           </span>
-          <h1 class="ds-title">Sistema de Diseño y Paleta Oficial de Colores Permitidos</h1>
+          <h1 class="ds-title">Paleta de Colores Únicos Permitidos en EcoGrid</h1>
           <p class="ds-subtitle">
-            Manual normativo de color para <b>EcoGrid DEC</b>. Aplica la regla <b>60-30-10</b> y el principio de <b>Separación Semántica Estricta</b> para garantizar legibilidad ejecutiva en Tema Claro y Tema Oscuro.
+            Regla de oro: <b>ÚNICAMENTE se permiten la Rampa Base (Teal ➔ Azul ➔ Pizarra) + 1 ROJO de Alerta + 1 NARANJA de Advertencia.</b> Todos los demás colores están prohibidos y eliminados del sistema.
           </p>
         </div>
 
         <button class="btn ds-theme-btn" @click="themeStore.toggleTheme">
           <Moon v-if="themeStore.isDark" :size="16" />
           <Sun v-else :size="16" />
-          <span>Probar en {{ themeStore.isDark ? 'Tema Claro' : 'Tema Oscuro' }}</span>
+          <span>Ver en {{ themeStore.isDark ? 'Tema Claro' : 'Tema Oscuro' }}</span>
         </button>
       </div>
 
-      <!-- Regla 60-30-10 -->
-      <div class="rule-proportion-bar">
-        <div class="prop-segment prop-60">
-          <b>60% Superficies Neutras</b>
-          <span>Fondos Pizarra / Blanco / Obsidiana (Cero ruido visual)</span>
-        </div>
-        <div class="prop-segment prop-30">
-          <b>30% Estructura y Datos Base</b>
-          <span>Escalas secuenciales Teal / Cobalto / Índigo</span>
-        </div>
-        <div class="prop-segment prop-10">
-          <b>10% Semántico SLA</b>
-          <span>Éxito / Riesgo / Vencido</span>
+      <!-- Resumen Visual de los Únicos Colores Permitidos -->
+      <div class="palette-audit-summary card">
+        <h3 class="audit-title">Elenco Cromático Oficial Cerrado (8 Tonos Totales)</h3>
+        <div class="official-palette-strip">
+          <!-- Rampa Base: 6 Tonos -->
+          <div class="swatch-group">
+            <span class="group-title">Rampa Base (Datos / Jerarquías / Tipologías)</span>
+            <div class="swatch-row">
+              <div
+                v-for="(hex, idx) in (themeStore.isDark ? getSequentialTerritoryPalette(true) : DEPTO_PALETTE)"
+                :key="idx"
+                class="swatch-cell"
+                :style="{ backgroundColor: hex }"
+                :title="`Rampa ${idx + 1}: ${hex}`"
+                @click="copyValue(hex)"
+              >
+                <span>{{ idx + 1 }}</span>
+                <code>{{ hex }}</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rojo de Alerta -->
+          <div class="swatch-group alert-group">
+            <span class="group-title">Rojo (Alerta Crítica / Vencidos)</span>
+            <div
+              class="swatch-cell single-alert danger"
+              :style="{ backgroundColor: themeStore.isDark ? '#EF4444' : '#DC2626' }"
+              @click="copyValue(themeStore.isDark ? '#EF4444' : '#DC2626')"
+            >
+              <AlertOctagon :size="16" />
+              <span>ROJO ÚNICO</span>
+              <code>{{ themeStore.isDark ? '#EF4444' : '#DC2626' }}</code>
+            </div>
+          </div>
+
+          <!-- Naranja de Advertencia -->
+          <div class="swatch-group alert-group">
+            <span class="group-title">Naranja (Advertencia / Retraso)</span>
+            <div
+              class="swatch-cell single-alert warning"
+              :style="{ backgroundColor: themeStore.isDark ? '#F97316' : '#EA580C' }"
+              @click="copyValue(themeStore.isDark ? '#F97316' : '#EA580C')"
+            >
+              <AlertTriangle :size="16" />
+              <span>NARANJA ÚNICO</span>
+              <code>{{ themeStore.isDark ? '#F97316' : '#EA580C' }}</code>
+            </div>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- SECCIÓN 1: PALETA SEMÁNTICA ESTRICTA (SLA) -->
-    <SemanticTokensGrid
-      :tokens="SEMANTIC_TOKENS"
-      :copied-token="copiedToken"
-      :on-copy="copyValue"
-    />
-
-    <!-- SECCIÓN 2: PALETA CATEGÓRICA ARMÓNICA (TIPOS DE AVISO) -->
-    <CategoricalTokensGrid
-      :tokens="CATEGORICAL_TOKENS"
-      :on-copy="copyValue"
-    />
-
-    <!-- SECCIÓN 3: ESCALAS SECUENCIALES (TERRITORIOS Y PLAZOS) -->
+    <!-- SECCIÓN 1: RAMPA INSTITUCIONAL (LA BASE DE DATOS Y JERARQUÍAS) -->
     <SequentialRampsGrid
       :depto-palette-light="DEPTO_PALETTE"
       :depto-palette-dark="getSequentialTerritoryPalette(true)"
@@ -93,13 +114,20 @@ function copyValue(val: string) {
       :on-copy="copyValue"
     />
 
-    <!-- SECCIÓN 4: SUPERFICIES Y TOKENS DE TEMA CLARO / OSCURO -->
+    <!-- SECCIÓN 2: SEÑALÉTICA EXCLUSIVA (ROJO Y NARANJA) -->
+    <SemanticTokensGrid
+      :tokens="SEMANTIC_TOKENS"
+      :copied-token="copiedToken"
+      :on-copy="copyValue"
+    />
+
+    <!-- SECCIÓN 3: SUPERFICIES Y FONDOS NEUTROS -->
     <SurfaceTokensTable
       :tokens="SURFACE_TOKENS"
       :on-copy="copyValue"
     />
 
-    <!-- SECCIÓN 5: COLORES DESCARTADOS / PROHIBIDOS -->
+    <!-- SECCIÓN 4: COLORES PROHIBIDOS / DESCARTADOS (AUDITORÍA) -->
     <DeprecatedColorsPanel
       :colors="DEPRECATED_COLORS"
     />
@@ -110,80 +138,119 @@ function copyValue(val: string) {
 .design-system-view {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 }
 
 .ds-hero {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 28px;
+  gap: 16px;
+  padding: 22px;
 }
 
 .ds-hero-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .ds-title {
-  font-size: 1.85rem;
+  font-size: 1.65rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin: 10px 0 6px;
-  letter-spacing: -0.4px;
+  margin: 6px 0 4px;
 }
 
 .ds-subtitle {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: var(--text-secondary);
-  max-width: 820px;
-  line-height: 1.55;
+  margin: 0;
 }
 
-.ds-theme-btn {
-  white-space: nowrap;
-}
-
-.rule-proportion-bar {
-  display: grid;
-  grid-template-columns: 6fr 3fr 1.5fr;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border-strong);
-}
-
-.prop-segment {
-  padding: 12px 16px;
+.palette-audit-summary {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 0.78rem;
-}
-
-.prop-segment b {
-  font-size: 0.85rem;
-}
-
-.prop-60 {
+  gap: 12px;
+  padding: 16px;
   background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.audit-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.prop-30 {
-  background: #0F766E;
+.official-palette-strip {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 14px;
+}
+
+.swatch-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.group-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.swatch-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.swatch-cell {
+  height: 64px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   color: #FFFFFF;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 
-.prop-10 {
-  background: #DC2626;
-  color: #FFFFFF;
+.swatch-cell:hover {
+  transform: translateY(-2px);
 }
 
-@media (max-width: 1024px) {
-  .rule-proportion-bar {
+.swatch-cell code {
+  font-size: 0.68rem;
+  opacity: 0.9;
+  background: rgba(0,0,0,0.25);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.single-alert {
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 960px) {
+  .official-palette-strip {
     grid-template-columns: 1fr;
   }
 }
