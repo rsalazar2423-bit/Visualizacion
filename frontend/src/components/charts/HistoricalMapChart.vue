@@ -170,7 +170,34 @@ const OPERATIVE_DEPTOS = [
   'Valle Del Cauca',
 ];
 
+// Coordenadas de encuadre y zoom automático al seleccionar un departamento
+const DEPTO_GEO_VIEW: Record<string, { center: [number, number]; zoom: number }> = {
+  'Cauca': { center: [-76.84, 2.14], zoom: 4.2 },
+  'Valle Del Cauca': { center: [-76.63, 3.85], zoom: 5.2 },
+  'Caldas': { center: [-75.27, 5.29], zoom: 6.8 },
+  'Risaralda': { center: [-75.79, 5.12], zoom: 7.2 },
+  'Nariño': { center: [-77.72, 1.42], zoom: 4.4 },
+  'Boyacá': { center: [-73.31, 5.85], zoom: 3.8 },
+  'Cundinamarca': { center: [-73.97, 4.78], zoom: 4.8 },
+  'Bogotá, D.C.': { center: [-74.22, 4.28], zoom: 7.5 },
+  'Huila': { center: [-75.52, 2.70], zoom: 4.5 },
+  'Tolima': { center: [-75.28, 4.09], zoom: 4.4 },
+  'Quindío': { center: [-75.64, 4.40], zoom: 7.5 },
+  'Antioquia': { center: [-75.51, 7.15], zoom: 3.2 },
+  'Santander': { center: [-73.51, 6.93], zoom: 4.0 },
+};
+
+function getActiveGeoView(): { center: [number, number]; zoom: number } {
+  const depto = territoryStore.selectedDepto;
+  if (depto && DEPTO_GEO_VIEW[depto]) {
+    return DEPTO_GEO_VIEW[depto];
+  }
+  // Si no hay depto seleccionado, vista nacional de Colombia
+  return { center: [-74.8, 4.3], zoom: 1.25 };
+}
+
 function buildMapOption(tokens: any, isDark: boolean) {
+  const activeGeoView = getActiveGeoView();
   const pts = filteredPoints.value;
   const lines = territoryStore.data?.map_lines || [];
 
@@ -231,8 +258,8 @@ function buildMapOption(tokens: any, isDark: boolean) {
     geo: {
       map: 'colombia_red',
       roam: true,
-      center: [-74.8, 4.3],
-      zoom: 1.25,
+      center: activeGeoView.center,
+      zoom: activeGeoView.zoom,
       aspectScale: 0.88,
       label: {
         show: false,
@@ -255,21 +282,28 @@ function buildMapOption(tokens: any, isDark: boolean) {
           borderWidth: 1.8,
         },
       },
-      regions: OPERATIVE_DEPTOS.map((name) => ({
-        name,
-        itemStyle: {
-          areaColor: isDark ? '#162238' : '#E0E7FF',
-          borderColor: isDark ? '#334155' : '#94A3B8',
-          borderWidth: 1.2,
-        },
-        emphasis: {
+      regions: OPERATIVE_DEPTOS.map((name) => {
+        const isSelected = territoryStore.selectedDepto === name;
+        return {
+          name,
           itemStyle: {
-            areaColor: isDark ? '#1E3A5F' : '#C7D2FE',
-            borderColor: tokens.brandColor,
-            borderWidth: 2,
+            areaColor: isSelected
+              ? (isDark ? '#1E3A5F' : '#C7D2FE')
+              : (isDark ? '#162238' : '#E0E7FF'),
+            borderColor: isSelected
+              ? tokens.brandColor
+              : (isDark ? '#334155' : '#94A3B8'),
+            borderWidth: isSelected ? 2.5 : 1.2,
           },
-        },
-      })),
+          emphasis: {
+            itemStyle: {
+              areaColor: isDark ? '#1E3A5F' : '#C7D2FE',
+              borderColor: tokens.brandColor,
+              borderWidth: 2,
+            },
+          },
+        };
+      }),
     },
     series: [
       {
@@ -414,7 +448,15 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  () => [territoryStore.data, themeStore.isDark, selectedYear.value, timeMode.value, layerFilter.value],
+  () => [
+    territoryStore.data,
+    territoryStore.selectedDepto,
+    territoryStore.selectedMunicipio,
+    themeStore.isDark,
+    selectedYear.value,
+    timeMode.value,
+    layerFilter.value,
+  ],
   () => {
     renderMap();
     if (isModalOpen.value) {
