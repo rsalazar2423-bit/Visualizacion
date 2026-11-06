@@ -3,14 +3,20 @@ import { ref, computed, watch } from 'vue';
 import { Tag, X } from 'lucide-vue-next';
 import type * as echarts from 'echarts';
 import { useOperationsStore } from '../../stores/operationsStore';
-import { getEChartsThemeTokens } from '../../constants/themeTokens';
+import { useThemeStore } from '../../stores/themeStore';
+import { getEChartsThemeTokens, getTipoColor } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 import { formatDonutTooltip } from '../../utils/chartFormatters';
 
 const opsStore = useOperationsStore();
+const themeStore = useThemeStore();
 
 const donutItems = computed(() => {
-  return opsStore.data?.donut || [];
+  const raw = opsStore.data?.donut || [];
+  return raw.map((item) => ({
+    ...item,
+    color: getTipoColor(item.name, themeStore.isDark),
+  }));
 });
 
 function handleTipoClick(name: string) {
@@ -30,19 +36,17 @@ function renderDonut(chartInstance: echarts.ECharts, isDark: boolean) {
   const chartData = items.map((i) => {
     const isSelected = opsStore.isTipoSelected(i.name);
     const isAnySelected = opsStore.selectedTipos.length > 0;
-    const opacity = !isAnySelected || isSelected ? 1 : 0.35;
+    const opacity = !isAnySelected || isSelected ? 1 : 0.32;
+    const resolvedColor = getTipoColor(i.name, isDark);
 
     return {
       name: i.name,
       value: i.value,
       itemStyle: {
-        color: i.color,
-        opacity: opacity,
-        borderColor: isSelected ? '#F59E0B' : (isDark ? '#131D28' : '#FFFFFF'),
+        color: resolvedColor,
+        opacity,
+        borderColor: isSelected ? tokens.accentSelect : tokens.cardBg,
         borderWidth: isSelected ? 3 : 2,
-        shadowBlur: isSelected ? 20 : 14,
-        shadowOffsetY: isSelected ? 10 : 8,
-        shadowColor: isSelected ? 'rgba(245, 158, 11, 0.5)' : (isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(0, 0, 0, 0.15)'),
       },
     };
   });
@@ -58,7 +62,6 @@ function renderDonut(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily },
       formatter: (params: any) => formatDonutTooltip(params, total, tokens),
     },
-    // Omitimos la leyenda de canvas estática para usar botones interactivos legibles al lado
     legend: {
       show: false,
     },
@@ -66,17 +69,13 @@ function renderDonut(chartInstance: echarts.ECharts, isDark: boolean) {
       {
         name: 'Tipo de Aviso',
         type: 'pie',
-        radius: ['52%', '80%'],
+        radius: ['52%', '78%'],
         center: ['50%', '50%'],
         avoidLabelOverlap: true,
         itemStyle: {
-          borderRadius: 8,
-          borderColor: isDark ? '#131D28' : '#FFFFFF',
+          borderRadius: 6,
+          borderColor: tokens.cardBg,
           borderWidth: 2,
-          shadowBlur: 14,
-          shadowOffsetX: 0,
-          shadowOffsetY: 8,
-          shadowColor: isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(0, 0, 0, 0.15)',
         },
         label: {
           show: false,
@@ -84,10 +83,10 @@ function renderDonut(chartInstance: echarts.ECharts, isDark: boolean) {
         },
         emphasis: {
           scale: true,
-          scaleSize: 8,
+          scaleSize: 6,
           label: {
             show: true,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: 'bold',
             color: tokens.textColor,
             fontFamily: tokens.fontFamily,
@@ -132,7 +131,7 @@ watch(() => [opsStore.data, opsStore.selectedTipos], () => render(), { deep: tru
     <!-- Canvas de 100% de Ancho -->
     <div ref="chartContainer" class="chart-canvas-full"></div>
 
-    <!-- Barra de Identificación de Colores / Leyenda Interactiva Abajo -->
+    <!-- Leyenda Interactiva Abajo -->
     <div class="chart-legend-container">
       <div class="chart-legend-header">
         <span>Tipos de Aviso Registrados</span>
@@ -172,8 +171,8 @@ watch(() => [opsStore.data, opsStore.selectedTipos], () => render(), { deep: tru
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: var(--color-brand-soft);
+  border: 1px solid var(--color-brand);
   border-radius: var(--radius-sm, 6px);
   padding: 6px 12px;
   margin-bottom: 8px;
@@ -181,24 +180,29 @@ watch(() => [opsStore.data, opsStore.selectedTipos], () => render(), { deep: tru
 
 .active-badge {
   font-size: 0.8rem;
-  color: var(--color-emerald);
+  color: var(--color-brand);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-clear-tipo {
   background: transparent;
-  border: 1px solid rgba(16, 185, 129, 0.5);
-  color: var(--color-emerald);
+  border: 1px solid var(--color-brand);
+  color: var(--color-brand);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 4px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transition: all var(--transition-fast);
 }
 
 .btn-clear-tipo:hover {
-  background: var(--color-emerald);
+  background: var(--color-brand);
   color: #ffffff;
 }
 </style>
-

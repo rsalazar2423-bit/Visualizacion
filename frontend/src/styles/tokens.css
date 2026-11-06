@@ -1,78 +1,154 @@
 :root {
-  /* Paleta Oficial EcoGrid (Clean-Tech & Biodiversidad DEC) */
-  --color-forest: #05261F;
-  --color-emerald: #0D9763;
-  --color-mint: #0D9763;
-  --color-mint-light: #E7FAF2;
-  --color-electric: #84CC16;
-  --color-amber: #D97706;
-  --color-amber-light: #F59E0B;
-  --color-terracotta: #E11D48;
-  --color-cyan: #0284C7;
-  --color-violet: #8B5CF6;
-  
-  /* Fuentes */
-  --font-family: 'Inter', system-ui, Arial, sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
+  /* Tipografía Técnica & Ejecutiva */
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* --- TEMA CLARO (SINCRONIZADO 100% CON LOGO LIGHT) --- */
-  --bg-app: #F4F8F6;
-  --bg-main: #F4F8F6;
+  /* =========================================================================
+     1. TEMA CLARO (EDITORIAL CLEAN) — Superficies Neutras (85% del lienzo)
+     ========================================================================= */
+  --bg-app: #F8FAFC;
+  --bg-main: #F8FAFC;
   --bg-card: #FFFFFF;
-  --bg-card-hover: #EEF7F3;
+  --bg-subtle: #F1F5F9;
+  --bg-card-hover: #F1F5F9;
   --bg-drawer: #FFFFFF;
   --bg-input: #FFFFFF;
-  --bg-table-header: #E7FAF2;
-  --bg-table-stripe: #F9FCFA;
-  --bg-table-hover: #EEF7F3;
+  --bg-table-header: #F1F5F9;
+  --bg-table-stripe: #F8FAFC;
+  --bg-table-hover: #F1F5F9;
 
-  --text-primary: #05261F;
-  --text-secondary: #4B6358;
+  /* Jerarquía de Texto */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
   --text-muted: #64748B;
   --text-light: #FFFFFF;
 
-  --border-subtle: #DCEBE3;
-  --border-focus: #0D9763;
+  /* Bordes y Elevación */
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-focus: #0D9488;
 
-  --shadow-sm: 0 2px 8px rgba(5, 38, 31, 0.04);
-  --shadow-md: 0 4px 18px rgba(5, 38, 31, 0.07);
-  --shadow-lg: 0 10px 25px rgba(5, 38, 31, 0.1);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.07), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.1), 0 4px 10px rgba(15, 23, 42, 0.05);
 
+  /* =========================================================================
+     2. IDENTIDAD DE MARCA ECOGRID DEC (Sobria: Teal Institucional & Azul Acero)
+     ========================================================================= */
+  --color-brand: #0D9488;
+  --color-brand-hover: #0F766E;
+  --color-brand-soft: rgba(13, 148, 136, 0.1);
+  --color-accent: #1D4ED8;
+  --color-accent-soft: rgba(29, 78, 216, 0.1);
+
+  /* =========================================================================
+     3. PALETA SEMÁNTICA ESTRICTA (EXCLUSIVA PARA CUMPLIMIENTO SLA Y ALERTAS)
+     ========================================================================= */
+  /* Cumple Plazo / Oportuno */
+  --sla-success: #059669;
+  --sla-success-bg: rgba(5, 150, 105, 0.11);
+  --sla-success-border: rgba(5, 150, 105, 0.28);
+
+  /* En Seguimiento / Precaución (Tiempo Típico / Abiertos en plazo) */
+  --sla-warning: #D97706;
+  --sla-warning-bg: rgba(217, 119, 6, 0.11);
+  --sla-warning-border: rgba(217, 119, 6, 0.28);
+
+  /* Excede Plazo / Abierto Vencido (Alerta Crítica) */
+  --sla-danger: #DC2626;
+  --sla-danger-bg: rgba(220, 38, 38, 0.11);
+  --sla-danger-border: rgba(220, 38, 38, 0.28);
+
+  /* Informativo / Volumen Activo */
+  --sla-info: #1D4ED8;
+  --sla-info-bg: rgba(29, 78, 216, 0.11);
+  --sla-info-border: rgba(29, 78, 216, 0.28);
+
+  /* =========================================================================
+     4. PALETA CATEGÓRICA ACOTADA (TIPOS DE AVISO — Sin colisión con SLA)
+     ========================================================================= */
+  --cat-1: #0F766E; /* Vegetación: Teal Profundo */
+  --cat-2: #1D4ED8; /* Construcciones: Azul Cobalto */
+  --cat-3: #0284C7; /* Obras: Azul Acero */
+  --cat-4: #4338CA; /* Permiso Ingreso: Índigo Técnico */
+  --cat-5: #B45309; /* Invasión / Explanación: Ocre Tierra */
+  --cat-6: #64748B; /* Otros: Pizarra Neutro */
+
+  /* Geometría y Transiciones */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-lg: 14px;
   --radius-full: 9999px;
 
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
+  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme="dark"] {
-  /* --- TEMA OSCURO (SINCRONIZADO 100% CON LOGO DARK #091928) --- */
-  --bg-app: #050E17;
-  --bg-main: #050E17;
-  --bg-card: #091928;
-  --bg-card-hover: #0F2338;
-  --bg-drawer: #061320;
-  --bg-input: #0D2032;
-  --bg-table-header: #0D2032;
-  --bg-table-stripe: #091928;
-  --bg-table-hover: #142B42;
+  /* =========================================================================
+     1. TEMA OSCURO (CONTROL ROOM SLATE) — Superficies Obsidiana y Pizarra
+     ========================================================================= */
+  --bg-app: #0B0F19;
+  --bg-main: #0B0F19;
+  --bg-card: #111827;
+  --bg-subtle: #1E293B;
+  --bg-card-hover: #1E293B;
+  --bg-drawer: #0F172A;
+  --bg-input: #1E293B;
+  --bg-table-header: #1E293B;
+  --bg-table-stripe: #111827;
+  --bg-table-hover: #1E293B;
 
-  --color-mint: #10B981;
-  --color-mint-light: rgba(16, 185, 129, 0.15);
-  --color-amber: #F59E0B;
-  --color-terracotta: #F43F5E;
-
-  --text-primary: #FFFFFF;
-  --text-secondary: #8AA4B8;
+  /* Jerarquía de Texto */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
   --text-muted: #64748B;
   --text-light: #FFFFFF;
 
-  --border-subtle: #142B42;
-  --border-focus: #10B981;
+  /* Bordes y Elevación */
+  --border-subtle: #1F2937;
+  --border-strong: #334155;
+  --border-focus: #2DD4BF;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 14px 32px rgba(0, 0, 0, 0.6);
+
+  /* =========================================================================
+     2. IDENTIDAD DE MARCA ECOGRID DEC (Modo Oscuro)
+     ========================================================================= */
+  --color-brand: #14B8A6;
+  --color-brand-hover: #2DD4BF;
+  --color-brand-soft: rgba(20, 184, 166, 0.14);
+  --color-accent: #60A5FA;
+  --color-accent-soft: rgba(96, 165, 250, 0.14);
+
+  /* =========================================================================
+     3. PALETA SEMÁNTICA ESTRICTA (Modo Oscuro)
+     ========================================================================= */
+  --sla-success: #10B981;
+  --sla-success-bg: rgba(16, 185, 129, 0.15);
+  --sla-success-border: rgba(16, 185, 129, 0.32);
+
+  --sla-warning: #F59E0B;
+  --sla-warning-bg: rgba(245, 158, 11, 0.15);
+  --sla-warning-border: rgba(245, 158, 11, 0.32);
+
+  --sla-danger: #F43F5E;
+  --sla-danger-bg: rgba(244, 63, 94, 0.15);
+  --sla-danger-border: rgba(244, 63, 94, 0.32);
+
+  --sla-info: #60A5FA;
+  --sla-info-bg: rgba(96, 165, 250, 0.15);
+  --sla-info-border: rgba(96, 165, 250, 0.32);
+
+  /* =========================================================================
+     4. PALETA CATEGÓRICA ACOTADA (Modo Oscuro)
+     ========================================================================= */
+  --cat-1: #2DD4BF; /* Vegetación */
+  --cat-2: #60A5FA; /* Construcciones */
+  --cat-3: #38BDF8; /* Obras */
+  --cat-4: #818CF8; /* Permiso Ingreso */
+  --cat-5: #FB923C; /* Invasión / Explanación */
+  --cat-6: #94A3B8; /* Otros */
 }

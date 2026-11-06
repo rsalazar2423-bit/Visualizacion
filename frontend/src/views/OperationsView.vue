@@ -18,10 +18,10 @@ onMounted(async () => {
   <div class="operations-view">
     <!-- Header -->
     <header class="view-header">
-      <div class="badge badge-tag">Módulo Operativo · EcoGrid DEC</div>
-      <h1 class="view-title">Tablero 1: Eficiencia Operativa y Tiempos de Resolución</h1>
+      <div class="badge badge-tag">Vista 01 · EcoGrid DEC</div>
+      <h1 class="view-title">Seguimiento de la Gestión Operativa y Cumplimiento de SLA</h1>
       <p class="view-subtitle">
-        Supervisión de cumplimiento de SLA, tiempos promedio de apertura y desglose por tipología de aviso.
+        Estado general de la operación (abiertos vs. cerrados, a tiempo vs. vencidos), evolución temporal de ingresos frente a cierres y cumplimiento por prioridad.
       </p>
     </header>
 
@@ -31,10 +31,10 @@ onMounted(async () => {
     <!-- Selección Rápida por Tipología (Multi-Selección Interactiva) -->
     <TypologyFilterPills />
 
-    <!-- Paso 2: Indicadores de Gestión y Cumplimiento de SLA -->
+    <!-- Paso 2: 4 Indicadores Principales (KPIs del Documento Rector) -->
     <OperationsKpiGrid />
 
-    <!-- Paso 3: Gráficos Analíticos -->
+    <!-- Paso 3: Gráficos Analíticos (Evolución Temporal + 100% Stacked SLA + Donut) -->
     <OperationsChartsGrid />
   </div>
 </template>

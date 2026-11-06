@@ -3,11 +3,13 @@ import { ref, computed, watch } from 'vue';
 import { Target, Clock } from 'lucide-vue-next';
 import type * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
-import { getEChartsThemeTokens } from '../../constants/themeTokens';
+import { useThemeStore } from '../../stores/themeStore';
+import { getEChartsThemeTokens, getTipoColor, getSlaColors } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 import { formatSunburstTooltip } from '../../utils/chartFormatters';
 
 const territoryStore = useTerritoryStore();
+const themeStore = useThemeStore();
 const mode = ref<'sla' | 'plazos'>('sla');
 
 function setMode(m: 'sla' | 'plazos') {
@@ -15,9 +17,9 @@ function setMode(m: 'sla' | 'plazos') {
   render();
 }
 
-// Extraer tipologías y sus métricas para los botones laterales
 const sunburstCategories = computed(() => {
   if (!territoryStore.data?.sunburst) return [];
+  const sla = getSlaColors(themeStore.isDark);
   const raw = mode.value === 'sla'
     ? (territoryStore.data.sunburst_sla || territoryStore.data.sunburst)
     : (territoryStore.data.sunburst_plazos || territoryStore.data.sunburst);
@@ -34,13 +36,17 @@ const sunburstCategories = computed(() => {
       name: cat.name,
       value: catTotal,
       pct,
-      color: cat.itemStyle?.color || '#38BDF8',
-      children: (cat.children || []).map((ch: any) => ({
-        name: ch.name,
-        value: ch.value,
-        pct: catTotal > 0 ? Number(((ch.value / catTotal) * 100).toFixed(1)) : 0,
-        color: ch.itemStyle?.color || '#10B981',
-      })),
+      color: getTipoColor(cat.name, themeStore.isDark),
+      children: (cat.children || []).map((ch: any) => {
+        const isCumple = String(ch.name).startsWith('Cumple');
+        const isExcede = String(ch.name).startsWith('Excede');
+        return {
+          name: ch.name,
+          value: ch.value,
+          pct: catTotal > 0 ? Number(((ch.value / catTotal) * 100).toFixed(1)) : 0,
+          color: isCumple ? sla.cumple : isExcede ? sla.excede : (ch.itemStyle?.color || sla.neutral),
+        };
+      }),
     };
   });
 });
@@ -49,9 +55,24 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
   if (!territoryStore.data?.sunburst) return;
 
   const tokens = getEChartsThemeTokens(isDark);
-  const sunburstData = mode.value === 'sla'
+  const rawData = mode.value === 'sla'
     ? (territoryStore.data.sunburst_sla || territoryStore.data.sunburst)
     : (territoryStore.data.sunburst_plazos || territoryStore.data.sunburst);
+
+  const sunburstData = rawData.map((cat) => ({
+    ...cat,
+    itemStyle: { color: getTipoColor(cat.name, isDark) },
+    children: (cat.children || []).map((ch) => {
+      const isCumple = String(ch.name).startsWith('Cumple');
+      const isExcede = String(ch.name).startsWith('Excede');
+      return {
+        ...ch,
+        itemStyle: {
+          color: isCumple ? tokens.sla.cumple : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
+        },
+      };
+    }),
+  }));
 
   const totalAvisos = sunburstData.reduce((acc, curr) => {
     const sumChild = (curr.children || []).reduce((cAcc, cCurr) => cAcc + (cCurr.value || 0), 0);
@@ -74,7 +95,7 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
       {
         type: 'sunburst',
         data: sunburstData,
-        radius: ['16%', '92%'],
+        radius: ['18%', '90%'],
         nodeClick: 'rootToNode',
         sort: undefined,
         emphasis: {
@@ -83,24 +104,17 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
         levels: [
           {},
           {
-            // Nivel 1: Tipo de Aviso (Anillo Interior Satinado)
             r0: '18%',
             r: '52%',
             itemStyle: {
-              borderWidth: 1.5,
-              borderColor: isDark ? '#091522' : '#FFFFFF',
+              borderWidth: 2,
+              borderColor: tokens.cardBg,
               borderRadius: 3,
-              shadowBlur: 6,
-              shadowOffsetY: 2,
-              shadowColor: isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.08)',
             },
             emphasis: {
               itemStyle: {
-                borderColor: '#F59E0B',
+                borderColor: tokens.accentSelect,
                 borderWidth: 2.5,
-                shadowBlur: 14,
-                shadowOffsetY: 2,
-                shadowColor: 'rgba(245, 158, 11, 0.4)',
               },
             },
             label: {
@@ -108,24 +122,17 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
             },
           },
           {
-            // Nivel 2: Prioridad / Plazos (Anillo Exterior Satinado)
             r0: '54%',
             r: '90%',
             itemStyle: {
               borderWidth: 1.5,
-              borderColor: isDark ? '#091522' : '#FFFFFF',
+              borderColor: tokens.cardBg,
               borderRadius: 2,
-              shadowBlur: 6,
-              shadowOffsetY: 2,
-              shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.06)',
             },
             emphasis: {
               itemStyle: {
-                borderColor: '#38BDF8',
-                borderWidth: 2.5,
-                shadowBlur: 12,
-                shadowOffsetY: 2,
-                shadowColor: 'rgba(56, 189, 248, 0.4)',
+                borderColor: tokens.accentSelect,
+                borderWidth: 2,
               },
             },
             label: {
@@ -174,7 +181,7 @@ watch(() => territoryStore.data, () => render(), { deep: true });
     <!-- Canvas de 100% de Ancho -->
     <div ref="chartContainer" class="chart-canvas-full"></div>
 
-    <!-- Barra de Identificación de Colores / Leyenda Interactiva Abajo -->
+    <!-- Leyenda Abajo -->
     <div class="chart-legend-container">
       <div class="chart-legend-header">
         <span>Distribución por Tipología</span>
@@ -194,7 +201,6 @@ watch(() => territoryStore.data, () => render(), { deep: true });
             <small>({{ cat.pct }}%)</small>
           </span>
 
-          <!-- Sub-indicadores de Cumplimiento -->
           <template v-if="mode === 'sla'">
             <span
               v-for="child in cat.children"
@@ -248,71 +254,20 @@ watch(() => territoryStore.data, () => render(), { deep: true });
   padding: 5px 12px;
   border-radius: 20px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   transition: all var(--transition-fast);
 }
 
 .btn-mode:hover {
-  border-color: var(--color-emerald);
+  border-color: var(--color-brand);
   color: var(--text-primary);
 }
 
 .btn-mode.active {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: var(--color-emerald);
-  color: var(--color-emerald);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
-}
-
-/* Card contenedora por categoría en el panel lateral */
-.sunburst-cat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed var(--border-subtle);
-}
-
-.sunburst-cat-card:last-child {
-  border-bottom: none;
-}
-
-.cat-children-list {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-left: 10px;
-}
-
-.cat-child-pill {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--border-subtle);
-}
-
-.child-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.child-name {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.child-count {
-  font-weight: 700;
-  color: var(--text-primary);
+  background: var(--color-brand-soft);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
 }
 </style>
-

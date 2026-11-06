@@ -20,23 +20,60 @@ def calc_operational_kpis(df: pd.DataFrame) -> KpiDict:
 
     Retorna valores numéricos puros:
     - total (int): cantidad total de avisos
-    - cumple_pct (float): porcentaje de cumplimiento [0-100]
+    - cumple_pct (float): porcentaje de cumplimiento global [0-100]
     - excede (int): cantidad que excede plazo
     - dias_prom (float | None): promedio de días abierto
+    - cumplimiento_oportuno_pct (float): % de avisos cerrados dentro de plazo (KPI 1 Word)
+    - avisos_abiertos (int): cantidad de avisos pendientes de cierre (KPI 2 Word)
+    - abiertos_vencidos (int): cantidad de avisos abiertos cuyo plazo ya se superó (KPI 3 Word)
+    - tiempo_tipico_mediana (float | None): mediana de duración de avisos cerrados en días (KPI 4 Word)
+    - avisos_cerrados (int): cantidad de avisos cerrados
     """
     total = len(df)
     if total == 0:
-        return {"total": 0, "cumple_pct": 0.0, "excede": 0, "dias_prom": None}
+        return {
+            "total": 0,
+            "cumple_pct": 0.0,
+            "excede": 0,
+            "dias_prom": None,
+            "cumplimiento_oportuno_pct": 0.0,
+            "avisos_abiertos": 0,
+            "abiertos_vencidos": 0,
+            "tiempo_tipico_mediana": None,
+            "avisos_cerrados": 0,
+        }
 
     cumple_count = int((df["Cumplimiento_Estado"] == "Cumple Plazo").sum())
     dias_prom_raw = df["Días abierto"].dropna().mean()
     dias_prom = round(float(dias_prom_raw), 1) if pd.notna(dias_prom_raw) else None
+
+    if "Estado aviso" in df.columns:
+        df_cerrados = df[df["Estado aviso"] == "Cerrado"]
+        df_abiertos = df[df["Estado aviso"] == "Abierto"]
+    else:
+        df_cerrados = df
+        df_abiertos = df.iloc[0:0]
+
+    cerrados_count = len(df_cerrados)
+    abiertos_count = len(df_abiertos)
+    cerrados_cumple = int((df_cerrados["Cumplimiento_Estado"] == "Cumple Plazo").sum()) if cerrados_count > 0 else 0
+    cumplimiento_oportuno_pct = round(cerrados_cumple / cerrados_count * 100, 1) if cerrados_count > 0 else 0.0
+    abiertos_vencidos = int((df_abiertos["Cumplimiento_Estado"] == "Excede Plazo").sum()) if abiertos_count > 0 else 0
+
+    mediana_source = df_cerrados["Días abierto"].dropna() if cerrados_count > 0 else df["Días abierto"].dropna()
+    mediana_raw = mediana_source.median() if len(mediana_source) > 0 else None
+    tiempo_tipico_mediana = round(float(mediana_raw), 1) if pd.notna(mediana_raw) else None
 
     return {
         "total": total,
         "cumple_pct": round(cumple_count / total * 100, 1),
         "excede": total - cumple_count,
         "dias_prom": dias_prom,
+        "cumplimiento_oportuno_pct": cumplimiento_oportuno_pct,
+        "avisos_abiertos": abiertos_count,
+        "abiertos_vencidos": abiertos_vencidos,
+        "tiempo_tipico_mediana": tiempo_tipico_mediana,
+        "avisos_cerrados": cerrados_count,
     }
 
 

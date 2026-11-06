@@ -55,8 +55,8 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--color-brand-soft);
+  border: 1px solid rgba(13, 148, 136, 0.25);
   border-radius: var(--radius-sm, 6px);
   padding: 5px 10px;
 }
@@ -69,9 +69,9 @@
 
 .filter-pill {
   font-size: 0.76rem;
-  background: rgba(245, 158, 11, 0.15);
-  color: #F59E0B;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: var(--sla-info-bg);
+  color: var(--sla-info);
+  border: 1px solid var(--sla-info-border);
   border-radius: 4px;
   padding: 2px 7px;
 }
@@ -79,8 +79,8 @@
 /* ---- Inline Clear Buttons ---- */
 .btn-clear-inline {
   background: transparent;
-  border: 1px solid rgba(244, 63, 94, 0.4);
-  color: #F43F5E;
+  border: 1px solid var(--sla-danger-border);
+  color: var(--sla-danger);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -90,13 +90,13 @@
 }
 
 .btn-clear-inline:hover {
-  background: rgba(244, 63, 94, 0.15);
+  background: var(--sla-danger-bg);
 }
 
 .btn-clear-tag {
   background: transparent;
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  color: #F59E0B;
+  border: 1px solid var(--sla-info-border);
+  color: var(--sla-info);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 4px 10px;
@@ -106,8 +106,8 @@
 }
 
 .btn-clear-tag:hover {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: #F59E0B;
+  background: var(--sla-info-bg);
+  border-color: var(--sla-info);
 }
 
 /* ---- Status Display ---- */
@@ -121,9 +121,9 @@
 .badge-active-territory {
   font-size: 0.78rem;
   padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: var(--color-emerald);
+  background: var(--color-brand-soft);
+  border: 1px solid var(--color-brand);
+  color: var(--color-brand);
 }
 
 /* ---- Responsive ---- */
@@ -192,14 +192,14 @@
 
 .legend-chip:hover {
   background: var(--bg-card-hover);
-  border-color: var(--color-emerald);
+  border-color: var(--color-brand);
   transform: translateY(-1px);
 }
 
 .legend-chip.active {
-  border-color: #F59E0B;
-  background: rgba(245, 158, 11, 0.12);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
   color: var(--text-primary);
 }
 
@@ -241,13 +241,13 @@
 }
 
 .legend-chip-badge.cumple {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--color-emerald);
+  background: var(--sla-success-bg);
+  color: var(--sla-success);
 }
 
 .legend-chip-badge.excede {
-  background: rgba(244, 63, 94, 0.15);
-  color: #F43F5E;
+  background: var(--sla-danger-bg);
+  color: var(--sla-danger);
 }
 
 /* ---- Chart Header & Analytical Reseña Block ---- */
@@ -282,15 +282,15 @@
   line-height: 1.55;
   color: var(--text-secondary);
   padding: 8px 14px;
-  background: rgba(13, 151, 99, 0.05);
-  border-left: 3px solid var(--color-emerald);
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--color-brand);
   border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
   margin: 0;
 }
 
 [data-theme="dark"] .chart-reseña {
-  background: rgba(16, 185, 129, 0.08);
-  color: #94A3B8;
-  border-left-color: #10B981;
+  background: rgba(30, 41, 59, 0.65);
+  color: var(--text-secondary);
+  border-left-color: var(--color-brand);
 }
 

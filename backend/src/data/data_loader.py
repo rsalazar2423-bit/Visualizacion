@@ -9,10 +9,15 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 from typing import Any, Dict, Tuple
 import pandas as pd
 
 DATA_DIR = Path(__file__).resolve().parent
+ROOT_DIR = DATA_DIR.parent.parent.parent
+VENV_SITE = ROOT_DIR / ".venv" / "lib" / "python3.14" / "site-packages"
+if VENV_SITE.exists() and str(VENV_SITE) not in sys.path:
+    sys.path.append(str(VENV_SITE))
 
 EQUIPOS_PATH = DATA_DIR / "equipos_proc.xlsx"
 AVISOS_PATH = DATA_DIR / "histórico_filtrado_proc.xlsx"
@@ -58,10 +63,26 @@ def clean_and_prepare_datasets(
     df_equipos["CTE"] = df_equipos["CTE"].fillna("Sin Asignar").astype(str).str.strip()
     df_equipos["Departamento"] = df_equipos["Departamento"].fillna("No Identificado").astype(str).str.strip()
     df_equipos["Municipio"] = df_equipos["Municipio"].fillna("No Identificado").astype(str).str.strip()
+    if "Linea" in df_equipos.columns:
+        df_equipos["Linea"] = df_equipos["Linea"].fillna("Sin Línea").astype(str).str.strip()
+    if "Torre" in df_equipos.columns:
+        df_equipos["Torre"] = df_equipos["Torre"].fillna("S/T").astype(str).str.strip()
+    if "Latitud" in df_equipos.columns:
+        df_equipos["Latitud"] = pd.to_numeric(df_equipos["Latitud"], errors="coerce")
+    if "Longitud" in df_equipos.columns:
+        df_equipos["Longitud"] = pd.to_numeric(df_equipos["Longitud"], errors="coerce")
 
     # 3. Rellenar nulos y normalizar espacios en avisos
     df_avisos["Tipo de aviso"] = df_avisos["Tipo de aviso"].fillna("Otros").astype(str).str.strip()
     df_avisos["Prioridad"] = df_avisos["Prioridad"].fillna("Media").astype(str).str.strip()
+    if "Estado aviso" in df_avisos.columns:
+        df_avisos["Estado aviso"] = df_avisos["Estado aviso"].fillna("Abierto").astype(str).str.strip()
+    else:
+        df_avisos["Estado aviso"] = "Cerrado"
+    if "Sector" in df_avisos.columns:
+        df_avisos["Sector"] = df_avisos["Sector"].fillna("No Identificado").astype(str).str.strip()
+    else:
+        df_avisos["Sector"] = "No Identificado"
 
     # 4. Categorización analítica de cumplimiento de plazo (SLA)
     if "Cumple prioridad días" in df_avisos.columns:

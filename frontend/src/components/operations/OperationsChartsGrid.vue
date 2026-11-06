@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Target, PieChart, X } from 'lucide-vue-next';
+import { Target, PieChart, TrendingUp, X } from 'lucide-vue-next';
 import { useOperationsStore } from '../../stores/operationsStore';
+import TimeEvolutionChart from '../charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../charts/StackedBarChart.vue';
 import DonutChart from '../charts/DonutChart.vue';
 
@@ -11,9 +12,28 @@ const opsStore = useOperationsStore();
   <section class="step-section">
     <div class="step-title-bar">
       <span class="badge badge-step">PASO 3</span>
-      <b>Distribución Visual de SLA y Categorías</b>
+      <b>Evolución Temporal, Cumplimiento por Prioridad y Composición</b>
     </div>
 
+    <!-- Fila 1: Evolución Histórica Ingresos vs. Cierres -->
+    <div class="card">
+      <div class="chart-header-block">
+        <div class="header-main-row">
+          <div class="title-with-badge">
+            <span class="badge">
+              <TrendingUp :size="13" /> Dinámica Operativa
+            </span>
+            <h3 class="card-title">Evolución de Avisos Ingresados vs. Cerrados y Cumplimiento</h3>
+          </div>
+        </div>
+        <p class="chart-reseña">
+          Comportamiento histórico de la demanda de incidentes frente a la capacidad de cierre anual, permitiendo identificar periodos de acumulación de trabajo (backlog) y cambios en el tiempo típico de respuesta.
+        </p>
+      </div>
+      <TimeEvolutionChart />
+    </div>
+
+    <!-- Fila 2: Cumplimiento por Prioridad (100% Apilada) + Composición por Tipología -->
     <div class="grid-2">
       <!-- Tarjeta 1: Gráfico de Cumplimiento de Plazo (SLA) -->
       <div class="card">
@@ -21,9 +41,9 @@ const opsStore = useOperationsStore();
           <div class="header-main-row">
             <div class="title-with-badge">
               <span class="badge badge-tag">
-                <Target :size="13" /> Eficiencia Operativa
+                <Target :size="13" /> Compromisos SLA
               </span>
-              <h3 class="card-title">Cumplimiento de Plazo por Prioridad (SLA)</h3>
+              <h3 class="card-title">Cumplimiento de Plazo por Prioridad (100%)</h3>
             </div>
             <button
               v-if="opsStore.selectedPrioridad"
@@ -35,7 +55,7 @@ const opsStore = useOperationsStore();
           </div>
 
           <p class="chart-reseña">
-            Evaluación porcentual acumulada (100% apilada) del cumplimiento de tiempos de respuesta: contraste entre atención oportuna (Cumple) y morosidad (Excede) en cada nivel de criticidad técnica.
+            Comparación porcentual al 100% entre atención oportuna (Cumple) e incumplimiento (Excede) según el horizonte de prioridad asignado al aviso.
           </p>
         </div>
         <StackedBarChart />
@@ -61,7 +81,7 @@ const opsStore = useOperationsStore();
           </div>
 
           <p class="chart-reseña">
-            Participación relativa de cada factor de afectación a la red de transmisión (Vegetación, Construcciones, Obras Civiles y Permisos de Ingreso) sobre el total de tickets gestionados.
+            Participación relativa de cada factor técnico sobre la red de transmisión (Vegetación, Construcciones, Obras, Permisos e Invasión de servidumbre).
           </p>
         </div>
         <DonutChart />
@@ -69,4 +89,3 @@ const opsStore = useOperationsStore();
     </div>
   </section>
 </template>
-

@@ -1,8 +1,20 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Zap, Lightbulb, Globe, Check, X } from 'lucide-vue-next';
 import { useOperationsStore } from '../../stores/operationsStore';
+import { useThemeStore } from '../../stores/themeStore';
+import { getTipoColor } from '../../constants/themeTokens';
 
 const opsStore = useOperationsStore();
+const themeStore = useThemeStore();
+
+const catalogItems = computed(() => {
+  const raw = opsStore.data?.tipos_catalogo || opsStore.data?.donut || [];
+  return raw.map((item) => ({
+    ...item,
+    color: getTipoColor(item.name, themeStore.isDark),
+  }));
+});
 </script>
 
 <template>
@@ -45,14 +57,14 @@ const opsStore = useOperationsStore();
       </button>
 
       <button
-        v-for="item in (opsStore.data?.tipos_catalogo || opsStore.data?.donut || [])"
+        v-for="item in catalogItems"
         :key="item.name"
         class="pill-btn"
         :class="{
           active: opsStore.isTipoSelected(item.name),
           dimmed: opsStore.selectedTipos.length > 0 && !opsStore.isTipoSelected(item.name)
         }"
-        :style="opsStore.isTipoSelected(item.name) ? { borderColor: item.color, boxShadow: `0 0 10px ${item.color}33` } : {}"
+        :style="opsStore.isTipoSelected(item.name) ? { borderColor: item.color } : {}"
         @click="opsStore.toggleTipo(item.name)"
       >
         <span
@@ -80,7 +92,7 @@ const opsStore = useOperationsStore();
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-left: 4px solid var(--color-emerald);
+  border-left: 4px solid var(--color-brand);
 }
 
 .quick-filter-header {
@@ -101,12 +113,15 @@ const opsStore = useOperationsStore();
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .badge-selection {
-  background: rgba(16, 185, 129, 0.2);
-  color: var(--color-emerald);
-  border: 1px solid var(--color-emerald);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  border: 1px solid var(--color-brand);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -122,6 +137,9 @@ const opsStore = useOperationsStore();
 .quick-filter-hint {
   font-size: 0.78rem;
   color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .btn-clear-selection {
@@ -132,13 +150,16 @@ const opsStore = useOperationsStore();
   padding: 3px 8px;
   border-radius: 6px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transition: all var(--transition-fast);
 }
 
 .btn-clear-selection:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: #EF4444;
-  color: #EF4444;
+  background: var(--sla-danger-bg);
+  border-color: var(--sla-danger);
+  color: var(--sla-danger);
 }
 
 .quick-filter-pills {
@@ -164,14 +185,14 @@ const opsStore = useOperationsStore();
 }
 
 .pill-btn:hover {
-  border-color: var(--color-emerald);
+  border-color: var(--color-brand);
   color: var(--text-primary);
   transform: translateY(-1px);
 }
 
 .pill-btn.active {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: var(--color-emerald);
+  background: var(--bg-subtle);
+  border-color: var(--color-brand);
   color: var(--text-primary);
   font-weight: 700;
 }

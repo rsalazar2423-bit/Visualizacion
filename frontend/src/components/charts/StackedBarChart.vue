@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Filter, Check, X } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import { useOperationsStore } from '../../stores/operationsStore';
-import { getEChartsThemeTokens } from '../../constants/themeTokens';
+import { getEChartsThemeTokens, PRIO_COLORS } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 import { formatStackedBarTooltip } from '../../utils/chartFormatters';
 
@@ -12,13 +12,6 @@ const opsStore = useOperationsStore();
 const stackedItems = computed(() => {
   return opsStore.data?.stacked_bar || [];
 });
-
-const PRIO_BORDER_COLORS: Record<string, string> = {
-  'Muy Alta': '#E11D48',
-  'Alta': '#F59E0B',
-  'Media': '#0D9763',
-  'Baja': '#84CC16',
-};
 
 function handlePriorityClick(prio: string) {
   opsStore.setPrioridad(prio);
@@ -38,48 +31,19 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
   const selectedPrio = opsStore.selectedPrioridad;
   const priorities = items.map((i) => i.prioridad);
 
-  // Acabado satinado arquitectónico (elegante, sin brillo plástico)
-  const cumpleGradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-    { offset: 0, color: '#10B981' },    // Luz cenital suave
-    { offset: 0.5, color: '#0D9763' },   // Color base esmeralda
-    { offset: 1, color: '#086341' },    // Sombra de profundidad satinada
-  ]);
-
-  const excedeGradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-    { offset: 0, color: '#FB7185' },    // Luz cenital suave
-    { offset: 0.5, color: '#E11D48' },   // Color base frambuesa
-    { offset: 1, color: '#9F1239' },    // Sombra de profundidad satinada
-  ]);
-
-  // Selected highlight gradients
-  const cumpleGradientSelected = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-    { offset: 0, color: '#34D399' },
-    { offset: 0.5, color: '#10B981' },
-    { offset: 1, color: '#047857' },
-  ]);
-
-  const excedeGradientSelected = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-    { offset: 0, color: '#FDA4AF' },
-    { offset: 0.5, color: '#F43F5E' },
-    { offset: 1, color: '#BE123C' },
-  ]);
-
   const cumpleSeriesData = items.map((i) => {
     const isSelected = selectedPrio === i.prioridad;
     const isAnySelected = Boolean(selectedPrio);
-    const opacity = !isAnySelected || isSelected ? 1 : 0.45;
+    const opacity = !isAnySelected || isSelected ? 0.94 : 0.35;
 
     return {
       name: i.prioridad,
       value: i.cumple_pct,
       itemStyle: {
-        color: isSelected ? cumpleGradientSelected : cumpleGradient,
-        opacity: opacity,
-        borderColor: isSelected ? '#F59E0B' : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)'),
-        borderWidth: isSelected ? 2.5 : 1.5,
-        shadowBlur: isSelected ? 16 : 8,
-        shadowOffsetY: isSelected ? 6 : 4,
-        shadowColor: isSelected ? 'rgba(245, 158, 11, 0.5)' : (isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)'),
+        color: tokens.sla.cumple,
+        opacity,
+        borderColor: isSelected ? tokens.accentSelect : tokens.cardBg,
+        borderWidth: isSelected ? 2 : 1,
       },
     };
   });
@@ -87,19 +51,16 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
   const excedeSeriesData = items.map((i) => {
     const isSelected = selectedPrio === i.prioridad;
     const isAnySelected = Boolean(selectedPrio);
-    const opacity = !isAnySelected || isSelected ? 1 : 0.45;
+    const opacity = !isAnySelected || isSelected ? 0.92 : 0.35;
 
     return {
       name: i.prioridad,
       value: i.excede_pct,
       itemStyle: {
-        color: isSelected ? excedeGradientSelected : excedeGradient,
-        opacity: opacity,
-        borderColor: isSelected ? '#F59E0B' : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)'),
-        borderWidth: isSelected ? 2.5 : 1.5,
-        shadowBlur: isSelected ? 16 : 8,
-        shadowOffsetY: isSelected ? 6 : 4,
-        shadowColor: isSelected ? 'rgba(245, 158, 11, 0.5)' : (isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)'),
+        color: tokens.sla.excede,
+        opacity,
+        borderColor: isSelected ? tokens.accentSelect : tokens.cardBg,
+        borderWidth: isSelected ? 2 : 1,
       },
     };
   });
@@ -111,7 +72,7 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
       axisPointer: {
         type: 'shadow',
         shadowStyle: {
-          color: isDark ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.05)',
+          color: isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(15, 23, 42, 0.04)',
         },
       },
       backgroundColor: tokens.tooltipBg,
@@ -119,17 +80,17 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily },
       formatter: (params: any) => formatStackedBarTooltip(params, items, selectedPrio, tokens),
     },
-    color: ['#10B981', '#E11D48'],
+    color: [tokens.sla.cumple, tokens.sla.excede],
     legend: {
       data: ['Cumple Plazo', 'Excede Plazo'],
       top: '0px',
-      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily },
+      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600 },
     },
     grid: {
-      left: '3%',
-      right: '6%',
-      bottom: '6%',
-      top: '40px',
+      left: '2%',
+      right: '5%',
+      bottom: '4%',
+      top: '38px',
       containLabel: true,
     },
     xAxis: {
@@ -150,9 +111,10 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
       inverse: true,
       triggerEvent: true,
       axisLabel: {
-        color: (val?: string | number) => (String(val) === selectedPrio ? '#F59E0B' : tokens.textColor),
+        color: (val?: string | number) => (String(val) === selectedPrio ? tokens.accentSelect : tokens.textColor),
         fontFamily: tokens.fontFamily,
-        formatter: (val: string) => (val === selectedPrio ? `▶ ${val}` : val),
+        fontWeight: 600,
+        formatter: (val: string) => (val === selectedPrio ? `▸ ${val}` : val),
       },
       axisLine: { lineStyle: { color: tokens.gridColor } },
     },
@@ -167,18 +129,16 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
           position: 'inside',
           formatter: (params: any) => {
             const val = Number(params.value);
-            if (val < 6) return '';
+            if (val < 7) return '';
             return Number.isInteger(val) ? `${val}%` : `${val.toFixed(1)}%`;
           },
           color: '#FFFFFF',
           fontSize: 11,
           fontWeight: 700,
           fontFamily: tokens.fontFamily,
-          textShadowColor: 'rgba(0, 0, 0, 0.75)',
-          textShadowBlur: 3,
         },
         itemStyle: {
-          borderRadius: [5, 0, 0, 5],
+          borderRadius: [4, 0, 0, 4],
         },
         data: cumpleSeriesData,
       },
@@ -192,18 +152,16 @@ function renderStackedBar(chartInstance: echarts.ECharts, isDark: boolean) {
           position: 'inside',
           formatter: (params: any) => {
             const val = Number(params.value);
-            if (val < 6) return '';
+            if (val < 7) return '';
             return Number.isInteger(val) ? `${val}%` : `${val.toFixed(1)}%`;
           },
           color: '#FFFFFF',
           fontSize: 11,
           fontWeight: 700,
           fontFamily: tokens.fontFamily,
-          textShadowColor: 'rgba(0, 0, 0, 0.75)',
-          textShadowBlur: 3,
         },
         itemStyle: {
-          borderRadius: [0, 5, 5, 0],
+          borderRadius: [0, 4, 4, 0],
         },
         data: excedeSeriesData,
       },
@@ -222,7 +180,7 @@ function handleBarClick(params: any) {
   }
 
   if (prio) {
-    const cleanPrio = String(prio).replace(/^▶\s*/, '').trim();
+    const cleanPrio = String(prio).replace(/^▸\s*/, '').trim();
     handlePriorityClick(cleanPrio);
   }
 }
@@ -248,7 +206,7 @@ watch(() => [opsStore.data, opsStore.selectedPrioridad], () => render(), { deep:
     <!-- Canvas de 100% de Ancho -->
     <div ref="chartContainer" class="chart-canvas-full"></div>
 
-    <!-- Barra de Identificación de Colores / Leyenda Interactiva Abajo -->
+    <!-- Leyenda Interactiva con Rampa Secuencial de Plazos -->
     <div class="chart-legend-container">
       <div class="chart-legend-header">
         <span>Plazos de Resolución de Avisos</span>
@@ -266,7 +224,7 @@ watch(() => [opsStore.data, opsStore.selectedPrioridad], () => render(), { deep:
         >
           <span
             class="legend-chip-dot"
-            :style="{ backgroundColor: PRIO_BORDER_COLORS[item.prioridad] || '#38BDF8' }"
+            :style="{ backgroundColor: PRIO_COLORS[item.prioridad] || '#64748B' }"
           ></span>
           <span class="legend-chip-name">{{ item.prioridad }}</span>
           <span class="legend-chip-metric">
@@ -296,8 +254,8 @@ watch(() => [opsStore.data, opsStore.selectedPrioridad], () => render(), { deep:
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: var(--sla-info-bg);
+  border: 1px solid var(--sla-info-border);
   border-radius: var(--radius-sm, 6px);
   padding: 6px 12px;
   margin-bottom: 8px;
@@ -305,64 +263,29 @@ watch(() => [opsStore.data, opsStore.selectedPrioridad], () => render(), { deep:
 
 .active-badge {
   font-size: 0.8rem;
-  color: #F59E0B;
+  color: var(--sla-info);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-clear-prio {
   background: transparent;
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  color: #F59E0B;
+  border: 1px solid var(--sla-info-border);
+  color: var(--sla-info);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 4px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transition: all var(--transition-fast);
 }
 
 .btn-clear-prio:hover {
-  background: #F59E0B;
-  color: #000000;
-}
-
-.prio-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed var(--border-subtle);
-}
-
-.prio-card:last-child {
-  border-bottom: none;
-}
-
-.prio-metrics-row {
-  display: flex;
-  gap: 4px;
-  padding-left: 8px;
-  flex-wrap: wrap;
-}
-
-.metric-badge {
-  font-size: 0.67rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.metric-badge.cumple {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--color-emerald);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.metric-badge.excede {
-  background: rgba(244, 63, 94, 0.12);
-  color: #F43F5E;
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: var(--sla-info);
+  color: #FFFFFF;
 }
 </style>
-

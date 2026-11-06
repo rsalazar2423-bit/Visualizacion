@@ -41,7 +41,7 @@
 
 .footer-brand {
   font-weight: 700;
-  color: var(--color-emerald);
+  color: var(--color-brand);
 }
 
 .footer-sep {

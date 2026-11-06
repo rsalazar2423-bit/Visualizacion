@@ -77,16 +77,16 @@ function handleBreadcrumbClick(crumb: any) {
 }
 
 .btn-back {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid var(--color-emerald);
-  color: var(--color-emerald);
+  background: var(--color-brand-soft);
+  border: 1px solid var(--color-brand);
+  color: var(--color-brand);
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .btn-back:hover {
-  background: var(--color-emerald);
+  background: var(--color-brand);
   color: #ffffff;
 }
 
@@ -96,7 +96,7 @@ function handleBreadcrumbClick(crumb: any) {
   gap: 6px;
   padding: 8px 12px;
   margin-bottom: 12px;
-  background: var(--bg-hover);
+  background: var(--bg-subtle);
   border-radius: 6px;
   flex-wrap: wrap;
 }
@@ -111,7 +111,7 @@ function handleBreadcrumbClick(crumb: any) {
 }
 
 .breadcrumb-chip.clickable {
-  color: #38BDF8;
+  color: var(--color-accent);
   cursor: pointer;
 }
 

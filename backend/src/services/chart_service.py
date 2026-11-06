@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 import pandas as pd
 
-from src.constants import PALETTE_DEPTOS, PRIO_COLORS, PRIO_ORDER, TIPO_COLORS
+from src.constants import PALETTE, PALETTE_DEPTOS, PRIO_COLORS, PRIO_ORDER, TIPO_COLORS
 
 # Etiquetas ejecutivas para plazos temporales
 PRIO_CLARIFIED_LABELS: Dict[str, str] = {
@@ -97,13 +97,13 @@ def build_sunburst_sla_tree(df: pd.DataFrame) -> List[Dict[str, Any]]:
             children.append({
                 "name": f"Cumple ({c_pct}%)",
                 "value": cumple,
-                "itemStyle": {"color": "#10B981"},
+                "itemStyle": {"color": PALETTE["emerald"]},
             })
         if excede > 0:
             children.append({
                 "name": f"Excede ({e_pct}%)",
                 "value": excede,
-                "itemStyle": {"color": "#F43F5E"},
+                "itemStyle": {"color": PALETTE["terracotta"]},
             })
 
         tree.append({

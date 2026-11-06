@@ -2,11 +2,13 @@
 import { ref, computed, watch } from 'vue';
 import type * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
-import { getEChartsThemeTokens } from '../../constants/themeTokens';
+import { useThemeStore } from '../../stores/themeStore';
+import { getEChartsThemeTokens, getSequentialTerritoryPalette } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 import { formatTreemapTooltip } from '../../utils/chartFormatters';
 
 const territoryStore = useTerritoryStore();
+const themeStore = useThemeStore();
 
 function handleClick(params: any) {
   if (!params) return;
@@ -15,7 +17,7 @@ function handleClick(params: any) {
   const cleanName = rawName.split(' (')[0].trim();
 
   if (!territoryStore.selectedDepto) {
-    if (cleanName && cleanName !== 'Toda Colombia' && !cleanName.startsWith('CTE')) {
+    if (cleanName && cleanName !== 'Toda Colombia' && cleanName !== 'Red Nacional' && !cleanName.startsWith('Zona')) {
       territoryStore.drillIntoDepto(cleanName);
     }
   } else if (!territoryStore.selectedMunicipio) {
@@ -23,20 +25,20 @@ function handleClick(params: any) {
   }
 }
 
-// Extraer items para botones laterales interactivos
 const treemapItems = computed(() => {
   if (!territoryStore.data?.treemap) return [];
+  const palette = getSequentialTerritoryPalette(themeStore.isDark);
   const rawTreemap = territoryStore.data.treemap;
   const nodes = (rawTreemap.children && rawTreemap.children.length > 0) ? rawTreemap.children : [rawTreemap];
   const total = rawTreemap.value || nodes.reduce((acc, curr) => acc + (curr.value || 0), 0);
-  return nodes.map((n) => {
+  return nodes.map((n, idx) => {
     const val = n.value || 0;
     const pct = total > 0 ? Number(((val / total) * 100).toFixed(1)) : 0;
     return {
       name: n.name,
       value: val,
       pct,
-      color: n.itemStyle?.color || '#0D9763',
+      color: palette[idx % palette.length],
     };
   });
 });
@@ -45,9 +47,17 @@ function renderTreemap(chartInstance: echarts.ECharts, isDark: boolean) {
   if (!territoryStore.data?.treemap) return;
 
   const tokens = getEChartsThemeTokens(isDark);
+  const palette = getSequentialTerritoryPalette(isDark);
   const rawTreemap = territoryStore.data.treemap;
-  const nodes = (rawTreemap.children && rawTreemap.children.length > 0) ? rawTreemap.children : [rawTreemap];
-  const totalValue = rawTreemap.value || nodes.reduce((acc, curr) => acc + (curr.value || 0), 0);
+  const rawNodes = (rawTreemap.children && rawTreemap.children.length > 0) ? rawTreemap.children : [rawTreemap];
+  const totalValue = rawTreemap.value || rawNodes.reduce((acc, curr) => acc + (curr.value || 0), 0);
+
+  const nodes = rawNodes.map((n, idx) => ({
+    ...n,
+    itemStyle: {
+      color: palette[idx % palette.length],
+    },
+  }));
 
   const isNationalView = !territoryStore.selectedDepto && !territoryStore.selectedMunicipio;
   const isDeptoView = Boolean(territoryStore.selectedDepto && !territoryStore.selectedMunicipio);
@@ -69,7 +79,7 @@ function renderTreemap(chartInstance: echarts.ECharts, isDark: boolean) {
         nodeClick: false,
         breadcrumb: { show: false },
         itemStyle: {
-          borderColor: isDark ? '#131D28' : '#FFFFFF',
+          borderColor: tokens.cardBg,
           borderWidth: 2,
           gapWidth: 2,
           borderRadius: 4,
@@ -93,17 +103,17 @@ function renderTreemap(chartInstance: echarts.ECharts, isDark: boolean) {
               color: '#FFFFFF',
               lineHeight: 18,
               align: 'center',
-              textShadowColor: 'rgba(0, 0, 0, 0.75)',
-              textShadowBlur: 4,
+              textShadowColor: 'rgba(15, 23, 42, 0.65)',
+              textShadowBlur: 3,
             },
             val: {
               fontSize: 10,
               fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.95)',
+              color: 'rgba(255, 255, 255, 0.92)',
               lineHeight: 14,
               align: 'center',
-              textShadowColor: 'rgba(0, 0, 0, 0.75)',
-              textShadowBlur: 3,
+              textShadowColor: 'rgba(15, 23, 42, 0.65)',
+              textShadowBlur: 2,
             },
           },
         },
@@ -125,10 +135,10 @@ watch(() => territoryStore.data, () => render(), { deep: true });
     <!-- Canvas de 100% de Ancho -->
     <div ref="chartContainer" class="chart-canvas-full"></div>
 
-    <!-- Barra de Identificación de Colores / Leyenda Interactiva Abajo -->
+    <!-- Escala Secuencial de Concentración Territorial -->
     <div class="chart-legend-container">
       <div class="chart-legend-header">
-        <span>{{ territoryStore.selectedDepto ? 'Municipios (' + territoryStore.selectedDepto + ')' : 'Departamentos de Cobertura' }}</span>
+        <span>{{ territoryStore.selectedDepto ? 'Municipios (' + territoryStore.selectedDepto + ')' : 'Departamentos (Escala Secuencial de Volumen)' }}</span>
         <span class="side-panel-hint">{{ treemapItems.length }} zonas</span>
       </div>
 
@@ -162,58 +172,4 @@ watch(() => territoryStore.data, () => render(), { deep: true });
   display: flex;
   flex-direction: column;
 }
-
-.treemap-context-indicator {
-  margin-bottom: 8px;
-}
-
-.indicator-badge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8rem;
-  font-weight: 500;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.indicator-badge.national {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--color-emerald, #0D9763);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
-.indicator-badge.depto {
-  background: rgba(56, 189, 248, 0.12);
-  color: #0284C7;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
-
-.indicator-badge.mpio {
-  background: rgba(245, 158, 11, 0.12);
-  color: #D97706;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.btn-indicator-back {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-indicator-back:hover {
-  background: rgba(0, 0, 0, 0.35);
-  transform: translateY(-1px);
-}
 </style>
-

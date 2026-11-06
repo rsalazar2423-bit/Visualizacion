@@ -5,6 +5,7 @@ import type {
   FilterOptionsResponse,
   OperationsDataResponse,
   TerritorialDataResponse,
+  CapacityDataResponse,
 } from '../types/models';
 
 const USE_REMOTE = import.meta.env.VITE_USE_REMOTE_API === 'true';
@@ -90,5 +91,12 @@ export const apiService = {
       }
     }
     return clientDataService.getTerritorialData(params);
+  },
+
+  async getCapacityData(params: {
+    cte?: string | null;
+    depto?: string | null;
+  }): Promise<CapacityDataResponse> {
+    return clientDataService.getCapacityData(params);
   },
 };

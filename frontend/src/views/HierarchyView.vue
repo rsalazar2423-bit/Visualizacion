@@ -18,10 +18,10 @@ onMounted(async () => {
   <div class="hierarchy-view">
     <!-- Header -->
     <header class="view-header">
-      <div class="badge badge-tag">Módulo Territorial · EcoGrid DEC</div>
-      <h1 class="view-title">Tablero 2: Estructura Jerárquica y Cobertura Territorial</h1>
+      <div class="badge badge-tag">Vista 02 · EcoGrid DEC</div>
+      <h1 class="view-title">Diagnóstico Territorial, Mapa Histórico y Desempeño Técnico</h1>
       <p class="view-subtitle">
-        Exploración multinivel (País ➔ Departamento ➔ Municipio), anatomía concéntrica de avisos y auditoría operativa de tickets.
+        Georreferenciación histórica de avisos y líneas (2008–2023), identificación de sectores con mayores retrasos, tiempos de atención por tipo de incidente y auditoría de avisos.
       </p>
     </header>
 
@@ -31,14 +31,14 @@ onMounted(async () => {
     <!-- Paso 2: Resumen de Cobertura -->
     <TerritoryKpiGrid />
 
-    <!-- Paso 3: Exploración Jerárquica Multinivel & Anatomía del Aviso -->
+    <!-- Paso 3: Mapa Histórico + Diagnóstico de Sectores y Tiempos + Jerarquía -->
     <TerritoryChartsGrid />
 
     <!-- Paso 4: Auditoría y Detalle de Tickets -->
     <section class="step-section">
       <div class="step-title-bar">
         <span class="badge badge-step">PASO 4</span>
-        <b>Auditoría y Detalle de Tickets por Ciudad</b>
+        <b>Auditoría y Detalle de Avisos por Municipio y Sector</b>
       </div>
 
       <TicketsTable

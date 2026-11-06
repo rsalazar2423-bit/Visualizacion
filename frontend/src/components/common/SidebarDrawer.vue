@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { Home, Activity, Map, Leaf, X, ShieldCheck } from 'lucide-vue-next';
+import { Home, Activity, Map, Sliders, Leaf, X, ShieldCheck, Palette } from 'lucide-vue-next';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -10,9 +10,11 @@ const props = defineProps<{
 const route = useRoute();
 
 const navItems = [
-  { name: 'Portada Institucional', path: '/', icon: Home },
-  { name: 'Tablero 1: Operaciones y SLA', path: '/operaciones', icon: Activity },
-  { name: 'Tablero 2: Jerarquía Territorial', path: '/territorio', icon: Map },
+  { name: 'Portada y Resumen Ejecutivo', path: '/', icon: Home },
+  { name: '01 · Seguimiento y Cumplimiento', path: '/operaciones', icon: Activity },
+  { name: '02 · Diagnóstico Territorial y Técnico', path: '/territorio', icon: Map },
+  { name: '03 · Capacidad y Mejora Operativa', path: '/capacidad', icon: Sliders },
+  { name: 'Gobernanza de Color y Diseño', path: '/diseno', icon: Palette },
 ];
 </script>
 
@@ -30,11 +32,11 @@ const navItems = [
       <div class="drawer-header">
         <div class="drawer-brand">
           <div class="logo-circle">
-            <Leaf :size="20" color="#0D9763" />
+            <Leaf :size="20" class="brand-icon" />
           </div>
           <div>
             <div class="drawer-title">EcoGrid DEC</div>
-            <div class="drawer-subtitle">Monitoreo Analítico</div>
+            <div class="drawer-subtitle">Control Táctico-Operacional</div>
           </div>
         </div>
         <button class="close-btn" aria-label="Cerrar" @click="props.onClose">
@@ -60,10 +62,10 @@ const navItems = [
 
       <div class="drawer-footer">
         <div class="footer-badge">
-          <ShieldCheck :size="15" color="#0D9763" />
-          <span>Cobertura Nacional 2026</span>
+          <ShieldCheck :size="15" class="brand-icon" />
+          <span>Sistema de Diseño Dual · Claro / Oscuro</span>
         </div>
-        <div class="version-text">Versión 2.0 · Vue 3 + TS</div>
+        <div class="version-text">Infraestructura de Transmisión · Colombia</div>
       </div>
     </aside>
   </div>
@@ -76,7 +78,7 @@ const navItems = [
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(3px);
   z-index: 1000;
   transition: opacity var(--transition-normal);
@@ -86,7 +88,7 @@ const navItems = [
   position: fixed;
   top: 0;
   left: -320px;
-  width: 300px;
+  width: 310px;
   height: 100vh;
   background: var(--bg-drawer);
   border-right: 1px solid var(--border-subtle);
@@ -94,7 +96,7 @@ const navItems = [
   z-index: 1001;
   display: flex;
   flex-direction: column;
-  transition: left var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1);
+  transition: left var(--transition-normal);
 }
 
 .sidebar-drawer.is-open {
@@ -119,11 +121,14 @@ const navItems = [
   width: 38px;
   height: 38px;
   border-radius: var(--radius-md);
-  background: rgba(16, 185, 129, 0.15);
+  background: var(--color-brand-soft);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+}
+
+.brand-icon {
+  color: var(--color-brand);
 }
 
 .drawer-title {
@@ -148,7 +153,7 @@ const navItems = [
 }
 
 .close-btn:hover {
-  background: var(--bg-table-stripe);
+  background: var(--bg-subtle);
   color: var(--text-primary);
 }
 
@@ -168,24 +173,25 @@ const navItems = [
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   transition: all var(--transition-fast);
   position: relative;
 }
 
 .nav-link:hover {
   background: var(--bg-table-hover);
-  color: var(--color-emerald);
+  color: var(--color-brand);
 }
 
 .nav-link.active {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--color-emerald);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
   font-weight: 700;
 }
 
 .nav-icon {
-  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
 }
 
 .active-indicator {
@@ -194,7 +200,7 @@ const navItems = [
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--color-emerald);
+  background-color: var(--color-brand);
 }
 
 .drawer-footer {
