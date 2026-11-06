@@ -5,6 +5,7 @@ import { useCapacityStore } from '../stores/capacityStore';
 import RegionalLoadChart from '../components/charts/RegionalLoadChart.vue';
 import ComplianceScatterChart from '../components/charts/ComplianceScatterChart.vue';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
+import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
 const store = useCapacityStore();
 const activeSubView = ref<'diagnosis' | 'simulator'>('diagnosis');
@@ -89,25 +90,21 @@ onMounted(() => {
 
     <!-- ÁREA DE CONTENIDO (VIEWPORT-FIT / CERO SCROLL) -->
     <main class="chart-viewport-stage">
-      <!-- HOJA 1: Exactamente 2 Gráficas en Paralelo (Carga Regional + Dispersión) -->
+      <!-- HOJA 1: Exactamente 2 Gráficas en Paralelo (Ambas con botón para Ampliar) -->
       <section v-show="activeSubView === 'diagnosis'" class="stage-pane dual-charts">
-        <div class="card chart-card">
-          <div class="pane-header">
-            <h3 class="pane-title">Carga de Avisos por Región CTE</h3>
-          </div>
-          <div class="pane-body">
-            <RegionalLoadChart :regions="store.capacityData?.regions || []" />
-          </div>
-        </div>
+        <ExpandableChartCard
+          title="Carga de Avisos por Región CTE"
+          subtitle="Distribución territorial de demanda e incidentes por zona operativa"
+        >
+          <RegionalLoadChart :regions="store.capacityData?.regions || []" />
+        </ExpandableChartCard>
 
-        <div class="card chart-card">
-          <div class="pane-header">
-            <h3 class="pane-title">Dispersión de Municipios: Torres vs. Cumplimiento</h3>
-          </div>
-          <div class="pane-body">
-            <ComplianceScatterChart :items="store.capacityData?.municipios_scatter || []" />
-          </div>
-        </div>
+        <ExpandableChartCard
+          title="Dispersión de Municipios: Torres vs. Cumplimiento"
+          subtitle="Identificación de municipios con alta densidad y bajo cumplimiento SLA"
+        >
+          <ComplianceScatterChart :items="store.capacityData?.municipios_scatter || []" />
+        </ExpandableChartCard>
       </section>
 
       <!-- HOJA 2: Simulador Táctico de Cuadrillas (Hoja Dedicada) -->
@@ -272,31 +269,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-}
-
-.chart-card {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.pane-header {
-  padding: 10px 14px 6px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.pane-title {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.pane-body {
-  flex: 1;
-  min-height: 0;
-  padding: 6px 10px;
 }
 
 .simulator-pane {

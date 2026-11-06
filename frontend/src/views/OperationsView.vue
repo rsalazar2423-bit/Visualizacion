@@ -5,6 +5,7 @@ import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../components/charts/StackedBarChart.vue';
 import DonutChart from '../components/charts/DonutChart.vue';
+import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
 const opsStore = useOperationsStore();
 const activeSubView = ref<'evolution' | 'sla'>('evolution');
@@ -108,35 +109,31 @@ onMounted(async () => {
 
     <!-- ÁREA DE GRÁFICAS: AJUSTADA EXACTAMENTE AL VIEWPORT (0 SCROLL) -->
     <main class="chart-viewport-stage">
-      <!-- HOJA 1: 1 Sola Gráfica Grande de Evolución Histórica -->
-      <section v-show="activeSubView === 'evolution'" class="stage-pane single-chart card">
-        <div class="pane-header">
-          <h3 class="pane-title">Evolución de Avisos Ingresados vs. Cerrados y Tasa de Cumplimiento (2008 – 2023)</h3>
-        </div>
-        <div class="pane-body">
+      <!-- HOJA 1: 1 Sola Gráfica Grande con botón para Ampliar -->
+      <section v-show="activeSubView === 'evolution'" class="stage-pane single-chart">
+        <ExpandableChartCard
+          title="Evolución de Avisos Ingresados vs. Cerrados y Tasa de Cumplimiento (2008 – 2023)"
+          subtitle="Análisis histórico de la demanda de incidentes frente a la capacidad de cierre anual"
+        >
           <TimeEvolutionChart />
-        </div>
+        </ExpandableChartCard>
       </section>
 
-      <!-- HOJA 2: Exactamente 2 Gráficas en Paralelo (SLA + Composición) -->
+      <!-- HOJA 2: Exactamente 2 Gráficas en Paralelo (Ambas con botón para Ampliar) -->
       <section v-show="activeSubView === 'sla'" class="stage-pane dual-charts">
-        <div class="card chart-card">
-          <div class="pane-header">
-            <h3 class="pane-title">Cumplimiento de Plazo por Prioridad SLA (100%)</h3>
-          </div>
-          <div class="pane-body">
-            <StackedBarChart />
-          </div>
-        </div>
+        <ExpandableChartCard
+          title="Cumplimiento de Plazo por Prioridad SLA (100%)"
+          subtitle="Relación porcentual de atención oportuna frente a vencimiento"
+        >
+          <StackedBarChart />
+        </ExpandableChartCard>
 
-        <div class="card chart-card">
-          <div class="pane-header">
-            <h3 class="pane-title">Composición por Tipología Técnica</h3>
-          </div>
-          <div class="pane-body">
-            <DonutChart />
-          </div>
-        </div>
+        <ExpandableChartCard
+          title="Composición por Tipología Técnica"
+          subtitle="Distribución proporcional de causas de mantenimiento sobre la red"
+        >
+          <DonutChart />
+        </ExpandableChartCard>
       </section>
     </main>
   </div>
@@ -296,30 +293,5 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-}
-
-.chart-card {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.pane-header {
-  padding: 10px 14px 6px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.pane-title {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.pane-body {
-  flex: 1;
-  min-height: 0;
-  padding: 6px 10px;
 }
 </style>
