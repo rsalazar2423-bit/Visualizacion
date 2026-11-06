@@ -55,7 +55,15 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
         fontWeight: 600,
         fontSize: 11,
         interval: 0,
-        rotate: 15,
+        rotate: 0, // Textos horizontales limpios (sin inclinación diagonal)
+        formatter: (val: string) => {
+          // Si el nombre es largo (ej. 'Valle Del Cauca'), lo divide en 2 líneas para que se lea perfectamente horizontal
+          if (val.length > 10 && val.includes(' ')) {
+            const parts = val.split(' ');
+            return parts.slice(0, 2).join(' ') + '\n' + parts.slice(2).join(' ');
+          }
+          return val;
+        },
       },
       axisLine: { lineStyle: { color: tokens.gridColor } },
     },

@@ -166,24 +166,30 @@ onMounted(async () => {
 .home-view {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  padding: 4px 6px;
 }
 
 .hero-card {
   background: linear-gradient(135deg, var(--color-brand-soft) 0%, var(--color-accent-soft) 100%), var(--bg-card);
-  padding: 36px 34px;
+  padding: 18px 24px;
   border: 1px solid var(--border-strong);
+  flex-shrink: 0;
 }
 
 .hero-layout {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 32px;
+  gap: 24px;
 }
 
 .hero-content {
-  max-width: 760px;
+  flex: 1;
+  max-width: 820px;
 }
 
 .hero-logo-box {
@@ -191,56 +197,56 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 28px 24px;
+  padding: 14px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  min-width: 250px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  min-width: 200px;
 }
 
 .hero-brand-logo {
-  height: 100px;
+  height: 60px;
   width: auto;
-  max-width: 200px;
+  max-width: 160px;
   object-fit: contain;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
 }
 
 .hero-brand-label {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-primary);
   text-align: center;
 }
 
 .hero-brand-sublabel {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-brand);
   text-align: center;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .hero-title {
-  font-size: 2rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: var(--text-primary);
-  line-height: 1.22;
-  margin: 14px 0 12px;
-  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 6px 0 6px;
+  letter-spacing: -0.4px;
 }
 
 .hero-description {
-  font-size: 1rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 24px;
+  line-height: 1.45;
+  margin-bottom: 14px;
 }
 
 .hero-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -268,14 +274,16 @@ onMounted(async () => {
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
 }
 
 .feature-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 24px;
+  padding: 16px 20px;
 }
 
 .feature-step-row {
@@ -283,14 +291,14 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .step-num {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.6px;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
   background: var(--bg-subtle);
   color: var(--text-secondary);
@@ -306,21 +314,21 @@ onMounted(async () => {
 }
 
 .feature-title {
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .feature-text {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.45;
   flex: 1;
 }
 
 .feat-btn {
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 @media (max-width: 1024px) {

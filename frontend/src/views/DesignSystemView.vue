@@ -138,7 +138,10 @@ function copyValue(val: string) {
 .design-system-view {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 24px;
 }
 
 .ds-hero {
