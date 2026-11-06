@@ -43,29 +43,30 @@
 
   /* =========================================================================
      3. PALETA SEMÁNTICA ESTRICTA (SLA Y SEÑALÉTICA OPERATIVA)
-     - Cumple Plazo: Teal Institucional (#0D9488)
-     - Advertencia / En Riesgo: Naranja Operativo (#EA580C)
-     - Alerta Máxima / Vencido: Rojo (#DC2626)
+     Calibrada para Alta Dirección: Tonos mate de saturación controlada.
+     - Cumple Plazo: Teal Petróleo (#0F766E)
+     - Advertencia / En Riesgo: Ámbar / Cobre Mate (#D97706)
+     - Alerta Máxima / Vencido: Carmín / Ladrillo Profesional (#BE123C)
      ========================================================================= */
   /* Cumple Plazo / Oportuno */
-  --sla-success: #0D9488;
-  --sla-success-bg: rgba(13, 148, 136, 0.11);
-  --sla-success-border: rgba(13, 148, 136, 0.28);
+  --sla-success: #0F766E;
+  --sla-success-bg: rgba(15, 118, 110, 0.08);
+  --sla-success-border: rgba(15, 118, 110, 0.25);
 
-  /* En Seguimiento / Precaución (Naranja Operativo) */
-  --sla-warning: #EA580C;
-  --sla-warning-bg: rgba(234, 88, 12, 0.11);
-  --sla-warning-border: rgba(234, 88, 12, 0.28);
+  /* En Seguimiento / Precaución (Ámbar Mate) */
+  --sla-warning: #D97706;
+  --sla-warning-bg: rgba(217, 119, 6, 0.08);
+  --sla-warning-border: rgba(217, 119, 6, 0.25);
 
-  /* Excede Plazo / Abierto Vencido (Rojo de Alerta Crítica) */
-  --sla-danger: #DC2626;
-  --sla-danger-bg: rgba(220, 38, 38, 0.11);
-  --sla-danger-border: rgba(220, 38, 38, 0.28);
+  /* Excede Plazo / Abierto Vencido (Carmín Ejecutivo) */
+  --sla-danger: #BE123C;
+  --sla-danger-bg: rgba(190, 18, 60, 0.08);
+  --sla-danger-border: rgba(190, 18, 60, 0.25);
 
-  /* Informativo / Volumen Activo */
-  --sla-info: #1D4ED8;
-  --sla-info-bg: rgba(29, 78, 216, 0.11);
-  --sla-info-border: rgba(29, 78, 216, 0.28);
+  /* Informativo / Volumen Activo (Pizarra sobrio) */
+  --sla-info: #334155;
+  --sla-info-bg: rgba(51, 65, 85, 0.08);
+  --sla-info-border: rgba(51, 65, 85, 0.25);
 
   /* =========================================================================
      4. PALETA CATEGÓRICA ACOTADA (100% Rampa Institucional Teal-Azul-Pizarra)
@@ -128,25 +129,25 @@
 
   /* =========================================================================
      3. PALETA SEMÁNTICA ESTRICTA (Modo Oscuro)
-     - Cumple: Teal Luminoso (#14B8A6)
-     - Advertencia: Naranja Operativo (#F97316)
-     - Alerta: Rojo (#EF4444)
+     - Cumple: Teal Mate (#2DD4BF)
+     - Advertencia: Ámbar / Cobre (#FBBF24)
+     - Alerta: Carmín (#F43F5E)
      ========================================================================= */
-  --sla-success: #14B8A6;
-  --sla-success-bg: rgba(20, 184, 166, 0.15);
-  --sla-success-border: rgba(20, 184, 166, 0.32);
+  --sla-success: #2DD4BF;
+  --sla-success-bg: rgba(45, 212, 191, 0.12);
+  --sla-success-border: rgba(45, 212, 191, 0.28);
 
-  --sla-warning: #F97316;
-  --sla-warning-bg: rgba(249, 115, 22, 0.15);
-  --sla-warning-border: rgba(249, 115, 22, 0.32);
+  --sla-warning: #FBBF24;
+  --sla-warning-bg: rgba(251, 191, 36, 0.12);
+  --sla-warning-border: rgba(251, 191, 36, 0.28);
 
-  --sla-danger: #EF4444; /* Rojo calibrado de alta visibilidad */
-  --sla-danger-bg: rgba(239, 68, 68, 0.16);
-  --sla-danger-border: rgba(239, 68, 68, 0.35);
+  --sla-danger: #F43F5E; /* Carmín sobrio de alta visibilidad sin saturación */
+  --sla-danger-bg: rgba(244, 63, 94, 0.14);
+  --sla-danger-border: rgba(244, 63, 94, 0.30);
 
-  --sla-info: #60A5FA;
-  --sla-info-bg: rgba(96, 165, 250, 0.15);
-  --sla-info-border: rgba(96, 165, 250, 0.32);
+  --sla-info: #38BDF8;
+  --sla-info-bg: rgba(56, 189, 248, 0.12);
+  --sla-info-border: rgba(56, 189, 248, 0.28);
 
   /* =========================================================================
      4. PALETA CATEGÓRICA ACOTADA (Modo Oscuro — Rampa Teal-Azul-Pizarra)

@@ -21,21 +21,27 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
 
   const tokens = getEChartsThemeTokens(isDark);
 
-  const scatterData = items.map((m) => ({
-    name: m.region,
-    value: [m.total_avisos, m.cumple_pct, m.abiertos_vencidos, m.mediana_dias, m.torres],
-    itemStyle: {
-      color:
-        m.cumple_pct < 40
+  const scatterData = items.map((m) => {
+    // Si tiene cumplimiento menor al 40% o más de 12 vencidos, es un municipio CRÍTICO (se destaca en Carmín)
+    const isCritical = m.cumple_pct < 45 || m.abiertos_vencidos >= 10;
+    // Si está entre 45% y 60%, advertencia moderada
+    const isWarning = !isCritical && m.cumple_pct < 60;
+
+    return {
+      name: m.region,
+      value: [m.total_avisos, m.cumple_pct, m.abiertos_vencidos, m.mediana_dias, m.torres],
+      itemStyle: {
+        color: isCritical
           ? tokens.sla.excede
-          : m.cumple_pct < 60
+          : isWarning
             ? tokens.sla.warning
-            : tokens.sla.cumple,
-      opacity: 0.85,
-      borderColor: tokens.cardBg,
-      borderWidth: 1.5,
-    },
-  }));
+            : (isDark ? 'rgba(56, 189, 248, 0.45)' : 'rgba(51, 65, 85, 0.35)'),
+        opacity: isCritical ? 0.95 : 0.65,
+        borderColor: isCritical ? '#FFFFFF' : (isDark ? '#38BDF8' : '#64748B'),
+        borderWidth: isCritical ? 2 : 1,
+      },
+    };
+  });
 
   const option: echarts.EChartsOption = {
     backgroundColor: 'transparent',

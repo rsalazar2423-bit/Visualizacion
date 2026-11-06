@@ -2,40 +2,40 @@
  * themeTokens.ts — Fuente Única de la Verdad (DRY) para el Sistema de Diseño de Visualización.
  *
  * Sistema Cromático Restringido y Ejecutivo (Edward Tufte & Stephen Few):
- * 1. Rampa Institucional (Analítica): Teal -> Azul Acero -> Pizarra (Norma 03).
- * 2. Señalética Operativa Exclusiva:
- *    - ROJO (#DC2626 / #EF4444): Alerta Máxima (Abiertos Vencidos / Incumplimiento Grave).
- *    - NARANJA (#EA580C / #F97316): Advertencia (Cerrados con Retraso / En Riesgo).
- * 3. CERO colores externos: Se eliminan violetas, olivas, amarillos y tonos no corporativos.
+ * 1. Rampa Institucional (Analítica): Slate / Azul Acero Mate / Teal Sobrio.
+ * 2. Señalética Operativa Exclusiva (Sin estridencias):
+ *    - ROJO BURDEOS / LADRILLO (#BE123C / #F43F5E): Alerta Máxima (Abiertos Vencidos).
+ *    - NARANJA COBRE / ÁMBAR (#D97706 / #FB923C): Advertencia (Cerrados con Retraso).
+ * 3. Volúmenes de Fondo: Tonos recesivos azul petróleo y pizarra para evitar el "efecto circo".
  */
 
 export const CORPORATE_PALETTE = {
-  brand: '#0D9488',
-  accent: '#1D4ED8',
-  orange: '#EA580C',
-  danger: '#DC2626',
-  slate: '#64748B',
+  brand: '#0F766E',   // Teal Petróleo Ejecutivo (no chillón)
+  accent: '#2563EB',  // Azul Real Sobrio
+  orange: '#D97706',  // Ámbar / Cobre Mate
+  danger: '#BE123C',  // Carmín / Ladrillo Profesional
+  slate: '#475569',   // Pizarra Profundo
 };
 
 /**
  * 1. Colores Semánticos Estrictos para SLA y Estado de Avisos
- * Rige el Semáforo de Operación:
- * - Cumple / Oportuno: Teal Institucional (#0D9488 / #14B8A6)
- * - Precaución / Retraso: Naranja (#EA580C / #F97316)
- * - Alerta Máxima / Vencido: Rojo (#DC2626 / #EF4444)
+ * Rige el Semáforo de Operación con saturación controlada:
+ * - Cumple / Oportuno: Teal Profundo (#0F766E / #2DD4BF)
+ * - Precaución / Retraso: Ámbar Mate (#D97706 / #FBBF24)
+ * - Alerta Máxima / Vencido: Carmín (#BE123C / #F43F5E)
  */
 export function getSlaColors(isDark: boolean) {
   return {
-    cumple: isDark ? '#14B8A6' : '#0D9488',
-    cumpleSoft: isDark ? 'rgba(20, 184, 166, 0.18)' : 'rgba(13, 148, 136, 0.12)',
-    warning: isDark ? '#F97316' : '#EA580C', // Naranja de advertencia
-    warningSoft: isDark ? 'rgba(249, 115, 22, 0.18)' : 'rgba(234, 88, 12, 0.12)',
-    excede: isDark ? '#EF4444' : '#DC2626', // Rojo de alerta crítica
-    excedeSoft: isDark ? 'rgba(239, 68, 68, 0.18)' : 'rgba(220, 38, 38, 0.12)',
-    abierto: isDark ? '#60A5FA' : '#1D4ED8',
-    abiertoSoft: isDark ? 'rgba(96, 165, 250, 0.18)' : 'rgba(29, 78, 216, 0.12)',
-    cerrado: isDark ? '#94A3B8' : '#64748B',
-    neutral: isDark ? '#94A3B8' : '#64748B',
+    cumple: isDark ? '#2DD4BF' : '#0F766E',
+    cumpleSoft: isDark ? 'rgba(45, 212, 191, 0.15)' : 'rgba(15, 118, 110, 0.10)',
+    warning: isDark ? '#FBBF24' : '#D97706', // Ámbar refinado en vez de naranja fósforo
+    warningSoft: isDark ? 'rgba(251, 191, 36, 0.15)' : 'rgba(217, 119, 6, 0.10)',
+    excede: isDark ? '#F43F5E' : '#BE123C', // Carmín sobrio en vez de rojo semáforo
+    excedeSoft: isDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(190, 18, 60, 0.10)',
+    abierto: isDark ? '#38BDF8' : '#334155', // Azul Pizarra en claro, Azul Claro en oscuro
+    abiertoSoft: isDark ? 'rgba(56, 189, 248, 0.12)' : 'rgba(51, 65, 85, 0.08)',
+    cerrado: isDark ? '#94A3B8' : '#0284C7', // Azul Acero Técnico
+    neutral: isDark ? '#64748B' : '#64748B',
   };
 }
 
