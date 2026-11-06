@@ -66,13 +66,14 @@
 
   /* =========================================================================
      4. PALETA CATEGÓRICA ACOTADA (TIPOS DE AVISO — Sin colisión con SLA)
+     Familias cromáticas con distancia Delta-E > 25 para discriminación visual
      ========================================================================= */
-  --cat-1: #0F766E; /* Vegetación: Teal Profundo */
-  --cat-2: #1D4ED8; /* Construcciones: Azul Cobalto */
-  --cat-3: #0284C7; /* Obras: Azul Acero */
-  --cat-4: #4338CA; /* Permiso Ingreso: Índigo Técnico */
-  --cat-5: #B45309; /* Invasión / Explanación: Ocre Tierra */
-  --cat-6: #64748B; /* Otros: Pizarra Neutro */
+  --cat-1: #3F6212; /* Vegetación: Verde Oliva Silvicultural (No compite con Esmeralda SLA) */
+  --cat-2: #1D4ED8; /* Construcciones: Azul Cobalto (Infraestructura / Ingeniería) */
+  --cat-3: #475569; /* Obras: Grafito / Acero Industrial (Rompe la sopa de azules) */
+  --cat-4: #6D28D9; /* Permiso Ingreso: Amatista Técnico / Predial */
+  --cat-5: #C2410C; /* Invasión / Explanación: Terracota Arcilla / Suelo (No compite con Ámbar SLA) */
+  --cat-6: #94A3B8; /* Otros: Pizarra Neutro */
 
   /* Geometría y Transiciones */
   --radius-sm: 6px;
@@ -134,21 +135,21 @@
   --sla-warning-bg: rgba(245, 158, 11, 0.15);
   --sla-warning-border: rgba(245, 158, 11, 0.32);
 
-  --sla-danger: #F43F5E;
-  --sla-danger-bg: rgba(244, 63, 94, 0.15);
-  --sla-danger-border: rgba(244, 63, 94, 0.32);
+  --sla-danger: #EF4444; /* Rojo calibrado sin vibración óptica sobre fondo pizarra */
+  --sla-danger-bg: rgba(239, 68, 68, 0.16);
+  --sla-danger-border: rgba(239, 68, 68, 0.35);
 
   --sla-info: #60A5FA;
   --sla-info-bg: rgba(96, 165, 250, 0.15);
   --sla-info-border: rgba(96, 165, 250, 0.32);
 
   /* =========================================================================
-     4. PALETA CATEGÓRICA ACOTADA (Modo Oscuro)
+     4. PALETA CATEGÓRICA ACOTADA (Modo Oscuro — Familias diferenciadas)
      ========================================================================= */
-  --cat-1: #2DD4BF; /* Vegetación */
-  --cat-2: #60A5FA; /* Construcciones */
-  --cat-3: #38BDF8; /* Obras */
-  --cat-4: #818CF8; /* Permiso Ingreso */
-  --cat-5: #FB923C; /* Invasión / Explanación */
-  --cat-6: #94A3B8; /* Otros */
+  --cat-1: #A3E635; /* Vegetación: Oliva suave silvicultural */
+  --cat-2: #60A5FA; /* Construcciones: Azul Cobalto */
+  --cat-3: #94A3B8; /* Obras: Grafito / Acero Industrial */
+  --cat-4: #A78BFA; /* Permiso Ingreso: Amatista Predial */
+  --cat-5: #FB923C; /* Invasión / Explanación: Terracota Arcilla */
+  --cat-6: #64748B; /* Otros: Pizarra Neutro */
 }

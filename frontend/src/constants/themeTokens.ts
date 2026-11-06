@@ -26,8 +26,8 @@ export function getSlaColors(isDark: boolean) {
   return {
     cumple: isDark ? '#10B981' : '#059669',
     cumpleSoft: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(5, 150, 105, 0.12)',
-    excede: isDark ? '#F43F5E' : '#DC2626',
-    excedeSoft: isDark ? 'rgba(244, 63, 94, 0.18)' : 'rgba(220, 38, 38, 0.12)',
+    excede: isDark ? '#EF4444' : '#DC2626',
+    excedeSoft: isDark ? 'rgba(239, 68, 68, 0.18)' : 'rgba(220, 38, 38, 0.12)',
     warning: isDark ? '#F59E0B' : '#D97706',
     warningSoft: isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(217, 119, 6, 0.12)',
     abierto: isDark ? '#60A5FA' : '#1D4ED8',
@@ -39,29 +39,30 @@ export function getSlaColors(isDark: boolean) {
 
 /**
  * 2. Paleta Categórica Sobria para Tipos de Aviso (Sin colisión con verde/rojo de SLA)
+ * Familias cromáticas con distancia perceptual Delta-E > 25 (CIELAB)
  */
 export const TIPO_COLORS: Record<string, string> = {
-  'Vegetación': '#0F766E',             // Teal profundo (Silvicultura)
-  'Construcciones': '#1D4ED8',         // Azul Cobalto (Estructuras)
-  'Obras': '#0284C7',                  // Azul Acero (Obra civil)
-  'Permiso Ingreso': '#4338CA',        // Índigo Técnico (Gestión predial)
-  'Invasión / Explanación': '#B45309', // Ocre Tierra (Terreno / Servidumbre)
-  'Otros': '#64748B',                  // Pizarra Neutro
+  'Vegetación': '#3F6212',             // Verde Oliva silvicultural (No compite con Esmeralda SLA)
+  'Construcciones': '#1D4ED8',         // Azul Cobalto (Ingeniería y Estructuras)
+  'Obras': '#475569',                  // Grafito / Acero Industrial (Rompe la sopa de azules)
+  'Permiso Ingreso': '#6D28D9',        // Amatista Técnico / Predial
+  'Invasión / Explanación': '#C2410C', // Terracota Arcilloso / Suelo (No compite con Ámbar SLA)
+  'Otros': '#94A3B8',                  // Pizarra Neutro
 };
 
 export function getTipoColor(tipo: string, isDark = false): string {
   if (isDark) {
     const darkMap: Record<string, string> = {
-      'Vegetación': '#2DD4BF',
+      'Vegetación': '#A3E635',
       'Construcciones': '#60A5FA',
-      'Obras': '#38BDF8',
-      'Permiso Ingreso': '#818CF8',
+      'Obras': '#94A3B8',
+      'Permiso Ingreso': '#A78BFA',
       'Invasión / Explanación': '#FB923C',
-      'Otros': '#94A3B8',
+      'Otros': '#64748B',
     };
     return darkMap[tipo] || '#94A3B8';
   }
-  return TIPO_COLORS[tipo] || '#64748B';
+  return TIPO_COLORS[tipo] || '#94A3B8';
 }
 
 /**
@@ -92,39 +93,27 @@ export const PRIO_COLORS: Record<string, string> = {
 };
 
 /**
- * 4. Escala Secuencial Monocromática para Territorios (De mayor a menor volumen)
- * Reemplaza los 12 colores aleatorios por una progresión limpia de Azul Petróleo a Pizarra.
+ * 4. Escala Secuencial Monocromática para Territorios (6 Peldaños de Densidad Perceptual)
+ * Binea los territorios en 6 niveles reconocibles sin saturar la memoria de trabajo.
  */
 export const DEPTO_PALETTE = [
-  '#115E59', // 1. Teal 800 (Mayor concentración)
-  '#0F766E', // 2. Teal 700
-  '#0D9488', // 3. Teal 600
-  '#0891B2', // 4. Cyan 600
-  '#0284C7', // 5. Sky 600
-  '#1D4ED8', // 6. Blue 700
-  '#2563EB', // 7. Blue 600
-  '#3B82F6', // 8. Blue 500
-  '#475569', // 9. Slate 600
-  '#64748B', // 10. Slate 500
-  '#94A3B8', // 11. Slate 400
-  '#CBD5E1', // 12. Slate 300 (Menor concentración)
+  '#115E59', // Nivel 1 - Concentración Extrema (Teal 800)
+  '#0F766E', // Nivel 2 - Muy Alta (Teal 700)
+  '#0284C7', // Nivel 3 - Alta (Sky 600)
+  '#2563EB', // Nivel 4 - Media (Blue 600)
+  '#475569', // Nivel 5 - Moderada (Slate 600)
+  '#94A3B8', // Nivel 6 - Base / Mínima (Slate 400)
 ];
 
 export function getSequentialTerritoryPalette(isDark: boolean): string[] {
   return isDark
     ? [
-        '#2DD4BF',
-        '#14B8A6',
-        '#0D9488',
-        '#38BDF8',
-        '#0284C7',
-        '#60A5FA',
-        '#3B82F6',
-        '#2563EB',
-        '#94A3B8',
-        '#64748B',
-        '#475569',
-        '#334155',
+        '#2DD4BF', // Nivel 1 - Extrema
+        '#14B8A6', // Nivel 2 - Muy Alta
+        '#38BDF8', // Nivel 3 - Alta
+        '#60A5FA', // Nivel 4 - Media
+        '#94A3B8', // Nivel 5 - Moderada
+        '#475569', // Nivel 6 - Mínima
       ]
     : DEPTO_PALETTE;
 }

@@ -92,7 +92,8 @@ defineProps<{
 
 .ramp-strip {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   height: 44px;
   border-radius: var(--radius-sm);
   overflow: hidden;
