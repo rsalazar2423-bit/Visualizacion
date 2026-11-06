@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { AlertTriangle, Clock } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { getEChartsThemeTokens, getTipoColor } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
+import ExpandableChartCard from '../common/ExpandableChartCard.vue';
 
 const territoryStore = useTerritoryStore();
 
@@ -48,10 +48,10 @@ function renderSectorRanking(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600 },
     },
     grid: {
-      left: '2%',
-      right: '5%',
-      bottom: '4%',
-      top: '36px',
+      left: '3%',
+      right: '6%',
+      bottom: '3%',
+      top: '14%',
       containLabel: true,
     },
     xAxis: {
@@ -63,25 +63,27 @@ function renderSectorRanking(chartInstance: echarts.ECharts, isDark: boolean) {
       type: 'category',
       data: labels,
       inverse: true,
-      axisLabel: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600, fontSize: 11 },
-      axisLine: { lineStyle: { color: tokens.gridColor } },
+      axisLabel: {
+        color: tokens.textColor,
+        fontFamily: tokens.fontFamily,
+        fontSize: 11,
+        formatter: (val: string) => (val.length > 20 ? val.substring(0, 18) + '…' : val),
+      },
     },
     series: [
       {
-        name: 'Abiertos Vencidos (Prioritario)',
+        name: 'Abiertos Vencidos (Alerta)',
         type: 'bar',
-        stack: 'atraso',
-        barWidth: 16,
-        itemStyle: { color: tokens.sla.excede, borderRadius: [3, 0, 0, 3] },
+        stack: 'total',
         data: vencidos,
+        itemStyle: { color: tokens.sla.excede, borderRadius: [0, 0, 0, 0] },
       },
       {
-        name: 'Cerrados fuera de plazo',
+        name: 'Cerrados con Atraso (Mitigados)',
         type: 'bar',
-        stack: 'atraso',
-        barWidth: 16,
-        itemStyle: { color: tokens.sla.warning, opacity: 0.78, borderRadius: [0, 3, 3, 0] },
+        stack: 'total',
         data: cerradosAtrasados,
+        itemStyle: { color: tokens.sla.warning, borderRadius: [0, 4, 4, 0] },
       },
     ],
   };
@@ -90,41 +92,37 @@ function renderSectorRanking(chartInstance: echarts.ECharts, isDark: boolean) {
 }
 
 function renderTypologyDurations(chartInstance: echarts.ECharts, isDark: boolean) {
-  const items = territoryStore.data?.typology_durations || [];
-  if (!items.length) {
+  const durations = territoryStore.data?.typology_durations || [];
+  if (!durations.length) {
     chartInstance.clear();
     return;
   }
 
   const tokens = getEChartsThemeTokens(isDark);
-  const categories = items.map((i) => i.tipo);
-  const medianas = items.map((i) => ({
-    value: i.mediana_dias,
-    itemStyle: { color: getTipoColor(i.tipo, isDark), borderRadius: [4, 4, 0, 0] },
-  }));
-  const promedios = items.map((i) => i.promedio_dias);
-  const p75s = items.map((i) => i.p75_dias);
+  const labels = durations.map((d) => d.tipo);
+  const medianas = durations.map((d) => d.mediana_dias);
+  const p75 = durations.map((d) => d.p75_dias);
 
   const option: echarts.EChartsOption = {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
       backgroundColor: tokens.tooltipBg,
       borderColor: tokens.tooltipBorder,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 12 },
       formatter: (params: any) => {
         const idx = params?.[0]?.dataIndex ?? 0;
-        const item = items[idx];
+        const item = durations[idx];
         if (!item) return '';
         return `
           <div style="font-weight:800;margin-bottom:4px;color:${tokens.textColor};">${item.tipo}</div>
           <div style="font-size:11px;color:${tokens.textSecondary};margin-bottom:6px;">
-            Volumen: <b>${item.total.toLocaleString()}</b> avisos · Cumplimiento: <b>${item.cumple_pct}%</b>
+            Total avisos: <b>${item.total}</b> · Cumplimiento: <b>${item.cumple_pct}%</b>
           </div>
-          <div style="color:${tokens.textColor};">● Tiempo Típico (Mediana): <b>${item.mediana_dias} días</b></div>
-          <div style="color:${tokens.textSecondary};">● Rango Intercuartil (P25 – P75): <b>${item.p25_dias} – ${item.p75_dias} días</b></div>
-          <div style="color:${tokens.sla.warning};">● Promedio (afectado por extremos): <b>${item.promedio_dias} días</b></div>
+          <div style="color:${tokens.brandColor};font-weight:700;">● Mediana de Duración: <b>${item.mediana_dias} días</b></div>
+          <div style="color:${tokens.accentSelect};">● Percentil 75 (P75): <b>${item.p75_dias} días</b></div>
+          <div style="color:${tokens.textSecondary};">● Promedio: <b>${item.promedio_dias} días</b></div>
+          <div style="color:${tokens.sla.excede};">● Abiertos Vencidos: <b>${item.abiertos_vencidos}</b></div>
         `;
       },
     },
@@ -134,54 +132,45 @@ function renderTypologyDurations(chartInstance: echarts.ECharts, isDark: boolean
     },
     grid: {
       left: '3%',
-      right: '4%',
-      bottom: '8%',
-      top: '38px',
+      right: '6%',
+      bottom: '3%',
+      top: '14%',
       containLabel: true,
     },
     xAxis: {
       type: 'category',
-      data: categories,
+      data: labels,
       axisLabel: {
         color: tokens.textColor,
         fontFamily: tokens.fontFamily,
-        fontWeight: 600,
         fontSize: 11,
         interval: 0,
-        rotate: 12,
+        formatter: (val: string) => (val.length > 12 ? val.substring(0, 10) + '…' : val),
       },
-      axisLine: { lineStyle: { color: tokens.gridColor } },
     },
     yAxis: {
       type: 'value',
-      name: 'Días de Atención',
+      name: 'Días de Duración',
       nameTextStyle: { color: tokens.textSecondary, fontSize: 11 },
-      axisLabel: { formatter: '{value} d', color: tokens.textSecondary, fontFamily: tokens.fontFamily },
+      axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
       splitLine: { lineStyle: { color: tokens.gridColor } },
     },
     series: [
       {
         name: 'Mediana (Tiempo Típico)',
         type: 'bar',
-        barMaxWidth: 32,
         data: medianas,
+        itemStyle: {
+          color: (params: any) => getTipoColor(labels[params.dataIndex], isDark),
+          borderRadius: [4, 4, 0, 0],
+        },
       },
       {
-        name: 'Promedio',
+        name: 'Percentil 75 (Cola de Atraso)',
         type: 'line',
-        symbol: 'circle',
-        symbolSize: 8,
-        lineStyle: { width: 2, color: tokens.sla.warning, type: 'dashed' },
+        data: p75,
+        lineStyle: { color: tokens.sla.warning, width: 2, type: 'dashed' },
         itemStyle: { color: tokens.sla.warning },
-        data: promedios,
-      },
-      {
-        name: 'Percentil 75 (P75)',
-        type: 'scatter',
-        symbol: 'diamond',
-        symbolSize: 9,
-        itemStyle: { color: tokens.sla.excede },
-        data: p75s,
       },
     ],
   };
@@ -207,49 +196,28 @@ watch(
 
 <template>
   <div class="grid-2">
-    <!-- Gráfico 1: Ranking de Municipios / Sectores con Mayores Retrasos -->
-    <div class="card">
-      <div class="chart-header-block">
-        <div class="header-main-row">
-          <div class="title-with-badge">
-            <span class="badge badge-tag">
-              <AlertTriangle :size="13" /> Cuellos de Botella
-            </span>
-            <h3 class="card-title">
-              {{ territoryStore.selectedDepto ? `Sectores con Mayor Atraso (${territoryStore.selectedDepto})` : 'Municipios con Mayor Concentración de Retrasos' }}
-            </h3>
-          </div>
-        </div>
-        <p class="chart-reseña">
-          Focalización de zonas donde se acumula el mayor número de avisos abiertos vencidos e incumplimientos históricos para priorizar el despliegue de cuadrillas.
-        </p>
-      </div>
+    <!-- Gráfico 1 con botón Ampliar -->
+    <ExpandableChartCard
+      :title="territoryStore.selectedDepto ? `Sectores con Mayor Atraso (${territoryStore.selectedDepto})` : 'Municipios con Mayor Concentración de Retrasos'"
+      subtitle="Focalización de zonas donde se acumulan avisos abiertos vencidos para priorizar cuadrillas"
+    >
       <div ref="rankingContainer" class="diag-canvas"></div>
-    </div>
+    </ExpandableChartCard>
 
-    <!-- Gráfico 2: Comparación de Tiempos de Atención por Tipo de Aviso -->
-    <div class="card">
-      <div class="chart-header-block">
-        <div class="header-main-row">
-          <div class="title-with-badge">
-            <span class="badge badge-tag">
-              <Clock :size="13" /> Diagnóstico Técnico
-            </span>
-            <h3 class="card-title">Tiempos de Atención por Tipo de Aviso (Mediana vs P75)</h3>
-          </div>
-        </div>
-        <p class="chart-reseña">
-          Comparación de la duración típica (mediana), el promedio y el percentil 75 (P75) entre tipos de incidente, evidenciando qué especialidades técnicas tardan más en resolverse.
-        </p>
-      </div>
+    <!-- Gráfico 2 con botón Ampliar -->
+    <ExpandableChartCard
+      title="Tiempos de Atención por Tipo de Aviso (Mediana vs P75)"
+      subtitle="Comparación de la duración típica frente al percentil 75 evidenciando qué especialidades tardan más"
+    >
       <div ref="durationContainer" class="diag-canvas"></div>
-    </div>
+    </ExpandableChartCard>
   </div>
 </template>
 
 <style scoped>
 .diag-canvas {
   width: 100%;
-  height: 360px;
+  height: 100%;
+  min-height: 380px;
 }
 </style>

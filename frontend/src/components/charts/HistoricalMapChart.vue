@@ -172,7 +172,14 @@ const OPERATIVE_DEPTOS = [
 ];
 
 function getActiveGeoView(): { center: [number, number]; zoom: number } {
-  return getAdaptiveGeoView(territoryStore.selectedDepto);
+  // Pasamos los puntos de torres del departamento seleccionado para enfocar exactamente el corredor
+  const depto = territoryStore.selectedDepto;
+  if (!depto || depto === 'Todos') {
+    return getAdaptiveGeoView(null);
+  }
+  const allPts = territoryStore.data?.map_points || [];
+  const deptoPts = allPts.filter((p) => p.depto === depto);
+  return getAdaptiveGeoView(depto, deptoPts);
 }
 
 function buildMapOption(tokens: any, isDark: boolean) {
@@ -347,20 +354,33 @@ function buildMapOption(tokens: any, isDark: boolean) {
   };
 }
 
-function renderMap() {
+function renderMap(preserveView = false) {
   if (!chartInstance || !mapRegistered) return;
   const isDark = themeStore.isDark;
   const tokens = getEChartsThemeTokens(isDark);
   const option = buildMapOption(tokens, isDark);
-  chartInstance.setOption(option, true);
+  
+  if (preserveView && option.geo) {
+    // Si solo estamos reproduciendo el año, no reseteamos el zoom/pan del usuario
+    delete (option.geo as any).center;
+    delete (option.geo as any).zoom;
+  }
+  
+  chartInstance.setOption(option, !preserveView);
 }
 
-function renderModalMap() {
+function renderModalMap(preserveView = false) {
   if (!modalChartInstance || !mapRegistered) return;
   const isDark = themeStore.isDark;
   const tokens = getEChartsThemeTokens(isDark);
   const option = buildMapOption(tokens, isDark);
-  modalChartInstance.setOption(option, true);
+  
+  if (preserveView && option.geo) {
+    delete (option.geo as any).center;
+    delete (option.geo as any).zoom;
+  }
+  
+  modalChartInstance.setOption(option, !preserveView);
 }
 
 function attachChartEvents(inst: echarts.ECharts) {
@@ -426,20 +446,25 @@ onBeforeUnmount(() => {
   closeModal();
 });
 
+// Vigilante del departamento: si cambia el departamento o el tema, se actualiza el encuadre completo (zoom/centro)
 watch(
-  () => [
-    territoryStore.data,
-    territoryStore.selectedDepto,
-    territoryStore.selectedMunicipio,
-    themeStore.isDark,
-    selectedYear.value,
-    timeMode.value,
-    layerFilter.value,
-  ],
+  () => [territoryStore.selectedDepto, territoryStore.selectedMunicipio, themeStore.isDark],
   () => {
-    renderMap();
+    renderMap(false);
     if (isModalOpen.value) {
-      renderModalMap();
+      renderModalMap(false);
+    }
+  }
+);
+
+// Vigilante de la línea de tiempo (reproductor, años, filtros de capas):
+// preserveView = true -> preserva el zoom y el encuadre para que NO se reinicie ni se reduzca al reproducir
+watch(
+  () => [territoryStore.data, selectedYear.value, timeMode.value, layerFilter.value],
+  () => {
+    renderMap(true);
+    if (isModalOpen.value) {
+      renderModalMap(true);
     }
   },
   { deep: true }
