@@ -99,12 +99,12 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'line',
         smooth: 0.25,
         symbol: 'circle',
-        symbolSize: 5,
-        lineStyle: { width: 2, color: isDark ? '#94A3B8' : '#64748B' }, // Azul Acero Pizarra (Sobrio / Contexto)
-        itemStyle: { color: isDark ? '#94A3B8' : '#64748B' },
+        symbolSize: 4,
+        lineStyle: { width: 1.5, color: isDark ? '#64748B' : '#94A3B8' }, // Gris Pizarra Tenue (Contexto Pasivo)
+        itemStyle: { color: isDark ? '#64748B' : '#94A3B8' },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: isDark ? 'rgba(148, 163, 184, 0.12)' : 'rgba(100, 116, 139, 0.08)' },
+            { offset: 0, color: isDark ? 'rgba(100, 116, 139, 0.08)' : 'rgba(148, 163, 184, 0.06)' },
             { offset: 1, color: 'rgba(0,0,0,0)' },
           ]),
         },
@@ -115,19 +115,19 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'line',
         smooth: 0.25,
         symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { width: 2.4, color: isDark ? '#60A5FA' : '#1D4ED8' }, // Azul Corporativo Profundo
-        itemStyle: { color: isDark ? '#60A5FA' : '#1D4ED8' },
+        symbolSize: 5,
+        lineStyle: { width: 1.8, color: isDark ? '#38BDF8' : '#0284C7' }, // Azul Acero Técnico (Capacidad)
+        itemStyle: { color: isDark ? '#38BDF8' : '#0284C7' },
         data: cerrados,
       },
       {
         name: 'Abiertos Vencidos (del periodo)',
         type: 'bar',
-        barMaxWidth: 14,
+        barMaxWidth: 16,
         itemStyle: {
-          color: tokens.sla.excede, // Carmín Ladrillo de Alarma
+          color: tokens.sla.excede, // Carmín Ladrillo (Alerta Principal de Mora)
           borderRadius: [2, 2, 0, 0],
-          opacity: 0.85,
+          opacity: 0.9,
         },
         data: vencidos,
       },
@@ -137,9 +137,13 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         yAxisIndex: 1,
         smooth: 0.25,
         symbol: 'diamond',
-        symbolSize: 6,
-        lineStyle: { width: 2, type: 'solid', color: isDark ? '#2DD4BF' : '#0F766E' }, // Teal Institucional Sobrio
-        itemStyle: { color: isDark ? '#2DD4BF' : '#0F766E' },
+        symbolSize: 7,
+        lineStyle: {
+          width: 2.2,
+          type: 'dashed', // Punteada: Diferenciación inmediata de escala porcentual
+          color: isDark ? '#FBBF24' : '#D97706', // Ámbar refinado para la tasa de efectividad
+        },
+        itemStyle: { color: isDark ? '#FBBF24' : '#D97706' },
         data: overlayData,
       },
     ],
