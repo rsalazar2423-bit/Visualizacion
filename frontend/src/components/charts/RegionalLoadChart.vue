@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { BarChart2 } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import type { CapacityRegionItem } from '../../types/models';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -36,8 +35,10 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 12 },
     },
     legend: {
-      top: 0,
-      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600 },
+      top: 4,
+      left: 'center',
+      itemGap: 12,
+      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600, fontSize: 11 },
     },
     dataZoom: [
       {
@@ -47,9 +48,9 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
     ],
     grid: {
       left: '3%',
-      right: '5%',
-      bottom: '8%',
-      top: '42px',
+      right: '4%',
+      bottom: '16%',
+      top: '72px', // Espacio holgado garantizado: la leyenda queda en 4-35px, y los nombres de ejes en 40-60px sin colisión
       containLabel: true,
     },
     xAxis: {
@@ -59,14 +60,15 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
         color: tokens.textColor,
         fontFamily: tokens.fontFamily,
         fontWeight: 600,
-        fontSize: 11,
+        fontSize: 10.5,
         interval: 0,
-        rotate: 0, // Textos horizontales limpios (sin inclinación diagonal)
+        margin: 12,
+        lineHeight: 14,
         formatter: (val: string) => {
-          // Si el nombre es largo (ej. 'Valle Del Cauca'), lo divide en 2 líneas para que se lea perfectamente horizontal
+          if (val === 'Valle Del Cauca') return 'Valle del\nCauca';
           if (val.length > 10 && val.includes(' ')) {
             const parts = val.split(' ');
-            return parts.slice(0, 2).join(' ') + '\n' + parts.slice(2).join(' ');
+            return parts.slice(0, Math.ceil(parts.length / 2)).join(' ') + '\n' + parts.slice(Math.ceil(parts.length / 2)).join(' ');
           }
           return val;
         },
@@ -77,15 +79,27 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
       {
         type: 'value',
         name: 'Avisos Pendientes',
-        nameTextStyle: { color: tokens.textSecondary, fontSize: 11 },
-        axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
+        nameLocation: 'end',
+        nameTextStyle: {
+          color: tokens.textSecondary,
+          fontSize: 10.5,
+          fontWeight: 600,
+          padding: [0, 0, 6, 0],
+        },
+        axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily, fontSize: 10.5 },
         splitLine: { lineStyle: { color: tokens.gridColor } },
       },
       {
         type: 'value',
         name: 'Avisos / 100 Torres',
-        nameTextStyle: { color: tokens.textSecondary, fontSize: 11 },
-        axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
+        nameLocation: 'end',
+        nameTextStyle: {
+          color: tokens.textSecondary,
+          fontSize: 10.5,
+          fontWeight: 600,
+          padding: [0, 0, 6, 0],
+        },
+        axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily, fontSize: 10.5 },
         splitLine: { show: false },
       },
     ],
@@ -94,7 +108,7 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
         name: 'Abiertos Vencidos (Prioritario)',
         type: 'bar',
         stack: 'backlog',
-        barMaxWidth: 28,
+        barMaxWidth: 26,
         itemStyle: { color: tokens.sla.excede, borderRadius: [0, 0, 0, 0] },
         data: vencidos,
       },
@@ -102,7 +116,7 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
         name: 'Abiertos en Plazo',
         type: 'bar',
         stack: 'backlog',
-        barMaxWidth: 28,
+        barMaxWidth: 26,
         itemStyle: { color: tokens.sla.abierto, borderRadius: [4, 4, 0, 0] },
         data: abiertosEnPlazo,
       },
@@ -112,7 +126,7 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
         yAxisIndex: 1,
         symbol: 'circle',
         symbolSize: 8,
-        lineStyle: { width: 2.5, color: tokens.brandColor },
+        lineStyle: { width: 2.2, color: tokens.brandColor },
         itemStyle: { color: tokens.brandColor },
         data: densidad,
       },
@@ -145,28 +159,25 @@ watch(
 </script>
 
 <template>
-  <div class="card">
-    <div class="chart-header-block">
-      <div class="header-main-row">
-        <div class="title-with-badge">
-          <span class="badge">
-            <BarChart2 :size="13" /> Carga Regional
-          </span>
-          <h3 class="card-title">Backlog Activo y Densidad por Territorio</h3>
-        </div>
-      </div>
-      <p class="chart-reseña">
-        Contraste entre el volumen de avisos abiertos (vencidos vs. en plazo) y la presión relativa por cada 100 torres instaladas.
-      </p>
-    </div>
+  <div class="regional-load-wrapper">
     <div ref="chartRef" class="cap-canvas"></div>
   </div>
 </template>
 
 <style scoped>
+.regional-load-wrapper {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .cap-canvas {
   width: 100%;
-  height: 360px;
+  height: 100%;
+  flex: 1;
+  min-height: 320px;
 }
 </style>
-

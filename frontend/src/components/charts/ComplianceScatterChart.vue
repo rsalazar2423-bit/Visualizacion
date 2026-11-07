@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Crosshair } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import type { CapacityRegionItem } from '../../types/models';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -22,9 +21,7 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
   const tokens = getEChartsThemeTokens(isDark);
 
   const scatterData = items.map((m) => {
-    // Si tiene cumplimiento menor al 40% o más de 12 vencidos, es un municipio CRÍTICO (se destaca en Carmín)
     const isCritical = m.cumple_pct < 45 || m.abiertos_vencidos >= 10;
-    // Si está entre 45% y 60%, advertencia moderada
     const isWarning = !isCritical && m.cumple_pct < 60;
 
     return {
@@ -86,8 +83,8 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
     ],
     grid: {
       left: '4%',
-      right: '6%',
-      bottom: '10%',
+      right: '5%',
+      bottom: '12%',
       top: '36px',
       containLabel: true,
     },
@@ -95,9 +92,9 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
       type: 'value',
       name: 'Carga de Trabajo (Volumen de Avisos)',
       nameLocation: 'middle',
-      nameGap: 28,
-      nameTextStyle: { color: tokens.textSecondary, fontWeight: 600 },
-      axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
+      nameGap: 26,
+      nameTextStyle: { color: tokens.textSecondary, fontWeight: 600, fontSize: 11 },
+      axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily, fontSize: 10.5 },
       splitLine: { lineStyle: { color: tokens.gridColor } },
     },
     yAxis: {
@@ -105,8 +102,8 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
       name: '% Cumplimiento SLA',
       min: 0,
       max: 100,
-      nameTextStyle: { color: tokens.textSecondary, fontWeight: 600 },
-      axisLabel: { formatter: '{value}%', color: tokens.textSecondary, fontFamily: tokens.fontFamily },
+      nameTextStyle: { color: tokens.textSecondary, fontWeight: 600, fontSize: 11, padding: [0, 0, 4, 0] },
+      axisLabel: { formatter: '{value}%', color: tokens.textSecondary, fontFamily: tokens.fontFamily, fontSize: 10.5 },
       splitLine: { lineStyle: { color: tokens.gridColor } },
     },
     series: [
@@ -115,7 +112,7 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'scatter',
         symbolSize: (val: any) => {
           const vencidos = val[2] || 0;
-          return Math.max(10, Math.min(34, 10 + Math.sqrt(vencidos) * 4));
+          return Math.max(10, Math.min(32, 10 + Math.sqrt(vencidos) * 4));
         },
         label: {
           show: true,
@@ -145,28 +142,25 @@ watch(
 </script>
 
 <template>
-  <div class="card">
-    <div class="chart-header-block">
-      <div class="header-main-row">
-        <div class="title-with-badge">
-          <span class="badge badge-tag">
-            <Crosshair :size="13" /> Matriz de Dispersión
-          </span>
-          <h3 class="card-title">Carga de Trabajo vs. % Cumplimiento por Municipio</h3>
-        </div>
-      </div>
-      <p class="chart-reseña">
-        El tamaño de cada nodo representa la cantidad de avisos abiertos vencidos. Los municipios en el cuadrante inferior derecho requieren refuerzo prioritario.
-      </p>
-    </div>
+  <div class="scatter-chart-wrapper">
     <div ref="chartRef" class="cap-canvas"></div>
   </div>
 </template>
 
 <style scoped>
+.scatter-chart-wrapper {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .cap-canvas {
   width: 100%;
-  height: 360px;
+  height: 100%;
+  flex: 1;
+  min-height: 320px;
 }
 </style>
-

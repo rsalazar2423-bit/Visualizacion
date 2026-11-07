@@ -99,8 +99,8 @@ onMounted(() => {
       <!-- HOJA 1: Exactamente 2 Gráficas en Paralelo (Ambas con botón para Ampliar) -->
       <section v-show="activeSubView === 'diagnosis'" class="stage-pane dual-charts">
         <ExpandableChartCard
-          title="Carga de Avisos por Región CTE"
-          subtitle="Distribución territorial de demanda e incidentes por zona operativa"
+          title="Carga Regional: Backlog Activo y Densidad de Torres"
+          subtitle="Volumen de avisos pendientes (vencidos vs. en plazo) y presión operativa relativa por 100 torres"
         >
           <RegionalLoadChart
             :regions="store.capacityData?.regions || []"
@@ -109,8 +109,8 @@ onMounted(() => {
         </ExpandableChartCard>
 
         <ExpandableChartCard
-          title="Dispersión de Municipios: Torres vs. Cumplimiento"
-          subtitle="Identificación de municipios con alta densidad y bajo cumplimiento SLA"
+          title="Matriz de Dispersión: Carga de Trabajo vs. % Cumplimiento"
+          subtitle="Correlación municipal entre volumen atendido y efectividad SLA. El tamaño indica mora acumulada."
         >
           <ComplianceScatterChart :items="store.capacityData?.municipios_scatter || []" />
         </ExpandableChartCard>
