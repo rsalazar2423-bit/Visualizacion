@@ -161,6 +161,25 @@ watch(() => territoryStore.data, () => render(), { deep: true });
           </span>
         </button>
       </div>
+
+      <!-- Guía Semántica Oficial del Treemap -->
+      <div class="treemap-semantic-bar">
+        <div class="sem-col">
+          <span class="sem-title">Codificación Jerárquica:</span>
+          <div class="sem-chips">
+            <span class="sem-chip"><b>Superficie:</b> Proporcional a la concentración histórica de avisos (100% de la red).</span>
+            <span class="sem-chip">
+              <b>Gradiente Secuencial:</b>
+              <span class="gradient-preview"></span>
+              <span>Teal profundo (mayor volumen de intervenciones) a Pizarra neutro (volumen base).</span>
+            </span>
+          </div>
+        </div>
+        <div class="sem-col interaction">
+          <span class="sem-title">Navegación Interactiva:</span>
+          <span class="sem-desc">Haz clic en cualquier cuadrante para realizar <b>Drill-Down</b> (País ➔ Departamento ➔ Municipio) y auditar su bitácora en la pestaña de Auditoría.</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -171,5 +190,65 @@ watch(() => territoryStore.data, () => render(), { deep: true });
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+.treemap-semantic-bar {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  background: var(--bg-subtle, rgba(241, 245, 249, 0.6));
+  border: 1px solid var(--border-subtle, rgba(226, 232, 240, 0.8));
+  border-radius: 8px;
+  font-size: 0.76rem;
+}
+
+.sem-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sem-title {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.sem-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-primary);
+}
+
+.sem-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.gradient-preview {
+  width: 50px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #115E59, #0F766E, #0284C7, #2563EB, #94A3B8);
+  display: inline-block;
+}
+
+.sem-desc {
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .treemap-semantic-bar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 </style>

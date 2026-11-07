@@ -40,11 +40,12 @@ const sunburstCategories = computed(() => {
       children: (cat.children || []).map((ch: any) => {
         const isCumple = String(ch.name).startsWith('Cumple');
         const isExcede = String(ch.name).startsWith('Excede');
+        const neutralSlate = themeStore.isDark ? '#64748B' : '#94A3B8';
         return {
           name: ch.name,
           value: ch.value,
           pct: catTotal > 0 ? Number(((ch.value / catTotal) * 100).toFixed(1)) : 0,
-          color: isCumple ? sla.cumple : isExcede ? sla.excede : (ch.itemStyle?.color || sla.neutral),
+          color: isCumple ? neutralSlate : isExcede ? sla.excede : (ch.itemStyle?.color || sla.neutral),
         };
       }),
     };
@@ -65,10 +66,11 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
     children: (cat.children || []).map((ch) => {
       const isCumple = String(ch.name).startsWith('Cumple');
       const isExcede = String(ch.name).startsWith('Excede');
+      const neutralSlate = isDark ? '#64748B' : '#94A3B8';
       return {
         ...ch,
         itemStyle: {
-          color: isCumple ? tokens.sla.cumple : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
+          color: isCumple ? neutralSlate : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
         },
       };
     }),
@@ -213,6 +215,28 @@ watch(() => territoryStore.data, () => render(), { deep: true });
           </template>
         </div>
       </div>
+
+      <!-- Guía Semántica de Interpretación Concéntrica -->
+      <div class="sunburst-semantic-bar">
+        <div class="sem-col">
+          <span class="sem-title">Estructura Concéntrica:</span>
+          <div class="sem-badges">
+            <span class="sem-chip"><b>Núcleo Interior:</b> Causa técnica del aviso (55% Vegetación, Obras, Estructuras).</span>
+            <span class="sem-chip" v-if="mode === 'sla'">
+              <b>Anillo Exterior:</b>
+              <span class="badge-dot-danger"></span> <b>Rojo Carmín:</b> Excede Plazo (Alerta SLA)
+              <span class="badge-dot-neutral"></span> <b>Gris:</b> Cumple Plazo en norma
+            </span>
+            <span class="sem-chip" v-else>
+              <b>Anillo Exterior:</b> Desglose por horizonte de tiempo comprometido (Semana a Años).
+            </span>
+          </div>
+        </div>
+        <div class="sem-col interaction">
+          <span class="sem-title">Navegación:</span>
+          <span class="sem-desc">Haz clic en cualquier segmento del círculo para aislar la tipología y profundizar en su tasa de cumplimiento.</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -269,5 +293,74 @@ watch(() => territoryStore.data, () => render(), { deep: true });
   background: var(--color-brand-soft);
   border-color: var(--color-brand);
   color: var(--color-brand);
+}
+
+.sunburst-semantic-bar {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  background: var(--bg-subtle, rgba(241, 245, 249, 0.6));
+  border: 1px solid var(--border-subtle, rgba(226, 232, 240, 0.8));
+  border-radius: 8px;
+  font-size: 0.76rem;
+}
+
+.sem-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sem-title {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.sem-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--text-primary);
+}
+
+.sem-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge-dot-danger {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #BE123C;
+  display: inline-block;
+}
+
+.badge-dot-neutral {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #94A3B8;
+  display: inline-block;
+  margin-left: 6px;
+}
+
+.sem-desc {
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .sunburst-semantic-bar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 </style>
