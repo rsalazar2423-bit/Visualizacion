@@ -311,20 +311,22 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cumple Plazo (A Tiempo)',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 7, // Tamaño visible y nítido (aumentado de 4.5)
+        symbolSize: 8, // Nodo visible y nítido para contraste espacial inmediato
         itemStyle: {
-          color: isDark ? '#64748B' : '#64748B', // Pizarra sobrio de buen contraste contra el mapa
-          opacity: 0.8,
-          borderColor: isDark ? '#1E293B' : '#FFFFFF',
-          borderWidth: 1.2,
+          color: isDark ? '#10B981' : '#059669', // Verde Esmeralda / Teal de Operación Conforme (BIEN)
+          opacity: 0.9,
+          borderColor: '#FFFFFF',
+          borderWidth: 1.4,
+          shadowColor: isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(5, 150, 105, 0.35)',
+          shadowBlur: 5,
         },
         emphasis: {
           scale: true,
           itemStyle: {
             borderColor: '#FFFFFF',
-            borderWidth: 2,
-            shadowBlur: 6,
-            shadowColor: 'rgba(0,0,0,0.3)',
+            borderWidth: 2.2,
+            shadowBlur: 8,
+            shadowColor: isDark ? 'rgba(16, 185, 129, 0.7)' : 'rgba(5, 150, 105, 0.6)',
           },
         },
         data: cumplePoints,
