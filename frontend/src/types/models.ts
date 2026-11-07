@@ -62,6 +62,20 @@ export interface TimeSeriesPoint {
   mediana_dias: number;
 }
 
+export interface TypologyPerformanceItem {
+  tipo: string;
+  total: number;
+  pct_total: number;
+  cumple_count: number;
+  cumple_pct: number;
+  excede_count: number;
+  excede_pct: number;
+  mediana_dias: number;
+  abiertos_vencidos: number;
+  color: string;
+  significado: string;
+}
+
 export interface OperationsDataResponse {
   kpis: OperationsKpis;
   stacked_bar: StackedBarItem[];
@@ -69,6 +83,7 @@ export interface OperationsDataResponse {
   tipos_catalogo?: DonutItem[];
   selected_prioridad?: string;
   time_series?: TimeSeriesPoint[];
+  typology_performance?: TypologyPerformanceItem[];
 }
 
 export interface TerritorialKpis {

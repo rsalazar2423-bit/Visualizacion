@@ -8,8 +8,9 @@ import type {
   FilterOptionsResponse,
   OperationsDataResponse,
   StackedBarItem,
+  TypologyPerformanceItem,
 } from '../../types/models';
-import { PRIO_ORDER } from '../../constants/themeTokens';
+import { PRIO_ORDER, TIPO_COLORS } from '../../constants/themeTokens';
 import { getDataset } from './datasetRepository';
 import { calcMedian, filterAvisos, buildDonutDistribution, buildTimeSeries } from './statsHelpers';
 
@@ -173,12 +174,58 @@ export async function computeOperationsData(params: {
     });
   }
 
+  // Metadatos semánticos de cada causa de mantenimiento en líneas de transmisión
+  const tipologiasSignificado: Record<string, string> = {
+    Vegetación: 'Poda y roce en zona de servidumbre (Riesgo de arco eléctrico RETIE)',
+    Construcciones: 'Obras o edificaciones que invaden distancias de seguridad a líneas vivas',
+    Obras: 'Mantenimiento civil, accesos a torres, taludes y drenajes de cimentación',
+    'Permiso Ingreso': 'Negociación de servidumbre de paso con propietarios de predios',
+    'Invasión/Explanación': 'Movimientos de tierra no autorizados que amenazan la estabilidad de las torres',
+  };
+
+  const tipoGroups: Record<string, typeof donutDf> = {};
+  for (const a of donutDf) {
+    const t = a['Tipo de aviso'] || 'Otros';
+    if (!tipoGroups[t]) tipoGroups[t] = [];
+    tipoGroups[t].push(a);
+  }
+
+  const typologyPerformance: TypologyPerformanceItem[] = Object.entries(tipoGroups)
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([tipo, list]) => {
+      const tipoTotal = list.length;
+      const cCount = list.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
+      const eCount = tipoTotal - cCount;
+      const cPct = tipoTotal > 0 ? Number(((cCount / tipoTotal) * 100).toFixed(1)) : 0;
+      const cerradosTipo = list.filter((a) => (a['Estado aviso'] || 'Cerrado') === 'Cerrado');
+      const srcDias = cerradosTipo.length > 0 ? cerradosTipo : list;
+      const medDias = srcDias.length > 0 ? calcMedian(srcDias.map((a) => a['Días abierto'] || 0)) : 0;
+      const abVencidos = list.filter(
+        (a) => a['Estado aviso'] === 'Abierto' && a.Cumplimiento_Estado === 'Excede Plazo'
+      ).length;
+
+      return {
+        tipo,
+        total: tipoTotal,
+        pct_total: total > 0 ? Number(((tipoTotal / total) * 100).toFixed(1)) : 0,
+        cumple_count: cCount,
+        cumple_pct: cPct,
+        excede_count: eCount,
+        excede_pct: Number((100 - cPct).toFixed(1)),
+        mediana_dias: medDias,
+        abiertos_vencidos: abVencidos,
+        color: TIPO_COLORS[tipo] || '#64748B',
+        significado: tipologiasSignificado[tipo] || 'Mantenimiento operativo no clasificado',
+      };
+    });
+
   return {
     kpis,
     donut: buildDonutDistribution(donutDf),
     tipos_catalogo: tiposCatalogo,
     stacked_bar: stackedBar,
     time_series: buildTimeSeries(donutDf),
+    typology_performance: typologyPerformance,
   };
 }
 

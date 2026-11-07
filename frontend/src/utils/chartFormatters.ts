@@ -23,6 +23,14 @@ export interface ThemeTokens {
   };
 }
 
+const TIPOLOGIAS_SIGNIFICADO: Record<string, string> = {
+  Vegetación: 'Poda y roce en zona de servidumbre (Riesgo de arco eléctrico RETIE)',
+  Construcciones: 'Obras o edificaciones que invaden distancias de seguridad a líneas vivas',
+  Obras: 'Mantenimiento civil, accesos a torres, taludes y drenajes de cimentación',
+  'Permiso Ingreso': 'Negociación de servidumbre de paso con propietarios de predios',
+  'Invasión/Explanación': 'Movimientos de tierra no autorizados que amenazan la estabilidad de las torres',
+};
+
 /**
  * Formateador para el gráfico Donut de Tipologías de Aviso.
  */
@@ -31,12 +39,16 @@ export function formatDonutTooltip(params: any, total: number, tokens: ThemeToke
   if (!p) return '';
   const pct = total > 0 ? ((p.value / total) * 100).toFixed(1) : '0';
   const accent = tokens.accentSelect || '#2563EB';
+  const significado = TIPOLOGIAS_SIGNIFICADO[p.name] || 'Causa de mantenimiento sobre la infraestructura de transmisión';
 
   return `
-    <div style="font-weight: 700; margin-bottom: 4px; color: ${tokens.textColor};">${p.name}</div>
-    <div style="color: ${tokens.textColor};">Avisos: <b>${Number(p.value).toLocaleString()}</b></div>
-    <div style="color: ${tokens.textColor};">Participación: <b style="color: ${accent};">${pct}%</b></div>
-    <div style="font-size: 10px; color: ${tokens.textSecondary}; margin-top: 4px;">(Clic para aislar tipología)</div>
+    <div style="font-weight: 800; font-size: 13px; margin-bottom: 3px; color: ${tokens.textColor};">${p.name}</div>
+    <div style="font-size: 11px; color: ${tokens.textSecondary}; margin-bottom: 6px; max-width: 250px; line-height: 1.35;">
+      ${significado}
+    </div>
+    <div style="color: ${tokens.textColor}; font-size: 12px;">Volumen: <b>${Number(p.value).toLocaleString()} avisos</b></div>
+    <div style="color: ${tokens.textColor}; font-size: 12px;">Participación: <b style="color: ${accent};">${pct}%</b></div>
+    <div style="font-size: 10px; color: ${tokens.accentSelect}; margin-top: 6px;">(Clic para aislar tipología en todo el tablero)</div>
   `;
 }
 

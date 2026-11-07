@@ -162,9 +162,13 @@ watch(() => [opsStore.data, opsStore.selectedTipos], () => render(), { deep: tru
 <style scoped>
 .donut-wrapper {
   width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
 }
 
 .active-tipo-bar {

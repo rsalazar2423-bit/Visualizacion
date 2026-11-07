@@ -5,6 +5,7 @@ import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../components/charts/StackedBarChart.vue';
 import DonutChart from '../components/charts/DonutChart.vue';
+import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
 const opsStore = useOperationsStore();
@@ -80,11 +81,11 @@ onMounted(async () => {
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'sla' }"
-          title="Composición Técnica de la Red"
+          title="Composición y Efectividad por Tipología Técnica"
           @click="activeSubView = 'sla'"
         >
           <Target :size="13" />
-          <span>2. Composición Técnica (Dona)</span>
+          <span>2. Composición Técnica (2 Gráficas)</span>
         </button>
       </nav>
     </header>
@@ -128,13 +129,20 @@ onMounted(async () => {
         </ExpandableChartCard>
       </section>
 
-      <!-- HOJA 2: Composición Técnica y Causas -->
-      <section v-show="activeSubView === 'sla'" class="stage-pane single-chart">
+      <!-- HOJA 2: Composición Técnica y Efectividad (2 Gráficas al 50% / 50%) -->
+      <section v-show="activeSubView === 'sla'" class="stage-pane dual-charts">
         <ExpandableChartCard
           title="Composición por Tipología Técnica"
-          subtitle="Distribución proporcional de causas de mantenimiento sobre la red de transmisión"
+          subtitle="Distribución proporcional de las 5 causas de mantenimiento sobre la infraestructura de 5.409 torres"
         >
           <DonutChart />
+        </ExpandableChartCard>
+
+        <ExpandableChartCard
+          title="Efectividad SLA y Duración por Tipología"
+          subtitle="Tasa de cumplimiento oportuno (en norma vs. mora) y tiempo típico de atención por especialidad"
+        >
+          <TypologyPerformanceChart />
         </ExpandableChartCard>
       </section>
     </main>
