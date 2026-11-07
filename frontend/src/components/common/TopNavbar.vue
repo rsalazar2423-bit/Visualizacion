@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { Sun, Moon, Activity, Map, Sliders, Home, Palette } from 'lucide-vue-next';
+import { Sun, Moon, Activity, Map, Sliders, Home, Palette, QrCode } from 'lucide-vue-next';
 import { useThemeStore } from '../../stores/themeStore';
+import QrAccessModal from './QrAccessModal.vue';
 
 const props = defineProps<{
   onToggleSidebar: () => void;
@@ -9,6 +11,7 @@ const props = defineProps<{
 
 const route = useRoute();
 const themeStore = useThemeStore();
+const isQrOpen = ref(false);
 
 const topNavLinks = [
   { label: 'Resumen', path: '/', icon: Home },
@@ -62,6 +65,16 @@ const topNavLinks = [
         <span class="inst-text">Suroccidente & Centro · Transmisión</span>
       </div>
 
+      <!-- Botón de Acceso Móvil por QR -->
+      <button
+        class="qr-access-btn"
+        title="Generar código QR para acceder desde celular o tablet"
+        @click="isQrOpen = true"
+      >
+        <QrCode :size="15" />
+        <span class="qr-btn-text">QR Móvil</span>
+      </button>
+
       <button
         class="theme-toggle-btn"
         :title="themeStore.isDark ? 'Cambiar a Tema Claro' : 'Cambiar a Tema Oscuro'"
@@ -71,6 +84,9 @@ const topNavLinks = [
         <Sun v-else :size="15" />
         <span class="theme-label">{{ themeStore.isDark ? 'Oscuro' : 'Claro' }}</span>
       </button>
+
+      <!-- Modal de Código QR -->
+      <QrAccessModal :is-open="isQrOpen" @close="isQrOpen = false" />
     </div>
   </header>
 </template>
@@ -227,6 +243,37 @@ const topNavLinks = [
   background: var(--bg-card-hover);
 }
 
+.qr-access-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(29, 78, 216, 0.08);
+  border: 1px solid rgba(29, 78, 216, 0.25);
+  color: #1D4ED8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.qr-access-btn:hover {
+  background: rgba(29, 78, 216, 0.16);
+  border-color: #1D4ED8;
+}
+
+[data-theme="dark"] .qr-access-btn {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.25);
+  color: #38BDF8;
+}
+
+[data-theme="dark"] .qr-access-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38BDF8;
+}
+
 @media (max-width: 1180px) {
   .institutional-badge {
     display: none;
@@ -240,7 +287,8 @@ const topNavLinks = [
 }
 
 @media (max-width: 640px) {
-  .theme-label {
+  .theme-label,
+  .qr-btn-text {
     display: none;
   }
 }

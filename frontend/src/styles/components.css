@@ -296,3 +296,73 @@
   border-left-color: var(--color-brand);
 }
 
+/* ==========================================================================
+   Modo Responsivo Móviles y Tablets: Habilita Scroll Vertical y Apilamiento
+   ========================================================================== */
+@media (max-width: 1024px), (max-height: 720px) {
+  .viewport-clean-view {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    gap: 14px !important;
+  }
+
+  .compact-control-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .minimal-filters {
+    flex-wrap: wrap !important;
+  }
+
+  .minimal-filters .form-select-sm {
+    flex: 1 !important;
+    min-width: 140px !important;
+  }
+
+  .subview-toggle {
+    width: 100% !important;
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  .kpi-micro-row {
+    flex-wrap: wrap !important;
+  }
+
+  .kpi-micro-chip {
+    flex: 1 1 calc(50% - 8px) !important;
+  }
+
+  .chart-viewport-stage {
+    height: auto !important;
+    min-height: auto !important;
+    overflow-y: visible !important;
+  }
+
+  .stage-pane {
+    height: auto !important;
+    min-height: auto !important;
+  }
+
+  .stage-pane.dual-charts {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    height: auto !important;
+  }
+
+  .expandable-chart-card {
+    height: 480px !important;
+    min-height: 420px !important;
+  }
+
+  .chart-canvas-evolution,
+  .stacked-canvas,
+  .cap-canvas {
+    height: 380px !important;
+    min-height: 340px !important;
+  }
+}
+
