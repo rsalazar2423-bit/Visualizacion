@@ -154,9 +154,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 100%;
-  max-height: 100%;
-  overflow: hidden; /* CERO SCROLL */
+  min-height: 100%;
 }
 
 /* Barra Superior de Control */

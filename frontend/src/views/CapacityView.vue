@@ -129,9 +129,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: calc(100vh - 120px);
-  max-height: calc(100vh - 120px);
-  overflow: hidden; /* CERO SCROLL */
+  min-height: calc(100vh - 120px);
 }
 
 /* Barra Superior de Control */

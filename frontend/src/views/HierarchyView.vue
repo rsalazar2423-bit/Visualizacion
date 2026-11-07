@@ -171,9 +171,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 100%;
-  max-height: 100%;
-  overflow: hidden; /* CERO SCROLL */
+  min-height: 100%;
 }
 
 /* Barra Superior de Control */
@@ -319,7 +317,14 @@ onMounted(async () => {
 .stage-pane.dual-charts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .stage-pane.dual-charts {
+    grid-template-columns: 1fr;
+  }
 }
 
 .audit-pane {

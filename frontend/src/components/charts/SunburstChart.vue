@@ -59,20 +59,24 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
     ? (territoryStore.data.sunburst_sla || territoryStore.data.sunburst)
     : (territoryStore.data.sunburst_plazos || territoryStore.data.sunburst);
 
-  const sunburstData = rawData.map((cat) => ({
-    ...cat,
-    itemStyle: { color: getTipoColor(cat.name, isDark) },
-    children: (cat.children || []).map((ch) => {
-      const isCumple = String(ch.name).startsWith('Cumple');
-      const isExcede = String(ch.name).startsWith('Excede');
-      return {
-        ...ch,
-        itemStyle: {
-          color: isCumple ? tokens.sla.cumple : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
-        },
-      };
-    }),
-  }));
+  const sunburstData = rawData.map((cat) => {
+    const parentColor = getTipoColor(cat.name, isDark);
+    return {
+      ...cat,
+      itemStyle: { color: parentColor },
+      children: (cat.children || []).map((ch) => {
+        const isCumple = String(ch.name).startsWith('Cumple');
+        const isExcede = String(ch.name).startsWith('Excede');
+        return {
+          ...ch,
+          itemStyle: {
+            color: isCumple ? parentColor : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
+            opacity: isCumple ? 0.65 : 0.95,
+          },
+        };
+      }),
+    };
+  });
 
   const totalAvisos = sunburstData.reduce((acc, curr) => {
     const sumChild = (curr.children || []).reduce((cAcc, cCurr) => cAcc + (cCurr.value || 0), 0);
@@ -95,7 +99,7 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
       {
         type: 'sunburst',
         data: sunburstData,
-        radius: ['18%', '90%'],
+        radius: ['26%', '88%'],
         nodeClick: 'rootToNode',
         sort: undefined,
         emphasis: {
@@ -103,14 +107,14 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
         },
         blur: {
           itemStyle: {
-            opacity: 0.55,
+            opacity: 0.6,
           },
         },
         levels: [
           {},
           {
-            r0: '18%',
-            r: '52%',
+            r0: '26%',
+            r: '56%',
             itemStyle: {
               borderWidth: 2,
               borderColor: tokens.cardBg,
@@ -123,31 +127,21 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
               },
             },
             label: {
-              show: true,
-              position: 'inside',
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: 11,
-              textShadowColor: 'rgba(0, 0, 0, 0.5)',
-              textShadowBlur: 3,
-              formatter: (p: any) => {
-                const pct = totalAvisos > 0 ? (p.value / totalAvisos) : 0;
-                return pct >= 0.06 ? p.name : '';
-              },
+              show: false,
             },
           },
           {
-            r0: '54%',
-            r: '90%',
+            r0: '59%',
+            r: '88%',
             itemStyle: {
-              borderWidth: 1.5,
+              borderWidth: 2,
               borderColor: tokens.cardBg,
               borderRadius: 2,
             },
             emphasis: {
               itemStyle: {
                 borderColor: tokens.accentSelect,
-                borderWidth: 2,
+                borderWidth: 2.5,
               },
             },
             label: {
@@ -237,8 +231,8 @@ watch(() => territoryStore.data, () => render(), { deep: true });
             <span class="sem-chip"><b>Núcleo Interior:</b> Causa técnica del aviso (55% Vegetación, Obras, Estructuras).</span>
             <span class="sem-chip" v-if="mode === 'sla'">
               <b>Anillo Exterior:</b>
-              <span class="badge-dot-success"></span> <b>Verde Esmeralda:</b> Cumple Plazo
-              <span class="badge-dot-danger"></span> <b>Rojo Carmín:</b> Excede Plazo (Alerta SLA)
+              <span class="badge-dot-neutral"></span> <b>Tono de la Causa (Suave):</b> Cumple Plazo en norma
+              <span class="badge-dot-danger"></span> <b>Rojo Carmín:</b> Excede Plazo (Alerta de Mora SLA)
             </span>
             <span class="sem-chip" v-else>
               <b>Anillo Exterior:</b> Desglose por horizonte de tiempo comprometido (Semana a Años).

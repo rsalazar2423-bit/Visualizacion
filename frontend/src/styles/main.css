@@ -26,11 +26,11 @@ a {
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   max-width: 100vw;
-  overflow: hidden; /* Cero Scroll en Desktop */
+  overflow-x: hidden;
+  overflow-y: auto; /* Scroll vertical netamente cuando sea necesario para no perder información */
 }
 
 .main-content {
@@ -38,11 +38,10 @@ a {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 8px 12px;
+  padding: 8px 12px 28px;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* Modo Responsivo para Móviles y Tablets: Habilita scroll vertical fluido y apilamiento */
