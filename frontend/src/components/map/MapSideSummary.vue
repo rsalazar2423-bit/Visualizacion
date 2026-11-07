@@ -45,12 +45,12 @@ defineProps<{
       </div>
 
       <div class="map-metric-row">
-        <span class="dot-indicator success"></span>
+        <span class="dot-indicator neutral"></span>
         <div class="metric-info">
           <span class="metric-label">Cumple Plazo (A Tiempo)</span>
           <span class="metric-sub">Cerrados / activos en plazo</span>
         </div>
-        <b class="metric-val success-text">{{ (stats.cumple + stats.abiertoEnPlazo).toLocaleString() }}</b>
+        <b class="metric-val neutral-text">{{ (stats.cumple + stats.abiertoEnPlazo).toLocaleString() }}</b>
       </div>
 
       <div class="map-metric-row line-row">
@@ -99,7 +99,7 @@ defineProps<{
 .period-big-year {
   font-size: 1.65rem;
   font-weight: 800;
-  color: var(--color-brand);
+  color: var(--text-primary);
   line-height: 1.2;
   margin: 2px 0;
   font-variant-numeric: tabular-nums;
@@ -140,18 +140,24 @@ defineProps<{
 
 .dot-indicator.warning {
   background: var(--sla-warning);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
-.dot-indicator.success {
-  background: var(--sla-success);
+.dot-indicator.neutral {
+  background: #64748B;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .line-indicator {
   width: 14px;
   height: 3px;
-  background: var(--color-brand);
+  background: #475569;
   border-radius: 2px;
   flex-shrink: 0;
+}
+
+[data-theme="dark"] .line-indicator {
+  background: #60A5FA;
 }
 
 .metric-info {
@@ -180,7 +186,7 @@ defineProps<{
 
 .danger-text { color: var(--sla-danger); }
 .warning-text { color: var(--sla-warning); }
-.success-text { color: var(--sla-success); }
+.neutral-text { color: var(--text-secondary); }
 
 .map-interaction-tip {
   font-size: 0.74rem;

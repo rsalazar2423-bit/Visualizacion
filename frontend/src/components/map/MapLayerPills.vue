@@ -66,15 +66,21 @@ defineEmits<{
 }
 
 .layer-btn:hover {
-  border-color: var(--color-brand);
+  border-color: var(--color-accent, #1D4ED8);
   color: var(--text-primary);
 }
 
 .layer-btn.active {
-  background: var(--color-brand-soft);
-  border-color: var(--color-brand);
-  color: var(--color-brand);
+  background: var(--color-accent-soft, #EFF6FF);
+  border-color: var(--color-accent, #1D4ED8);
+  color: var(--color-accent, #1D4ED8);
   font-weight: 700;
+}
+
+[data-theme="dark"] .layer-btn.active {
+  background: rgba(30, 58, 138, 0.35);
+  border-color: #38BDF8;
+  color: #38BDF8;
 }
 
 .layer-btn.info.active {

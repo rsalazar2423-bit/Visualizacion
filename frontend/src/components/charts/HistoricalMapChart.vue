@@ -274,12 +274,12 @@ function buildMapOption(tokens: any, isDark: boolean) {
           name,
           itemStyle: {
             areaColor: isSelected
-              ? (isDark ? '#1E293B' : '#F1F5F9') // Fondo neutro sobrio (Sin púrpuras ni lavandas)
-              : (isDark ? '#111827' : '#F8FAFC'),
+              ? (isDark ? '#1E293B' : '#E8EEF5') // Plano técnico cartográfico con contraste nítido
+              : (isDark ? '#0F172A' : '#F8FAFC'),
             borderColor: isSelected
               ? (isDark ? '#38BDF8' : '#1D4ED8') // Borde azul corporativo nítido de ingeniería
               : (isDark ? '#334155' : '#CBD5E1'),
-            borderWidth: isSelected ? 2.2 : 1,
+            borderWidth: isSelected ? 2.2 : 0.8,
           },
           emphasis: {
             itemStyle: {
@@ -299,8 +299,9 @@ function buildMapOption(tokens: any, isDark: boolean) {
         polyline: true,
         data: lineData,
         lineStyle: {
-          color: isDark ? '#60A5FA' : '#334155', // Trazo de alta tensión: Pizarra en claro, Azul en oscuro
-          width: 2.2,
+          color: isDark ? '#60A5FA' : '#475569', // Trazo de alta tensión balanceado
+          width: 2.0,
+          opacity: 0.65,
           type: 'solid',
         },
         silent: false,
@@ -310,12 +311,21 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cumple Plazo (A Tiempo)',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 4.5,
+        symbolSize: 7, // Tamaño visible y nítido (aumentado de 4.5)
         itemStyle: {
-          color: isDark ? '#64748B' : '#94A3B8', // Pizarra recesivo: fondo contextual que no compite
-          opacity: 0.7,
-          borderColor: isDark ? '#0F172A' : '#FFFFFF',
-          borderWidth: 0.5,
+          color: isDark ? '#64748B' : '#64748B', // Pizarra sobrio de buen contraste contra el mapa
+          opacity: 0.8,
+          borderColor: isDark ? '#1E293B' : '#FFFFFF',
+          borderWidth: 1.2,
+        },
+        emphasis: {
+          scale: true,
+          itemStyle: {
+            borderColor: '#FFFFFF',
+            borderWidth: 2,
+            shadowBlur: 6,
+            shadowColor: 'rgba(0,0,0,0.3)',
+          },
         },
         data: cumplePoints,
         zlevel: 2,
@@ -324,31 +334,56 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cerrados con Retraso',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 5.5,
+        symbolSize: 8.5, // Legibilidad inmediata en el corredor (aumentado de 5.5)
         itemStyle: {
-          color: tokens.sla.warning, // Ámbar / Cobre mate
-          opacity: 0.85,
-          borderColor: isDark ? '#1E293B' : '#FFFFFF',
-          borderWidth: 0.8,
+          color: isDark ? '#F59E0B' : '#D97706', // Ámbar cálido visible
+          opacity: 0.9,
+          borderColor: '#FFFFFF',
+          borderWidth: 1.2,
+          shadowColor: 'rgba(217, 119, 6, 0.35)',
+          shadowBlur: 4,
+        },
+        emphasis: {
+          scale: true,
+          itemStyle: {
+            borderColor: '#FFFFFF',
+            borderWidth: 2.2,
+            shadowBlur: 8,
+            shadowColor: 'rgba(217, 119, 6, 0.6)',
+          },
         },
         data: atrasadoPoints,
-        zlevel: 2,
+        zlevel: 3,
       },
       {
         name: 'Abiertos Vencidos (Alerta)',
-        type: 'scatter',
+        type: 'effectScatter', // Efecto de radar/pulsación continua para alerta crítica
         coordinateSystem: 'geo',
-        symbolSize: 8, // Nodo destacado de alerta
+        showEffectOn: 'render',
+        rippleEffect: {
+          brushType: 'stroke',
+          scale: 3.2,
+          period: 3,
+        },
+        symbolSize: 12, // Gran visibilidad focal prioritaria (aumentado de 8)
         itemStyle: {
           color: tokens.sla.excede, // Carmín Ladrillo de Alarma
-          opacity: 0.95,
           borderColor: '#FFFFFF',
-          borderWidth: 1.5,
-          shadowColor: 'rgba(190, 18, 60, 0.45)',
-          shadowBlur: 5,
+          borderWidth: 2,
+          shadowColor: 'rgba(190, 18, 60, 0.75)',
+          shadowBlur: 10,
+        },
+        emphasis: {
+          scale: true,
+          itemStyle: {
+            borderColor: '#FFFFFF',
+            borderWidth: 2.5,
+            shadowBlur: 14,
+            shadowColor: 'rgba(190, 18, 60, 0.9)',
+          },
         },
         data: vencidoPoints,
-        zlevel: 3,
+        zlevel: 4,
       },
     ],
   };

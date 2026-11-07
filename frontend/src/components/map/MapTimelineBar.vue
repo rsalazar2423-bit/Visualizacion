@@ -105,7 +105,7 @@ defineEmits<{
   gap: 7px;
   padding: 7px 16px;
   border-radius: var(--radius-full);
-  background: var(--color-brand);
+  background: #1D4ED8;
   color: #FFFFFF;
   font-size: 0.8rem;
   font-weight: 700;
@@ -115,6 +115,7 @@ defineEmits<{
 }
 
 [data-theme="dark"] .btn-play {
+  background: #38BDF8;
   color: #0B0F19;
 }
 
@@ -158,10 +159,16 @@ defineEmits<{
 }
 
 .mode-chip.active {
-  background: var(--color-brand-soft);
-  border-color: var(--color-brand);
-  color: var(--color-brand);
+  background: var(--color-accent-soft, #EFF6FF);
+  border-color: var(--color-accent, #1D4ED8);
+  color: var(--color-accent, #1D4ED8);
   font-weight: 700;
+}
+
+[data-theme="dark"] .mode-chip.active {
+  background: rgba(30, 58, 138, 0.35);
+  border-color: #38BDF8;
+  color: #38BDF8;
 }
 
 .timeline-slider-box {
@@ -176,8 +183,12 @@ defineEmits<{
 
 .year-slider {
   width: 100%;
-  accent-color: var(--color-brand);
+  accent-color: #1D4ED8;
   cursor: pointer;
+}
+
+[data-theme="dark"] .year-slider {
+  accent-color: #38BDF8;
 }
 
 .year-ticks {
@@ -198,13 +209,22 @@ defineEmits<{
 }
 
 .year-tick-btn:hover {
-  color: var(--color-brand);
+  color: #1D4ED8;
 }
 
 .year-tick-btn.active {
-  color: var(--color-brand);
+  color: #1D4ED8;
   font-weight: 800;
-  background: var(--color-brand-soft);
+  background: rgba(29, 78, 216, 0.1);
+}
+
+[data-theme="dark"] .year-tick-btn:hover {
+  color: #38BDF8;
+}
+
+[data-theme="dark"] .year-tick-btn.active {
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.15);
 }
 </style>
 
