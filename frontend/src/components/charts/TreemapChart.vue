@@ -31,13 +31,15 @@ const treemapItems = computed(() => {
   const rawTreemap = territoryStore.data.treemap;
   const nodes = (rawTreemap.children && rawTreemap.children.length > 0) ? rawTreemap.children : [rawTreemap];
   const total = rawTreemap.value || nodes.reduce((acc, curr) => acc + (curr.value || 0), 0);
-  return nodes.map((n, idx) => {
+  return nodes.map((n: any, idx) => {
     const val = n.value || 0;
     const pct = total > 0 ? Number(((val / total) * 100).toFixed(1)) : 0;
     return {
       name: n.name,
       value: val,
       pct,
+      cumple_pct: n.cumple_pct,
+      vencidos: n.vencidos || 0,
       color: palette[idx % palette.length],
     };
   });
@@ -91,8 +93,13 @@ function renderTreemap(chartInstance: echarts.ECharts, isDark: boolean) {
             const name = params.name || '';
             const val = params.value || 0;
             const pct = totalValue > 0 ? ((val / totalValue) * 100).toFixed(1) : '0';
-            if (totalValue > 0 && (val / totalValue) < 0.025) {
-              return `{name|${name}}`;
+            const ratio = totalValue > 0 ? (val / totalValue) : 0;
+            // Si el cuadrante es muy pequeño (<1.8%), no ensuciar con texto mutilado ("Mo...", "Su...")
+            if (ratio < 0.018) {
+              return '';
+            }
+            if (ratio < 0.038) {
+              return `{name|${name}}\n{val|${Number(val).toLocaleString()}}`;
             }
             return `{name|${name}}\n{val|${Number(val).toLocaleString()} (${pct}%)}`;
           },
@@ -132,8 +139,8 @@ watch(() => territoryStore.data, () => render(), { deep: true });
 
 <template>
   <div class="treemap-wrapper">
-    <!-- Canvas de 100% de Ancho -->
-    <div ref="chartContainer" class="chart-canvas-full"></div>
+    <!-- Canvas de 100% de Ancho y Altura Proporcional Ampliada -->
+    <div ref="chartContainer" class="treemap-canvas"></div>
 
     <!-- Escala Secuencial de Concentración Territorial -->
     <div class="chart-legend-container">
@@ -150,7 +157,7 @@ watch(() => territoryStore.data, () => render(), { deep: true });
           :class="{
             active: territoryStore.selectedMunicipio === item.name || (!territoryStore.selectedMunicipio && territoryStore.selectedDepto === item.name)
           }"
-          :title="`Desglosar ${item.name}`"
+          :title="`Desglosar ${item.name} (${item.value} avisos, ${item.vencidos} vencidos)`"
           @click="handleClick({ name: item.name })"
         >
           <span class="legend-chip-dot" :style="{ backgroundColor: item.color }"></span>
@@ -158,6 +165,9 @@ watch(() => territoryStore.data, () => render(), { deep: true });
           <span class="legend-chip-metric">
             {{ item.value.toLocaleString() }}
             <small>({{ item.pct }}%)</small>
+          </span>
+          <span v-if="item.vencidos > 0" class="badge-venc-chip">
+            ⚠ {{ item.vencidos }}
           </span>
         </button>
       </div>
@@ -190,6 +200,22 @@ watch(() => territoryStore.data, () => render(), { deep: true });
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+.treemap-canvas {
+  width: 100%;
+  flex: 1;
+  min-height: 400px;
+  position: relative;
+}
+
+.badge-venc-chip {
+  background: var(--sla-danger-bg, rgba(190, 18, 60, 0.12));
+  color: var(--sla-danger, #BE123C);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
 .treemap-semantic-bar {

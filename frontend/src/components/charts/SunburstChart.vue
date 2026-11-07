@@ -40,12 +40,11 @@ const sunburstCategories = computed(() => {
       children: (cat.children || []).map((ch: any) => {
         const isCumple = String(ch.name).startsWith('Cumple');
         const isExcede = String(ch.name).startsWith('Excede');
-        const neutralSlate = themeStore.isDark ? '#64748B' : '#94A3B8';
         return {
           name: ch.name,
           value: ch.value,
           pct: catTotal > 0 ? Number(((ch.value / catTotal) * 100).toFixed(1)) : 0,
-          color: isCumple ? neutralSlate : isExcede ? sla.excede : (ch.itemStyle?.color || sla.neutral),
+          color: isCumple ? sla.cumple : isExcede ? sla.excede : (ch.itemStyle?.color || sla.neutral),
         };
       }),
     };
@@ -66,11 +65,10 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
     children: (cat.children || []).map((ch) => {
       const isCumple = String(ch.name).startsWith('Cumple');
       const isExcede = String(ch.name).startsWith('Excede');
-      const neutralSlate = isDark ? '#64748B' : '#94A3B8';
       return {
         ...ch,
         itemStyle: {
-          color: isCumple ? neutralSlate : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
+          color: isCumple ? tokens.sla.cumple : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
         },
       };
     }),
@@ -103,6 +101,11 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
         emphasis: {
           focus: 'ancestor',
         },
+        blur: {
+          itemStyle: {
+            opacity: 0.55,
+          },
+        },
         levels: [
           {},
           {
@@ -120,7 +123,17 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
               },
             },
             label: {
-              show: false,
+              show: true,
+              position: 'inside',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              fontSize: 11,
+              textShadowColor: 'rgba(0, 0, 0, 0.5)',
+              textShadowBlur: 3,
+              formatter: (p: any) => {
+                const pct = totalAvisos > 0 ? (p.value / totalAvisos) : 0;
+                return pct >= 0.06 ? p.name : '';
+              },
             },
           },
           {
@@ -224,8 +237,8 @@ watch(() => territoryStore.data, () => render(), { deep: true });
             <span class="sem-chip"><b>Núcleo Interior:</b> Causa técnica del aviso (55% Vegetación, Obras, Estructuras).</span>
             <span class="sem-chip" v-if="mode === 'sla'">
               <b>Anillo Exterior:</b>
+              <span class="badge-dot-success"></span> <b>Verde Esmeralda:</b> Cumple Plazo
               <span class="badge-dot-danger"></span> <b>Rojo Carmín:</b> Excede Plazo (Alerta SLA)
-              <span class="badge-dot-neutral"></span> <b>Gris:</b> Cumple Plazo en norma
             </span>
             <span class="sem-chip" v-else>
               <b>Anillo Exterior:</b> Desglose por horizonte de tiempo comprometido (Semana a Años).
@@ -333,6 +346,14 @@ watch(() => territoryStore.data, () => render(), { deep: true });
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.badge-dot-success {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #059669;
+  display: inline-block;
 }
 
 .badge-dot-danger {
