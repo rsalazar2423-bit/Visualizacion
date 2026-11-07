@@ -251,8 +251,8 @@ function buildMapOption(tokens: any, isDark: boolean) {
         show: false,
       },
       itemStyle: {
-        areaColor: isDark ? '#0B1120' : '#F1F5F9',
-        borderColor: isDark ? '#1E293B' : '#CBD5E1',
+        areaColor: isDark ? '#0F172A' : '#F8FAFC',
+        borderColor: isDark ? '#1E293B' : '#E2E8F0',
         borderWidth: 0.8,
       },
       emphasis: {
@@ -264,8 +264,8 @@ function buildMapOption(tokens: any, isDark: boolean) {
         },
         itemStyle: {
           areaColor: isDark ? '#1E293B' : '#E2E8F0',
-          borderColor: tokens.brandColor,
-          borderWidth: 1.8,
+          borderColor: isDark ? '#38BDF8' : '#1D4ED8',
+          borderWidth: 1.5,
         },
       },
       regions: OPERATIVE_DEPTOS.map((name) => {
@@ -274,17 +274,17 @@ function buildMapOption(tokens: any, isDark: boolean) {
           name,
           itemStyle: {
             areaColor: isSelected
-              ? (isDark ? '#1E3A5F' : '#C7D2FE')
-              : (isDark ? '#162238' : '#E0E7FF'),
+              ? (isDark ? '#1E293B' : '#F1F5F9') // Fondo neutro sobrio (Sin púrpuras ni lavandas)
+              : (isDark ? '#111827' : '#F8FAFC'),
             borderColor: isSelected
-              ? tokens.brandColor
-              : (isDark ? '#334155' : '#94A3B8'),
-            borderWidth: isSelected ? 2.5 : 1.2,
+              ? (isDark ? '#38BDF8' : '#1D4ED8') // Borde azul corporativo nítido de ingeniería
+              : (isDark ? '#334155' : '#CBD5E1'),
+            borderWidth: isSelected ? 2.2 : 1,
           },
           emphasis: {
             itemStyle: {
-              areaColor: isDark ? '#1E3A5F' : '#C7D2FE',
-              borderColor: tokens.brandColor,
+              areaColor: isDark ? '#1E293B' : '#E2E8F0',
+              borderColor: isDark ? '#38BDF8' : '#1D4ED8',
               borderWidth: 2,
             },
           },
@@ -299,7 +299,7 @@ function buildMapOption(tokens: any, isDark: boolean) {
         polyline: true,
         data: lineData,
         lineStyle: {
-          color: isDark ? 'rgba(20, 184, 166, 0.75)' : 'rgba(13, 148, 136, 0.80)',
+          color: isDark ? '#60A5FA' : '#334155', // Trazo de alta tensión: Pizarra en claro, Azul en oscuro
           width: 2.2,
           type: 'solid',
         },
@@ -310,12 +310,12 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cumple Plazo (A Tiempo)',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 5,
+        symbolSize: 4.5,
         itemStyle: {
-          color: tokens.sla.cumple,
-          opacity: 0.85,
-          borderColor: isDark ? '#022C22' : '#FFFFFF',
-          borderWidth: 0.6,
+          color: isDark ? '#64748B' : '#94A3B8', // Pizarra recesivo: fondo contextual que no compite
+          opacity: 0.7,
+          borderColor: isDark ? '#0F172A' : '#FFFFFF',
+          borderWidth: 0.5,
         },
         data: cumplePoints,
         zlevel: 2,
@@ -324,12 +324,12 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cerrados con Retraso',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 5,
+        symbolSize: 5.5,
         itemStyle: {
-          color: tokens.sla.warning,
+          color: tokens.sla.warning, // Ámbar / Cobre mate
           opacity: 0.85,
-          borderColor: isDark ? '#451A03' : '#FFFFFF',
-          borderWidth: 0.6,
+          borderColor: isDark ? '#1E293B' : '#FFFFFF',
+          borderWidth: 0.8,
         },
         data: atrasadoPoints,
         zlevel: 2,
@@ -338,14 +338,14 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Abiertos Vencidos (Alerta)',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 6.5,
+        symbolSize: 8, // Nodo destacado de alerta
         itemStyle: {
-          color: tokens.sla.excede,
+          color: tokens.sla.excede, // Carmín Ladrillo de Alarma
           opacity: 0.95,
           borderColor: '#FFFFFF',
-          borderWidth: 1.2,
-          shadowColor: 'rgba(239, 68, 68, 0.45)',
-          shadowBlur: 4,
+          borderWidth: 1.5,
+          shadowColor: 'rgba(190, 18, 60, 0.45)',
+          shadowBlur: 5,
         },
         data: vencidoPoints,
         zlevel: 3,
