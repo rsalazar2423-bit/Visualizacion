@@ -57,12 +57,41 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     },
     legend: {
       top: 0,
+      left: 'center',
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600 },
     },
+    toolbox: {
+      right: 12,
+      top: 0,
+      feature: {
+        dataZoom: {
+          title: { zoom: 'Seleccionar zona temporal', back: 'Restablecer zoom' },
+          yAxisIndex: 'none',
+        },
+        restore: { title: 'Restablecer vista' },
+      },
+      iconStyle: { borderColor: tokens.textSecondary },
+    },
+    dataZoom: [
+      {
+        type: 'inside',
+        throttle: 50,
+      },
+      {
+        type: 'slider',
+        height: 18,
+        bottom: 2,
+        borderColor: 'transparent',
+        backgroundColor: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(241, 245, 249, 0.8)',
+        fillerColor: isDark ? 'rgba(56, 189, 248, 0.2)' : 'rgba(29, 78, 216, 0.15)',
+        handleStyle: { color: isDark ? '#38BDF8' : '#1D4ED8', borderColor: '#FFFFFF' },
+        textStyle: { color: tokens.textSecondary, fontSize: 10 },
+      },
+    ],
     grid: {
       left: '3%',
       right: '4%',
-      bottom: '6%',
+      bottom: '42px',
       top: '44px',
       containLabel: true,
     },

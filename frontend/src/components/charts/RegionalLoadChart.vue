@@ -39,6 +39,12 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
       top: 0,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600 },
     },
+    dataZoom: [
+      {
+        type: 'inside',
+        throttle: 50,
+      },
+    ],
     grid: {
       left: '3%',
       right: '5%',
@@ -116,7 +122,18 @@ function renderLoadChart(chartInstance: echarts.ECharts, isDark: boolean) {
   chartInstance.setOption(option, true);
 }
 
-const { render } = useChart(chartRef, renderLoadChart);
+const emit = defineEmits<{
+  (e: 'select-region', region: string): void;
+}>();
+
+function handleBarClick(params: any) {
+  const name = params.name || params.value;
+  if (name) {
+    emit('select-region', String(name));
+  }
+}
+
+const { render } = useChart(chartRef, renderLoadChart, handleBarClick);
 
 watch(
   () => props.regions,

@@ -1,26 +1,41 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Maximize2 } from 'lucide-vue-next';
-import ChartModal from './ChartModal.vue';
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { Maximize2, Minimize2, X } from 'lucide-vue-next';
 
 defineProps<{
   title: string;
   subtitle?: string;
 }>();
 
-const isExpanded = ref(false);
+const isFullscreen = ref(false);
 
-function openModal() {
-  isExpanded.value = true;
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value;
+  nextTick(() => {
+    window.dispatchEvent(new Event('resize'));
+  });
 }
 
-function closeModal() {
-  isExpanded.value = false;
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && isFullscreen.value) {
+    isFullscreen.value = false;
+    nextTick(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+  }
 }
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
 </script>
 
 <template>
-  <div class="expandable-chart-card card">
+  <div class="expandable-chart-card card" :class="{ 'is-fullscreen': isFullscreen }">
     <div class="expandable-header">
       <div class="title-wrap">
         <h3 class="expandable-title">{{ title }}</h3>
@@ -29,33 +44,21 @@ function closeModal() {
 
       <button
         class="btn-expand-icon"
-        title="Ampliar gráfica a pantalla completa"
-        aria-label="Ampliar gráfica"
-        @click="openModal"
+        :class="{ active: isFullscreen }"
+        :title="isFullscreen ? 'Restaurar tamaño normal (Esc)' : 'Ampliar gráfica a pantalla completa'"
+        :aria-label="isFullscreen ? 'Cerrar pantalla completa' : 'Ampliar gráfica'"
+        @click="toggleFullscreen"
       >
-        <Maximize2 :size="13" />
-        <span>Ampliar</span>
+        <component :is="isFullscreen ? Minimize2 : Maximize2" :size="13" />
+        <span>{{ isFullscreen ? 'Cerrar Pantalla Completa' : 'Ampliar' }}</span>
+        <X v-if="isFullscreen" :size="13" />
       </button>
     </div>
 
-    <!-- Contenido normal (pantalla estándar) -->
+    <!-- Contenido normal que se expande a toda la pantalla sin duplicar DOM ni perder estado de gráficas -->
     <div class="expandable-body">
       <slot />
     </div>
-
-    <!-- Modal a Pantalla Completa (Teleport body) -->
-    <ChartModal
-      :is-open="isExpanded"
-      :title="title"
-      :subtitle="subtitle"
-      @close="closeModal"
-    >
-      <div class="modal-slot-content">
-        <slot name="expanded">
-          <slot />
-        </slot>
-      </div>
-    </ChartModal>
   </div>
 </template>
 
@@ -66,6 +69,40 @@ function closeModal() {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.expandable-chart-card.is-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  z-index: 9999 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 16px 24px 20px !important;
+  box-shadow: none !important;
+  background: var(--bg-card) !important;
+}
+
+.expandable-chart-card.is-fullscreen .expandable-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.expandable-chart-card.is-fullscreen .expandable-title {
+  font-size: 1.25rem;
+}
+
+.expandable-chart-card.is-fullscreen .expandable-subtitle {
+  font-size: 0.85rem;
+}
+
+.expandable-chart-card.is-fullscreen .expandable-body {
+  height: calc(100vh - 75px) !important;
+  flex: 1;
 }
 
 .expandable-header {
@@ -117,8 +154,20 @@ function closeModal() {
 
 .btn-expand-icon:hover {
   background: var(--bg-hover);
-  color: var(--color-brand);
-  border-color: var(--color-brand);
+  color: #1D4ED8;
+  border-color: #1D4ED8;
+}
+
+.btn-expand-icon.active {
+  background: rgba(29, 78, 216, 0.1);
+  color: #1D4ED8;
+  border-color: #1D4ED8;
+}
+
+[data-theme="dark"] .btn-expand-icon.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  border-color: #38BDF8;
 }
 
 .expandable-body {
@@ -128,13 +177,4 @@ function closeModal() {
   display: flex;
   flex-direction: column;
 }
-
-.modal-slot-content {
-  width: 100%;
-  height: 100%;
-  min-height: 520px;
-  display: flex;
-  flex-direction: column;
-}
 </style>
-

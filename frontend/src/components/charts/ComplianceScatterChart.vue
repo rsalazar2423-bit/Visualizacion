@@ -63,11 +63,32 @@ function renderScatterChart(chartInstance: echarts.ECharts, isDark: boolean) {
         `;
       },
     },
+    toolbox: {
+      right: 12,
+      top: 0,
+      feature: {
+        dataZoom: {
+          title: { zoom: 'Seleccionar zona (Caja)', back: 'Restablecer zoom' },
+        },
+        restore: { title: 'Restablecer vista' },
+      },
+      iconStyle: { borderColor: tokens.textSecondary },
+    },
+    dataZoom: [
+      {
+        type: 'inside',
+        xAxisIndex: 0,
+      },
+      {
+        type: 'inside',
+        yAxisIndex: 0,
+      },
+    ],
     grid: {
       left: '4%',
       right: '6%',
       bottom: '10%',
-      top: '28px',
+      top: '36px',
       containLabel: true,
     },
     xAxis: {

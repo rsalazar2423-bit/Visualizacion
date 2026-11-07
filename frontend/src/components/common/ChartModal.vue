@@ -62,24 +62,24 @@ onBeforeUnmount(() => {
 .chart-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11, 15, 25, 0.78);
+  background: rgba(11, 15, 25, 0.88);
   backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
 }
 
 .chart-modal-dialog {
-  width: 95vw;
-  max-width: 1400px;
-  height: 90vh;
-  max-height: 900px;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
   background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -89,10 +89,11 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-subtle);
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .modal-title {

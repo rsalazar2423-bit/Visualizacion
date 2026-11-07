@@ -10,6 +10,12 @@ import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 const store = useCapacityStore();
 const activeSubView = ref<'diagnosis' | 'simulator'>('diagnosis');
 
+function onSelectRegion(region: string) {
+  if (store.filterOptions.ctes.includes(region)) {
+    store.setCte(region);
+  }
+}
+
 onMounted(() => {
   store.loadAll();
 });
@@ -96,7 +102,10 @@ onMounted(() => {
           title="Carga de Avisos por Región CTE"
           subtitle="Distribución territorial de demanda e incidentes por zona operativa"
         >
-          <RegionalLoadChart :regions="store.capacityData?.regions || []" />
+          <RegionalLoadChart
+            :regions="store.capacityData?.regions || []"
+            @select-region="onSelectRegion"
+          />
         </ExpandableChartCard>
 
         <ExpandableChartCard
