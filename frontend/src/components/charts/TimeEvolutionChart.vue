@@ -79,10 +79,25 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       },
     },
     legend: {
-      top: 2,
+      top: 0,
       left: 'center',
-      itemGap: 16,
+      right: 95, // Reserva espacio en la derecha para que los botones del toolbox no se crucen con la leyenda
+      itemGap: 12,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
+    },
+    toolbox: {
+      right: 12,
+      top: 0,
+      itemSize: 13,
+      itemGap: 8,
+      feature: {
+        dataZoom: {
+          title: { zoom: 'Seleccionar zona temporal', back: 'Restablecer zoom' },
+          yAxisIndex: 'none',
+        },
+        restore: { title: 'Restablecer vista' },
+      },
+      iconStyle: { borderColor: tokens.textSecondary },
     },
     dataZoom: [
       {
@@ -102,9 +117,9 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     ],
     grid: {
       left: '3%',
-      right: '5%',
+      right: '4%',
       bottom: '42px',
-      top: '58px', // Espacio suficiente para que el título del eje y la leyenda no choquen con el 100%
+      top: '52px', // Espacio vertical suficiente para que el título del eje no se encime sobre 100% ni sobre el toolbox
       containLabel: true,
     },
     xAxis: {
@@ -118,7 +133,8 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'value',
         name: 'Volumen de Avisos',
         nameLocation: 'end',
-        nameTextStyle: { color: tokens.textSecondary, fontSize: 11, align: 'left', padding: [0, 0, 8, 0] },
+        nameGap: 12,
+        nameTextStyle: { color: tokens.textSecondary, fontSize: 10.5, align: 'left', padding: [0, 0, 4, 0] },
         axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
         splitLine: { lineStyle: { color: tokens.gridColor } },
       },
@@ -127,17 +143,19 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         name: isCumpleMode ? '% Cumplimiento' : 'Mediana (Días)',
         max: isCumpleMode ? 100 : undefined,
         nameLocation: 'end',
+        nameGap: 14,
         nameTextStyle: {
           color: tokens.textSecondary,
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: 600,
           align: 'right',
-          padding: [0, 0, 8, 0], // Evita colisión con la marca de 100%
+          padding: [0, 2, 4, 0], // Separación exacta para no chocar con la etiqueta de 100% ni con el toolbox
         },
         axisLabel: {
           formatter: isCumpleMode ? '{value}%' : '{value} d',
           color: tokens.textSecondary,
           fontFamily: tokens.fontFamily,
+          fontSize: 10,
         },
         splitLine: { show: false },
       },
