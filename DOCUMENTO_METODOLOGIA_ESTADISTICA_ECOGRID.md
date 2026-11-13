@@ -189,3 +189,4 @@ Como parte de la revisión senior de ingeniería de software, se analizaron los 
 ### 4. Cuello de Botella: Optimización del Bundle de Producción (Vite)
 * **Diagnóstico:** Importar `echarts` completo genera un archivo minificado de $1.1\text{ MB}$.
 * **Optimización en `vite.config.ts`:** Separar dependencias en chunks modulares (`vendor-echarts`, `vendor-vue`, `app-core`) permite que el navegador almacene ECharts en caché permanente y solo descargue el código de negocio en despliegues sucesivos.
+
