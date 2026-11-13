@@ -376,7 +376,9 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 .evolution-controls-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
+  flex: 1;
   flex-wrap: wrap;
 }
 
@@ -415,8 +417,7 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
   display: flex;
   align-items: center;
   gap: 5px;
-  padding-left: 10px;
-  border-left: 1px solid var(--border-subtle);
+  margin-left: auto;
 }
 
 .btn-tool-sm {
@@ -449,6 +450,6 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 .chart-canvas-evolution {
   width: 100%;
   flex: 1;
-  min-height: 420px;
+  min-height: 260px;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue';
+import { watch, onMounted, onBeforeUnmount } from 'vue';
 import { X, Minimize2 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -12,18 +12,30 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
+function setBodyScrollLock(locked: boolean) {
+  const val = locked ? 'hidden' : '';
+  document.documentElement.style.overflow = val;
+  document.body.style.overflow = val;
+}
+
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape' && props.isOpen) {
     emit('close');
   }
 }
 
+watch(() => props.isOpen, (val) => {
+  setBodyScrollLock(val);
+});
+
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown);
+  if (props.isOpen) setBodyScrollLock(true);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown);
+  if (props.isOpen) setBodyScrollLock(false);
 });
 </script>
 
@@ -75,7 +87,9 @@ onBeforeUnmount(() => {
   width: 100vw;
   max-width: 100vw;
   height: 100vh;
+  height: 100dvh;
   max-height: 100vh;
+  max-height: 100dvh;
   background: var(--bg-card);
   border: none;
   border-radius: 0;
@@ -132,10 +146,17 @@ onBeforeUnmount(() => {
 
 .modal-body {
   flex: 1;
-  padding: 20px;
-  overflow: auto;
+  min-height: 0;
+  padding: 16px 20px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 960px) {
+  .modal-body {
+    overflow-y: auto;
+  }
 }
 
 .modal-fade-enter-active,

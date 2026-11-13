@@ -258,7 +258,7 @@ watch(() => [opsStore.data, opsStore.selectedPrioridad], () => render(), { deep:
 .chart-canvas-full {
   width: 100%;
   flex: 1;
-  min-height: 320px;
+  min-height: 240px;
 }
 
 .active-prio-bar {

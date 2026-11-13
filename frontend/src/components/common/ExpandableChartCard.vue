@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Maximize2, Minimize2, X } from 'lucide-vue-next';
 
 defineProps<{
@@ -9,21 +9,36 @@ defineProps<{
 
 const isFullscreen = ref(false);
 
-function toggleFullscreen() {
-  isFullscreen.value = !isFullscreen.value;
+function setBodyScrollLock(locked: boolean) {
+  const val = locked ? 'hidden' : '';
+  document.documentElement.style.overflow = val;
+  document.body.style.overflow = val;
+}
+
+function triggerChartResize() {
   nextTick(() => {
     window.dispatchEvent(new Event('resize'));
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
   });
+}
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value;
+  triggerChartResize();
 }
 
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape' && isFullscreen.value) {
     isFullscreen.value = false;
-    nextTick(() => {
-      window.dispatchEvent(new Event('resize'));
-    });
+    triggerChartResize();
   }
 }
+
+watch(isFullscreen, (val) => {
+  setBodyScrollLock(val);
+});
 
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown);
@@ -31,6 +46,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown);
+  if (isFullscreen.value) {
+    setBodyScrollLock(false);
+  }
 });
 </script>
 
@@ -77,32 +95,36 @@ onBeforeUnmount(() => {
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  height: 100dvh !important;
   max-width: 100vw !important;
   max-height: 100vh !important;
+  max-height: 100dvh !important;
   z-index: 9999 !important;
   border-radius: 0 !important;
   margin: 0 !important;
-  padding: 16px 24px 20px !important;
+  padding: 14px 20px 16px !important;
   box-shadow: none !important;
   background: var(--bg-card) !important;
+  overflow: hidden !important;
 }
 
 .expandable-chart-card.is-fullscreen .expandable-header {
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .expandable-chart-card.is-fullscreen .expandable-title {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .expandable-chart-card.is-fullscreen .expandable-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .expandable-chart-card.is-fullscreen .expandable-body {
-  height: calc(100vh - 75px) !important;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .expandable-header {

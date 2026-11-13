@@ -731,7 +731,9 @@ watch(
 .modal-map-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
   height: 100%;
 }
 
@@ -740,13 +742,13 @@ watch(
   grid-template-columns: 1fr 310px;
   gap: 16px;
   flex: 1;
-  min-height: 520px;
+  min-height: 0;
 }
 
 .modal-map-canvas {
   width: 100%;
   height: 100%;
-  min-height: 520px;
+  min-height: 0;
   background: var(--bg-subtle);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
@@ -756,6 +758,10 @@ watch(
   .map-body-grid,
   .modal-map-body-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-map-canvas {
+    min-height: 360px;
   }
 }
 </style>
