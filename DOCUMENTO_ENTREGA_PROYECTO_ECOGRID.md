@@ -244,4 +244,75 @@ El simulador de cuadrillas (`CapacitySimulatorPanel.vue`) modela el equilibrio d
 | **"¿Por qué afirman que Tolima es más crítico que Valle si Valle tiene más del doble de avisos?"** | *"Porque normalizamos el indicador calculando la tasa de fallo por cada 100 torres instaladas. Tolima presenta una densidad de 118.6 avisos/100 torres frente a 48.6 en el Valle, evidenciando una tasa de estrés unitario 2.4 veces mayor sobre sus activos."* |
 | **"¿Qué validez matemática tiene su simulador de cuadrillas?"** | *"Modela la dinámica de colas multi-servidor evaluando la condición de estabilidad de Erlang ($\rho < 1$). Calcula el punto donde la tasa de servicio ($c \cdot \mu$) supera el flujo de arribo para extinguir el backlog acumulado de 344 avisos en un horizonte finito de 4 meses."* |
 
+---
+
+# 9. Guía Pedagógica: Cada Gráfico Explicado en Lenguaje Natural (Nivel Primer Grado)
+
+Esta sección traduce cada componente visual a metáforas cotidianas (juguetes, semáforos, carreteras y médicos) para sustentar ante audiencias no técnicas, directores generales o evaluadores que busquen la máxima claridad conceptual.
+
+### 1. El Mapa Geográfico con Bombillos de Colores (`HistoricalMapChart.vue`)
+* **¿Qué es este dibujo?** El mapa de Colombia visto desde un satélite, con el trazado de los cables de alta tensión y las 5.409 torres que llevan la energía.
+* **¿Qué son los bombillitos?** Cada torre donde ocurrió un incidente técnico:
+  * 🟢 **Verde Esmeralda:** El problema se arregló a tiempo y sin contratiempos.
+  * 🟠 **Naranja Ámbar:** El problema se solucionó, pero los técnicos llegaron después de la fecha pactada.
+  * 🔴 **Rojo Carmín Pulsante:** ¡Alerta roja! Es un daño que sigue roto hoy en día y ya venció su plazo legal.
+* **Mensaje clave:** Muestra geográficamente dónde están los incendios operativos en tiempo real y permite ver la evolución histórica año por año con el reproductor interactivo.
+
+### 2. La Rosquilla de Dos Pisos (`SunburstChart.vue`)
+* **¿Qué es este dibujo?** Una torta circular concéntrica con dos niveles de información.
+* **El piso de adentro (El centro):** Responde a **QUÉ** se dañó:
+  * *Vegetación (Verde oscuro, 48.1%):* Árboles y ramas creciendo cerca de los cables.
+  * *Construcciones (Azul, 37.4%):* Fallas estructurales en las torres metálicas.
+  * *Obras, Permisos e Invasiones (Pizarra, 14.5%):* Problemas prediales o terrenos inestables.
+* **El anillo de afuera:** Responde a **CÓMO** nos fue atendiéndolo:
+  * 🟢 *Verde Esmeralda:* Cumplió la meta contractual (SLA).
+  * 🔴 *Rojo Carmín:* Se pasó de la fecha límite.
+* **Mensaje clave:** *"El centro muestra la enfermedad técnica de la torre; el borde exterior muestra si el médico llegó a tiempo o tarde"*.
+
+### 3. La Caja de Juguetes Cuadrada (`TreemapPanel.vue`)
+* **¿Qué es este dibujo?** Una caja grande dividida en compartimientos rectangulares, donde cada cajón representa un municipio.
+* **¿Por qué unos cajones son más grandes?** El tamaño es directamente proporcional a la cantidad de problemas acumulados. Un cajón gigante (como Ubalá) exige atención inmediata frente a cajones diminutos.
+* **Mensaje clave:** Permite a la gerencia priorizar recursos visualmente en 2 segundos sin perderse en tablas interminables de Excel.
+
+### 4. La Carrera de los Municipios Más Demorados (`SectorDelayRankingChart.vue`)
+* **¿Qué es este dibujo?** Un ranking de barras horizontales ordenado de mayor a menor tiempo de espera.
+* **Mensaje clave:** Es la "lista de cuellos de botella". Si un municipio muestra 1.200 días promedio, evidencia que en esa zona existen trabas burocráticas o prediales graves que frenan el cierre de órdenes en Oracle EBS.
+
+### 5. La Regla con Bigotes (`TypologyBoxplotChart.vue`)
+* **¿Qué es este dibujo?** Cajas horizontales con dos antenas o "bigotes" que miden la dispersión del tiempo.
+* **Mensaje clave:** Demuestra que podar un árbol (Vegetación) toma pocos días y es predecible (caja compacta), mientras que conseguir una servidumbre (Permiso de Ingreso) puede tardar años (caja estirada con puntos lejanos atípicos).
+
+### 6. El Tacómetro de la Moto (`GaugeChart.vue`)
+* **¿Qué es este dibujo?** Un velocímetro con una aguja central que califica la eficiencia global.
+* **Mensaje clave:** Muestra que la red se encuentra en **47.8% de cumplimiento** (zona naranja-roja), lo que justifica y fundamenta este proyecto de grado como una necesidad operativa crítica.
+
+### 7. El Mapa de Cuatro Esquinas (`ComplianceScatterChart.vue`)
+* **¿Qué es este dibujo?** Un plano cartesiano donde cada punto es un municipio ubicado según su carga de trabajo (eje X) y su porcentaje de éxito (eje Y).
+* **Mensaje clave:** Aísla en la esquina superior izquierda a los municipios críticos (Ubalá y Santa María con más de 160 avisos y menos del 41% de SLA), demostrando matemáticamente que son casos atípicos de alto apalancamiento.
+
+### 8. La Gráfica de la Bañera que se Vacía (`CapacityDrainChart.vue`)
+* **¿Qué es este dibujo?** Una simulación de flujo que modela 743 avisos abiertos acumulados como una bañera llena.
+* **Mensaje clave:** Es una herramienta prospectiva para la toma de decisiones: muestra que contratando 2 cuadrillas adicionales ($c = 12$) y asignando el 70% de su tiempo al rezago, la bañera de incidentes vencidos se drena por completo en **4.1 meses**.
+
+---
+
+# 10. Bitácora de Optimizaciones de Alto Rendimiento y Cartografía
+
+Durante la fase de validación técnica y pruebas de usuario, se ejecutaron las siguientes mejoras sobre el código fuente de la plataforma:
+
+1. **Eliminación del Cuello de Botella de Carga del Mapa (`HistoricalMapChart.vue`):**
+   * Se retiraron los filtros masivos de desenfoque gaussiano (`shadowBlur: 5` y `shadowBlur: 10`) en Canvas 2D que congelaban el hilo principal al renderizar miles de coordenadas.
+   * Se activó el streaming progresivo en ECharts (`progressive: 600`, `large: true`).
+   * Se implementó un *overlay* de carga con *spinner* interactivo que informa el estado de procesamiento de los 5.409 activos.
+2. **Solución a la Oclusión de Nodos (*Anti-Overplotting*):**
+   * En la versión inicial, los avisos vencidos (11% del total) tenían un radio de 12px y una onda de radar de 38.4px que cubría completamente los puntos verdes y naranjas adyacentes a lo largo de los vanos entre torres.
+   * Se redujo el calibre base de la alarma a 7.5px y la onda a escala 1.8.
+   * Se incorporó un algoritmo de **micro-dispersión radial determinista (*jittering* polar ~120m)** para que múltiples avisos ocurridos en una misma torre a lo largo del tiempo (2008–2023) coexistan visualmente como nodos contiguos distinguibles.
+3. **Caché Singleton en Memoria (`datasetRepository.ts`):**
+   * Se precalculó y congeló la geometría de los 44 corredores de alta tensión (`getStaticLines`) y la tabla hash de torres (`getEquiposMap`), ahorrando ~85 ms de procesamiento de CPU por cada acción de filtrado.
+4. **Armonización Semiótica del Sunburst (`SunburstChart.vue`):**
+   * Se asignaron contrastes plenos en el anillo exterior: Verde Esmeralda (`#059669`) para cumplimiento en norma y Rojo Carmín (`#DC2626`) para alerta de mora contractual.
+   * Se protegieron los rótulos de texto mediante el parámetro `minAngle: 25`, mostrando texto limpio y centrado en las categorías mayores (*Vegetación* y *Construcciones*) y evitando solapamiento tipográfico en sectores estrechos.
+
+
 
