@@ -1,16 +1,55 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Activity, Map, Sliders, ChevronRight, Palette } from 'lucide-vue-next';
 import { apiService } from '../services/api';
-import type { PortadaKpis } from '../types/models';
+import type { PortadaKpis, OperationsDataResponse } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
 
 const loading = ref(true);
 const kpis = ref<PortadaKpis | null>(null);
+const opsData = ref<OperationsDataResponse | null>(null);
+
+const portfolioBreakdown = computed(() => {
+  if (!kpis.value) return [];
+  const total = kpis.value.total_avisos || 1;
+  const abiertos = kpis.value.avisos_abiertos ?? 0;
+  const vencidos = kpis.value.abiertos_vencidos ?? 0;
+  const abiertosPlazo = Math.max(0, abiertos - vencidos);
+  const cerrados = Math.max(0, total - abiertos);
+  const cumplePct = kpis.value.cumplimiento_oportuno_pct ?? kpis.value.pct_cumplimiento;
+  const cerradosTiempo = Math.round((cerrados * cumplePct) / 100);
+  const cerradosRetraso = Math.max(0, cerrados - cerradosTiempo);
+
+  return [
+    { label: 'Cerrados a Tiempo', count: cerradosTiempo, pct: Number(((cerradosTiempo / total) * 100).toFixed(1)), cls: 'seg-success' },
+    { label: 'Cerrados con Retraso', count: cerradosRetraso, pct: Number(((cerradosRetraso / total) * 100).toFixed(1)), cls: 'seg-warning' },
+    { label: 'Abiertos En Plazo', count: abiertosPlazo, pct: Number(((abiertosPlazo / total) * 100).toFixed(1)), cls: 'seg-info' },
+    { label: 'Abiertos Vencidos', count: vencidos, pct: Number(((vencidos / total) * 100).toFixed(1)), cls: 'seg-danger' },
+  ];
+});
+
+const topTypologies = computed(() => {
+  const items = opsData.value?.donut || [];
+  return items.slice(0, 5).map((item) => ({
+    name: item.name,
+    value: item.value,
+    pct: Number(item.pct.toFixed(1)),
+  }));
+});
+
+const slaBars = computed(() => {
+  const rows = opsData.value?.stacked_bar || [];
+  return rows.filter((r) => r.prioridad !== 'No asignada').slice(0, 6);
+});
 
 onMounted(async () => {
   try {
-    kpis.value = await apiService.getPortadaKpis();
+    const [portadaRes, opsRes] = await Promise.all([
+      apiService.getPortadaKpis(),
+      apiService.getOperationsData({}),
+    ]);
+    kpis.value = portadaRes;
+    opsData.value = opsRes;
   } catch (err) {
     console.error('Error cargando KPIs de portada:', err);
   } finally {
@@ -114,121 +153,113 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- Secuencia de Navegación en 3 Vistas -->
+    <!-- Resumen Ejecutivo Visual (Ocupa el espacio central con datos reales) -->
+    <section v-if="kpis" class="executive-pulse-grid">
+      <div class="pulse-card card">
+        <div class="pulse-header">
+          <div>
+            <h3 class="pulse-title">Estado del Portafolio y Causas Técnicas</h3>
+            <p class="pulse-sub">Distribución de los {{ kpis.total_avisos.toLocaleString() }} avisos por estado de cierre y tipología</p>
+          </div>
+          <span class="badge">Causa líder: {{ kpis.pct_vegetacion }}% Vegetación</span>
+        </div>
+
+        <div class="stacked-portfolio-bar">
+          <div
+            v-for="seg in portfolioBreakdown"
+            :key="seg.label"
+            class="port-seg"
+            :class="seg.cls"
+            :style="{ width: `${seg.pct}%` }"
+            :title="`${seg.label}: ${seg.count.toLocaleString()} (${seg.pct}%)`"
+          ></div>
+        </div>
+
+        <div class="portfolio-legend">
+          <div v-for="seg in portfolioBreakdown" :key="seg.label" class="port-leg-item">
+            <span class="leg-dot" :class="seg.cls"></span>
+            <span class="leg-txt">{{ seg.label }}: <b>{{ seg.count.toLocaleString() }}</b> ({{ seg.pct }}%)</span>
+          </div>
+        </div>
+
+        <div class="typology-bars">
+          <div v-for="t in topTypologies" :key="t.name" class="typo-row">
+            <span class="typo-name">{{ t.name }}</span>
+            <div class="typo-track">
+              <div class="typo-fill" :style="{ width: `${t.pct}%` }"></div>
+            </div>
+            <span class="typo-val">{{ t.value.toLocaleString() }} ({{ t.pct }}%)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pulse-card card">
+        <div class="pulse-header">
+          <div>
+            <h3 class="pulse-title">Cumplimiento por Prioridad SLA</h3>
+            <p class="pulse-sub">Porcentaje de atención oportuna vs. vencimiento por nivel de servicio</p>
+          </div>
+          <router-link to="/operaciones" class="pulse-link">Ver detalle →</router-link>
+        </div>
+
+        <div class="sla-mini-list">
+          <div v-for="row in slaBars" :key="row.prioridad" class="sla-mini-row">
+            <span class="sla-prio-lbl">{{ row.prioridad }}</span>
+            <div class="sla-track">
+              <div class="sla-fill-ok" :style="{ width: `${row.cumple_pct}%` }">
+                <span v-if="row.cumple_pct >= 18">{{ row.cumple_pct }}%</span>
+              </div>
+              <div class="sla-fill-late" :style="{ width: `${row.excede_pct}%` }">
+                <span v-if="row.excede_pct >= 18">{{ row.excede_pct }}%</span>
+              </div>
+            </div>
+            <span class="sla-total-lbl">{{ row.total.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <div class="sla-mini-legend">
+          <span><i class="leg-dot seg-sla-ok"></i> Cumple Plazo</span>
+          <span><i class="leg-dot seg-danger"></i> Excede Plazo</span>
+          <span class="sla-note">Volumen total a la derecha</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Acceso Rápido Compacto a las 3 Vistas -->
     <section class="features-section grid-3">
-      <div class="feature-card card">
-        <div class="feature-top">
-          <div class="feature-step-row">
-            <span class="step-num">VISTA 01</span>
-            <Activity :size="20" class="feat-icon brand" />
-          </div>
-          <h3 class="feature-title">Seguimiento y Cumplimiento</h3>
-          <p class="feature-text">
-            Panorama de la operación: evolución temporal de ingresos vs. cierres, cumplimiento por prioridad SLA y composición técnica.
-          </p>
+      <router-link to="/operaciones" class="feature-card-compact card">
+        <div class="fc-head">
+          <span class="step-num">VISTA 01</span>
+          <Activity :size="18" class="feat-icon brand" />
         </div>
+        <h3 class="feature-title">Seguimiento y Cumplimiento</h3>
+        <p class="feature-text">Evolución 2008–2023, plazos SLA y composición por tipología técnica.</p>
+        <span class="fc-cta">Abrir Vista 01 <ChevronRight :size="14" /></span>
+      </router-link>
 
-        <div class="feature-highlights">
-          <div class="mini-stat-pair">
-            <div class="mini-stat">
-              <span class="mini-val">{{ kpis ? `${kpis.pct_vegetacion}%` : '...' }}</span>
-              <span class="mini-lbl">Causa Vegetación</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-val">{{ kpis ? (kpis.total_avisos - (kpis.avisos_abiertos ?? 0)).toLocaleString() : '...' }}</span>
-              <span class="mini-lbl">Avisos Cerrados</span>
-            </div>
-          </div>
-          <div class="module-tags">
-            <span class="mod-tag">Evolución 2008–2023</span>
-            <span class="mod-tag">Plazos SLA</span>
-            <span class="mod-tag">Tipología Técnica</span>
-          </div>
+      <router-link to="/territorio" class="feature-card-compact card">
+        <div class="fc-head">
+          <span class="step-num">VISTA 02</span>
+          <Map :size="18" class="feat-icon accent" />
         </div>
+        <h3 class="feature-title">Diagnóstico Territorial y Técnico</h3>
+        <p class="feature-text">
+          Mapa georreferenciado sobre {{ kpis ? kpis.total_deptos : 10 }} deptos y {{ kpis ? kpis.total_municipios : 166 }} municipios, ranking y tabla.
+        </p>
+        <span class="fc-cta">Abrir Vista 02 <ChevronRight :size="14" /></span>
+      </router-link>
 
-        <div class="feature-footer">
-          <router-link to="/operaciones" class="btn btn-sm feat-btn">
-            <span>Abrir Vista 01</span>
-            <ChevronRight :size="14" />
-          </router-link>
+      <router-link to="/capacidad" class="feature-card-compact card">
+        <div class="fc-head">
+          <span class="step-num">VISTA 03</span>
+          <Sliders :size="18" class="feat-icon brand" />
         </div>
-      </div>
-
-      <div class="feature-card card">
-        <div class="feature-top">
-          <div class="feature-step-row">
-            <span class="step-num">VISTA 02</span>
-            <Map :size="20" class="feat-icon accent" />
-          </div>
-          <h3 class="feature-title">Diagnóstico Territorial y Técnico</h3>
-          <p class="feature-text">
-            Mapa geográfico interactivo (2008–2023), ranking de sectores con retrasos, duración por tipología y desglose jerárquico.
-          </p>
-        </div>
-
-        <div class="feature-highlights">
-          <div class="mini-stat-pair">
-            <div class="mini-stat">
-              <span class="mini-val">{{ kpis ? kpis.total_deptos : '...' }}</span>
-              <span class="mini-lbl">Departamentos</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-val">{{ kpis ? kpis.total_municipios : '...' }}</span>
-              <span class="mini-lbl">Municipios</span>
-            </div>
-          </div>
-          <div class="module-tags">
-            <span class="mod-tag">Mapa & Líneas</span>
-            <span class="mod-tag">Ranking Crítico</span>
-            <span class="mod-tag">Tabla Auditable</span>
-          </div>
-        </div>
-
-        <div class="feature-footer">
-          <router-link to="/territorio" class="btn btn-sm feat-btn">
-            <span>Abrir Vista 02</span>
-            <ChevronRight :size="14" />
-          </router-link>
-        </div>
-      </div>
-
-      <div class="feature-card card">
-        <div class="feature-top">
-          <div class="feature-step-row">
-            <span class="step-num">VISTA 03</span>
-            <Sliders :size="20" class="feat-icon brand" />
-          </div>
-          <h3 class="feature-title">Capacidad y Mejora Operativa</h3>
-          <p class="feature-text">
-            Comparación de carga regional frente a infraestructura instalada, matriz carga vs. cumplimiento y simulador de cuadrillas.
-          </p>
-        </div>
-
-        <div class="feature-highlights">
-          <div class="mini-stat-pair">
-            <div class="mini-stat">
-              <span class="mini-val">{{ kpis ? kpis.total_equipos.toLocaleString() : '...' }}</span>
-              <span class="mini-lbl">Torres en Red</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-val danger">{{ kpis ? (kpis.abiertos_vencidos ?? 0).toLocaleString() : '...' }}</span>
-              <span class="mini-lbl">Backlog Vencido</span>
-            </div>
-          </div>
-          <div class="module-tags">
-            <span class="mod-tag">Carga Regional</span>
-            <span class="mod-tag">Matriz Dispersión</span>
-            <span class="mod-tag">Simulador Cuadrillas</span>
-          </div>
-        </div>
-
-        <div class="feature-footer">
-          <router-link to="/capacidad" class="btn btn-sm feat-btn">
-            <span>Abrir Vista 03</span>
-            <ChevronRight :size="14" />
-          </router-link>
-        </div>
-      </div>
+        <h3 class="feature-title">Capacidad y Mejora Operativa</h3>
+        <p class="feature-text">
+          Carga sobre {{ kpis ? kpis.total_equipos.toLocaleString() : '5,409' }} torres, dispersión y simulador de cuadrillas.
+        </p>
+        <span class="fc-cta">Abrir Vista 03 <ChevronRight :size="14" /></span>
+      </router-link>
     </section>
   </div>
 </template>
@@ -351,37 +382,236 @@ onMounted(async () => {
   margin-top: 2px;
 }
 
-.grid-3 {
+.executive-pulse-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
   flex: 1;
   min-height: 0;
 }
 
-.feature-card {
+.pulse-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 14px 18px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.feature-top {
+.pulse-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pulse-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.pulse-sub {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.pulse-link {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-brand);
+  white-space: nowrap;
+}
+
+.stacked-portfolio-bar {
+  display: flex;
+  height: 12px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--bg-subtle);
+  gap: 2px;
+}
+
+.port-seg {
+  height: 100%;
+}
+
+.seg-success { background: var(--sla-success, #10B981); }
+.seg-sla-ok { background: #475569; }
+.seg-warning { background: var(--sla-warning, #F59E0B); }
+.seg-info { background: var(--sla-info, #38BDF8); }
+.seg-danger { background: var(--sla-danger, #E11D48); }
+
+.portfolio-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.port-leg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+}
+
+.port-leg-item b {
+  color: var(--text-primary);
+}
+
+.leg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.typology-bars {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
-.feature-step-row {
-  width: 100%;
+.typo-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 95px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+}
+
+.typo-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.typo-track {
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.typo-fill {
+  height: 100%;
+  background: var(--color-brand);
+  border-radius: var(--radius-full);
+}
+
+.typo-val {
+  text-align: right;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.sla-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  justify-content: center;
+}
+
+.sla-mini-row {
+  display: grid;
+  grid-template-columns: 76px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+}
+
+.sla-prio-lbl {
+  color: var(--text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sla-track {
+  display: flex;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-subtle);
+}
+
+.sla-fill-ok {
+  background: #475569;
+  color: #F8FAFC;
+  font-size: 0.66rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sla-fill-late {
+  background: var(--sla-danger, #E11D48);
+  color: #FFFFFF;
+  font-size: 0.66rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sla-total-lbl {
+  text-align: right;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.sla-mini-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.sla-note {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.feature-card-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.feature-card-compact:hover {
+  border-color: var(--color-brand);
+  transform: translateY(-2px);
+}
+
+.fc-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
 }
 
 .step-num {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.6px;
   padding: 2px 8px;
@@ -400,87 +630,30 @@ onMounted(async () => {
 }
 
 .feature-title {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin: 2px 0 0;
 }
 
 .feature-text {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
-.feature-highlights {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: auto;
-}
-
-.mini-stat-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.mini-stat {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 10px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-}
-
-.mini-val {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.15;
-}
-
-.mini-val.danger {
-  color: var(--sla-danger);
-}
-
-.mini-lbl {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.module-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.mod-tag {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-}
-
-.feature-footer {
-  display: flex;
+.fc-cta {
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.feat-btn {
-  margin-top: 0;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-brand);
 }
 
 @media (max-width: 1024px) {
+  .executive-pulse-grid,
   .grid-3 {
     grid-template-columns: 1fr;
   }
