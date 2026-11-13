@@ -4,7 +4,9 @@ import { Activity, Map, Sliders, ChevronRight, Palette } from 'lucide-vue-next';
 import { apiService } from '../services/api';
 import type { PortadaKpis, OperationsDataResponse } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
+import { useThemeStore } from '../stores/themeStore';
 
+const themeStore = useThemeStore();
 const loading = ref(true);
 const kpis = ref<PortadaKpis | null>(null);
 const opsData = ref<OperationsDataResponse | null>(null);
@@ -84,7 +86,17 @@ onMounted(async () => {
         </div>
 
         <div class="hero-scope-card">
-          <div class="scope-header">Alcance del Tablero</div>
+          <div class="scope-brand-row">
+            <img
+              :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"
+              alt="EcoGrid Colombia"
+              class="hero-brand-logo"
+            />
+            <div class="scope-brand-text">
+              <span class="hero-brand-label">EcoGrid DEC · Colombia</span>
+              <span class="hero-brand-sublabel">Control de Red & Sostenibilidad</span>
+            </div>
+          </div>
           <div class="scope-grid">
             <div class="scope-item">
               <span class="scope-val">{{ kpis ? kpis.total_avisos.toLocaleString() : '3,118' }}</span>
@@ -296,24 +308,49 @@ onMounted(async () => {
 .hero-scope-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   padding: 12px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  min-width: 280px;
+  min-width: 300px;
   flex-shrink: 0;
 }
 
-.scope-header {
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--color-brand);
+.scope-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 4px;
+}
+
+.hero-brand-logo {
+  height: 40px;
+  width: auto;
+  max-width: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.scope-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-brand-label {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.hero-brand-sublabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-brand);
+  margin-top: 1px;
 }
 
 .scope-grid {
