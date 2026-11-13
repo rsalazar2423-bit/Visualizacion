@@ -247,9 +247,18 @@ watch(() => [opsStore.data, opsStore.selectedPrioridad], () => render(), { deep:
 <style scoped>
 .stacked-bar-wrapper {
   width: 100%;
+  height: 100%;
+  min-height: 0;
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+
+.chart-canvas-full {
+  width: 100%;
+  flex: 1;
+  min-height: 320px;
 }
 
 .active-prio-bar {

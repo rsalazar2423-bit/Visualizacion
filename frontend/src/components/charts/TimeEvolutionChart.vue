@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { ZoomIn, RotateCcw } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import { useOperationsStore } from '../../stores/operationsStore';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -27,6 +28,35 @@ const summaryStats = computed(() => {
   }
   return { totalIngresos, totalCierres, peakYear, peakIngresos };
 });
+
+const chartContainer = ref<HTMLDivElement | null>(null);
+const { getChartInstance, render } = useChart(chartContainer, renderTimeEvolution);
+const isZoomActive = ref(false);
+
+function toggleZoomMode() {
+  const inst = getChartInstance();
+  if (!inst) return;
+  isZoomActive.value = !isZoomActive.value;
+  inst.dispatchAction({
+    type: 'takeGlobalCursor',
+    key: 'dataZoomSelect',
+    dataZoomSelectActive: isZoomActive.value,
+  });
+}
+
+function resetView() {
+  const inst = getChartInstance();
+  if (!inst) return;
+  isZoomActive.value = false;
+  inst.dispatchAction({
+    type: 'dataZoom',
+    start: 0,
+    end: 100,
+  });
+  inst.dispatchAction({
+    type: 'restore',
+  });
+}
 
 function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
   const pts = seriesPoints.value;
@@ -81,23 +111,8 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     legend: {
       top: 0,
       left: 'center',
-      right: 95, // Reserva espacio en la derecha para que los botones del toolbox no se crucen con la leyenda
-      itemGap: 12,
+      itemGap: 16,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
-    },
-    toolbox: {
-      right: 12,
-      top: 0,
-      itemSize: 13,
-      itemGap: 8,
-      feature: {
-        dataZoom: {
-          title: { zoom: 'Seleccionar zona temporal', back: 'Restablecer zoom' },
-          yAxisIndex: 'none',
-        },
-        restore: { title: 'Restablecer vista' },
-      },
-      iconStyle: { borderColor: tokens.textSecondary },
     },
     dataZoom: [
       {
@@ -119,7 +134,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       left: '3%',
       right: '4%',
       bottom: '42px',
-      top: '52px', // Espacio vertical suficiente para que el título del eje no se encime sobre 100% ni sobre el toolbox
+      top: '40px', // Canvas despejado: los botones ahora viven limpiamente en el toolbar superior
       containLabel: true,
     },
     xAxis: {
@@ -133,7 +148,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'value',
         name: 'Volumen de Avisos',
         nameLocation: 'end',
-        nameGap: 12,
+        nameGap: 10,
         nameTextStyle: { color: tokens.textSecondary, fontSize: 10.5, align: 'left', padding: [0, 0, 4, 0] },
         axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
         splitLine: { lineStyle: { color: tokens.gridColor } },
@@ -143,13 +158,13 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         name: isCumpleMode ? '% Cumplimiento' : 'Mediana (Días)',
         max: isCumpleMode ? 100 : undefined,
         nameLocation: 'end',
-        nameGap: 14,
+        nameGap: 10,
         nameTextStyle: {
           color: tokens.textSecondary,
           fontSize: 10.5,
           fontWeight: 600,
           align: 'right',
-          padding: [0, 2, 4, 0], // Separación exacta para no chocar con la etiqueta de 100% ni con el toolbox
+          padding: [0, 2, 4, 0],
         },
         axisLabel: {
           formatter: isCumpleMode ? '{value}%' : '{value} d',
@@ -220,9 +235,6 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
   chartInstance.setOption(option, true);
 }
 
-const chartContainer = ref<HTMLDivElement | null>(null);
-const { render } = useChart(chartContainer, renderTimeEvolution);
-
 watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true });
 </script>
 
@@ -239,22 +251,45 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
         </span>
       </div>
 
-      <div class="overlay-toggle">
-        <span class="toggle-label">Eje Derecho:</span>
-        <button
-          class="btn-toggle-sm"
-          :class="{ active: metricOverlay === 'cumplimiento' }"
-          @click="metricOverlay = 'cumplimiento'"
-        >
-          % Cumplimiento
-        </button>
-        <button
-          class="btn-toggle-sm"
-          :class="{ active: metricOverlay === 'mediana' }"
-          @click="metricOverlay = 'mediana'"
-        >
-          Mediana Días
-        </button>
+      <div class="evolution-controls-right">
+        <div class="overlay-toggle">
+          <span class="toggle-label">Eje Derecho:</span>
+          <button
+            class="btn-toggle-sm"
+            :class="{ active: metricOverlay === 'cumplimiento' }"
+            @click="metricOverlay = 'cumplimiento'"
+          >
+            % Cumplimiento
+          </button>
+          <button
+            class="btn-toggle-sm"
+            :class="{ active: metricOverlay === 'mediana' }"
+            @click="metricOverlay = 'mediana'"
+          >
+            Mediana Días
+          </button>
+        </div>
+
+        <!-- Herramientas de Navegación ubicadas en el espacio vacío superior (Cero superposición en el gráfico) -->
+        <div class="zoom-tools-cluster">
+          <button
+            class="btn-tool-sm"
+            :class="{ active: isZoomActive }"
+            title="Activar selección de área para acercar período"
+            @click="toggleZoomMode"
+          >
+            <ZoomIn :size="12" />
+            <span>Zoom Área</span>
+          </button>
+          <button
+            class="btn-tool-sm"
+            title="Restablecer período completo (2008 – 2023)"
+            @click="resetView"
+          >
+            <RotateCcw :size="12" />
+            <span>Restablecer</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -284,7 +319,7 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 
 .evolution-kpis {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -299,6 +334,13 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 
 .evo-stat b {
   color: var(--text-primary);
+}
+
+.evolution-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .overlay-toggle {
@@ -332,9 +374,44 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
   font-weight: 700;
 }
 
+.zoom-tools-cluster {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.btn-tool-sm {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--transition-fast);
+}
+
+.btn-tool-sm:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--color-brand);
+}
+
+.btn-tool-sm.active {
+  background: var(--color-brand-soft);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
 .chart-canvas-evolution {
   width: 100%;
   flex: 1;
-  min-height: 380px;
+  min-height: 420px;
 }
 </style>
