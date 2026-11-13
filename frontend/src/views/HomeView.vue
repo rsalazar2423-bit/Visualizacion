@@ -114,51 +114,120 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- Secuencia de Navegación en 3 Vistas (Definición de Construcción) -->
+    <!-- Secuencia de Navegación en 3 Vistas -->
     <section class="features-section grid-3">
       <div class="feature-card card">
-        <div class="feature-step-row">
-          <span class="step-num">VISTA 01</span>
-          <Activity :size="22" class="feat-icon brand" />
+        <div class="feature-top">
+          <div class="feature-step-row">
+            <span class="step-num">VISTA 01</span>
+            <Activity :size="20" class="feat-icon brand" />
+          </div>
+          <h3 class="feature-title">Seguimiento y Cumplimiento</h3>
+          <p class="feature-text">
+            Panorama de la operación: evolución temporal de ingresos vs. cierres, cumplimiento por prioridad SLA y composición técnica.
+          </p>
         </div>
-        <h3 class="feature-title">Seguimiento y Cumplimiento</h3>
-        <p class="feature-text">
-          Panorama de la operación: estado actual, evolución temporal de avisos ingresados vs. cerrados, cumplimiento al 100% entre prioridades y composición técnica.
-        </p>
-        <router-link to="/operaciones" class="btn btn-sm feat-btn">
-          <span>Abrir Vista 01</span>
-          <ChevronRight :size="14" />
-        </router-link>
+
+        <div class="feature-highlights">
+          <div class="mini-stat-pair">
+            <div class="mini-stat">
+              <span class="mini-val">{{ kpis ? `${kpis.pct_vegetacion}%` : '...' }}</span>
+              <span class="mini-lbl">Causa Vegetación</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-val">{{ kpis ? (kpis.total_avisos - (kpis.avisos_abiertos ?? 0)).toLocaleString() : '...' }}</span>
+              <span class="mini-lbl">Avisos Cerrados</span>
+            </div>
+          </div>
+          <div class="module-tags">
+            <span class="mod-tag">Evolución 2008–2023</span>
+            <span class="mod-tag">Plazos SLA</span>
+            <span class="mod-tag">Tipología Técnica</span>
+          </div>
+        </div>
+
+        <div class="feature-footer">
+          <router-link to="/operaciones" class="btn btn-sm feat-btn">
+            <span>Abrir Vista 01</span>
+            <ChevronRight :size="14" />
+          </router-link>
+        </div>
       </div>
 
       <div class="feature-card card">
-        <div class="feature-step-row">
-          <span class="step-num">VISTA 02</span>
-          <Map :size="22" class="feat-icon accent" />
+        <div class="feature-top">
+          <div class="feature-step-row">
+            <span class="step-num">VISTA 02</span>
+            <Map :size="20" class="feat-icon accent" />
+          </div>
+          <h3 class="feature-title">Diagnóstico Territorial y Técnico</h3>
+          <p class="feature-text">
+            Mapa geográfico interactivo (2008–2023), ranking de sectores con retrasos, duración por tipología y desglose jerárquico.
+          </p>
         </div>
-        <h3 class="feature-title">Diagnóstico Territorial y Técnico</h3>
-        <p class="feature-text">
-          Mapa geográfico interactivo a lo largo de la historia (2008–2023), ranking de sectores con mayores retrasos, tiempos por tipo de aviso y desglose jerárquico.
-        </p>
-        <router-link to="/territorio" class="btn btn-sm feat-btn">
-          <span>Abrir Vista 02</span>
-          <ChevronRight :size="14" />
-        </router-link>
+
+        <div class="feature-highlights">
+          <div class="mini-stat-pair">
+            <div class="mini-stat">
+              <span class="mini-val">{{ kpis ? kpis.total_deptos : '...' }}</span>
+              <span class="mini-lbl">Departamentos</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-val">{{ kpis ? kpis.total_municipios : '...' }}</span>
+              <span class="mini-lbl">Municipios</span>
+            </div>
+          </div>
+          <div class="module-tags">
+            <span class="mod-tag">Mapa & Líneas</span>
+            <span class="mod-tag">Ranking Crítico</span>
+            <span class="mod-tag">Tabla Auditable</span>
+          </div>
+        </div>
+
+        <div class="feature-footer">
+          <router-link to="/territorio" class="btn btn-sm feat-btn">
+            <span>Abrir Vista 02</span>
+            <ChevronRight :size="14" />
+          </router-link>
+        </div>
       </div>
 
       <div class="feature-card card">
-        <div class="feature-step-row">
-          <span class="step-num">VISTA 03</span>
-          <Sliders :size="22" class="feat-icon brand" />
+        <div class="feature-top">
+          <div class="feature-step-row">
+            <span class="step-num">VISTA 03</span>
+            <Sliders :size="20" class="feat-icon brand" />
+          </div>
+          <h3 class="feature-title">Capacidad y Mejora Operativa</h3>
+          <p class="feature-text">
+            Comparación de carga regional frente a infraestructura instalada, matriz carga vs. cumplimiento y simulador de cuadrillas.
+          </p>
         </div>
-        <h3 class="feature-title">Capacidad y Mejora Operativa</h3>
-        <p class="feature-text">
-          Comparación de carga regional frente a infraestructura instalada, matriz de dispersión carga vs. cumplimiento y simulador de asignación de cuadrillas.
-        </p>
-        <router-link to="/capacidad" class="btn btn-sm feat-btn">
-          <span>Abrir Vista 03</span>
-          <ChevronRight :size="14" />
-        </router-link>
+
+        <div class="feature-highlights">
+          <div class="mini-stat-pair">
+            <div class="mini-stat">
+              <span class="mini-val">{{ kpis ? kpis.total_equipos.toLocaleString() : '...' }}</span>
+              <span class="mini-lbl">Torres en Red</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-val danger">{{ kpis ? (kpis.abiertos_vencidos ?? 0).toLocaleString() : '...' }}</span>
+              <span class="mini-lbl">Backlog Vencido</span>
+            </div>
+          </div>
+          <div class="module-tags">
+            <span class="mod-tag">Carga Regional</span>
+            <span class="mod-tag">Matriz Dispersión</span>
+            <span class="mod-tag">Simulador Cuadrillas</span>
+          </div>
+        </div>
+
+        <div class="feature-footer">
+          <router-link to="/capacidad" class="btn btn-sm feat-btn">
+            <span>Abrir Vista 03</span>
+            <ChevronRight :size="14" />
+          </router-link>
+        </div>
       </div>
     </section>
   </div>
@@ -293,8 +362,14 @@ onMounted(async () => {
 .feature-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   padding: 16px 20px;
+}
+
+.feature-top {
+  display: flex;
+  flex-direction: column;
 }
 
 .feature-step-row {
@@ -335,11 +410,74 @@ onMounted(async () => {
   font-size: 0.82rem;
   color: var(--text-secondary);
   line-height: 1.45;
-  flex: 1;
+}
+
+.feature-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.mini-stat-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.mini-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.mini-val.danger {
+  color: var(--sla-danger);
+}
+
+.mini-lbl {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.module-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mod-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.feature-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .feat-btn {
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 @media (max-width: 1024px) {
