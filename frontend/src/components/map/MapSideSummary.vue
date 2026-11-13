@@ -1,7 +1,11 @@
 <script setup lang="ts">
-defineProps<{
+import type { MapLayerFilter } from './MapLayerPills.vue';
+
+const props = defineProps<{
   timeMode: 'all' | 'cumulative' | 'single';
   selectedYear: number;
+  layerFilter: MapLayerFilter;
+  showLines: boolean;
   stats: {
     total: number;
     cumple: number;
@@ -11,6 +15,15 @@ defineProps<{
   };
   transmissionLinesCount: number;
 }>();
+
+const emit = defineEmits<{
+  (e: 'update:layerFilter', val: MapLayerFilter): void;
+  (e: 'toggle-lines'): void;
+}>();
+
+function toggleFilter(target: MapLayerFilter) {
+  emit('update:layerFilter', props.layerFilter === target ? 'all' : target);
+}
 </script>
 
 <template>
@@ -26,45 +39,69 @@ defineProps<{
     </div>
 
     <div class="map-legend-metrics">
-      <div class="map-metric-row">
+      <button
+        type="button"
+        class="map-metric-row clickable"
+        :class="{ active: layerFilter === 'vencidos' }"
+        title="Clic para filtrar solo Abiertos Vencidos"
+        @click="toggleFilter('vencidos')"
+      >
         <span class="dot-indicator danger-pulse"></span>
         <div class="metric-info">
           <span class="metric-label">Abiertos Vencidos</span>
           <span class="metric-sub">Prioridad superada (Alerta)</span>
         </div>
         <b class="metric-val danger-text">{{ stats.abiertoVencido.toLocaleString() }}</b>
-      </div>
+      </button>
 
-      <div class="map-metric-row">
-        <span class="dot-indicator warning"></span>
+      <button
+        type="button"
+        class="map-metric-row clickable"
+        :class="{ active: layerFilter === 'abiertos_plazo' }"
+        title="Clic para filtrar solo Abiertos En Plazo (no vencidos)"
+        @click="toggleFilter('abiertos_plazo')"
+      >
+        <span class="dot-indicator info-open"></span>
         <div class="metric-info">
-          <span class="metric-label">Cerrados con Retraso</span>
-          <span class="metric-sub">Atendidos fuera de SLA</span>
+          <span class="metric-label">Abiertos En Plazo</span>
+          <span class="metric-sub">Activos dentro del SLA</span>
         </div>
-        <b class="metric-val warning-text">{{ stats.excedeCerrado.toLocaleString() }}</b>
-      </div>
+        <b class="metric-val info-text">{{ stats.abiertoEnPlazo.toLocaleString() }}</b>
+      </button>
 
-      <div class="map-metric-row">
+      <button
+        type="button"
+        class="map-metric-row clickable"
+        :class="{ active: layerFilter === 'cerrados' }"
+        title="Clic para filtrar todos los avisos Cerrados"
+        @click="toggleFilter('cerrados')"
+      >
         <span class="dot-indicator success"></span>
         <div class="metric-info">
-          <span class="metric-label">Cumple Plazo (A Tiempo)</span>
-          <span class="metric-sub">Cerrados / activos en plazo</span>
+          <span class="metric-label">Cerrados (A Tiempo / Retraso)</span>
+          <span class="metric-sub">{{ stats.cumple.toLocaleString() }} en plazo · {{ stats.excedeCerrado.toLocaleString() }} fuera SLA</span>
         </div>
-        <b class="metric-val success-text">{{ (stats.cumple + stats.abiertoEnPlazo).toLocaleString() }}</b>
-      </div>
+        <b class="metric-val success-text">{{ (stats.cumple + stats.excedeCerrado).toLocaleString() }}</b>
+      </button>
 
-      <div class="map-metric-row line-row">
+      <button
+        type="button"
+        class="map-metric-row line-row clickable"
+        :class="{ active: showLines, dimmed: !showLines }"
+        title="Clic para mostrar u ocultar las líneas de transmisión"
+        @click="emit('toggle-lines')"
+      >
         <span class="line-indicator"></span>
         <div class="metric-info">
           <span class="metric-label">Corredores Eléctricos</span>
-          <span class="metric-sub">Trazado de líneas y torres</span>
+          <span class="metric-sub">{{ showLines ? 'Visibles (clic para ocultar)' : 'Ocultos (clic para mostrar)' }}</span>
         </div>
         <b class="metric-val">{{ transmissionLinesCount }}</b>
-      </div>
+      </button>
     </div>
 
     <div class="map-interaction-tip">
-      💡 <b>Interacción:</b> Usa la rueda del mouse para hacer zoom sobre corredores específicos o haz clic en un nodo para filtrar la vista.
+      💡 <b>Interacción:</b> Haz clic en una categoría para aislarla, usa la rueda para zoom o pulsa un nodo para filtrar territorio.
     </div>
   </aside>
 </template>
@@ -120,10 +157,31 @@ defineProps<{
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  text-align: left;
   background: var(--bg-card);
   padding: 9px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.map-metric-row.clickable {
+  cursor: pointer;
+}
+
+.map-metric-row.clickable:hover {
+  border-color: var(--color-brand);
+  transform: translateY(-1px);
+}
+
+.map-metric-row.active {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.map-metric-row.dimmed {
+  opacity: 0.55;
 }
 
 .dot-indicator {
@@ -141,6 +199,15 @@ defineProps<{
 .dot-indicator.warning {
   background: var(--sla-warning);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.dot-indicator.info-open {
+  background: var(--sla-info, #38BDF8);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.info-text {
+  color: var(--sla-info, #38BDF8);
 }
 
 .dot-indicator.success {

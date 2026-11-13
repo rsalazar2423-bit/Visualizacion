@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { Compass, Maximize2 } from 'lucide-vue-next';
+import { Compass, Maximize2, Crosshair } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
-import MapLayerPills from '../map/MapLayerPills.vue';
+import MapLayerPills, { type MapLayerFilter } from '../map/MapLayerPills.vue';
 import MapSideSummary from '../map/MapSideSummary.vue';
 import MapTimelineBar from '../map/MapTimelineBar.vue';
 import ChartModal from '../common/ChartModal.vue';
@@ -31,7 +31,8 @@ const isModalOpen = ref(false);
 const timeMode = ref<'all' | 'cumulative' | 'single'>('cumulative');
 const selectedYear = ref<number>(2023);
 const isPlaying = ref<boolean>(false);
-const layerFilter = ref<'all' | 'vencidos' | 'abiertos'>('all');
+const layerFilter = ref<MapLayerFilter>('all');
+const showLines = ref<boolean>(true);
 let playTimer: ReturnType<typeof setInterval> | null = null;
 
 const availableYears = computed(() => {
@@ -39,26 +40,38 @@ const availableYears = computed(() => {
   return yrs.length > 0 ? yrs : [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023];
 });
 
-const filteredPoints = computed(() => {
+// Puntos filtrados únicamente por tiempo (para mantener contadores reales en cada píldora)
+const timeFilteredPoints = computed(() => {
   const allPts = territoryStore.data?.map_points || [];
   const yr = selectedYear.value;
 
   return allPts.filter((p) => {
     if (timeMode.value === 'cumulative' && p.year > yr) return false;
     if (timeMode.value === 'single' && p.year !== yr) return false;
+    return true;
+  });
+});
 
+const filteredPoints = computed(() => {
+  return timeFilteredPoints.value.filter((p) => {
     if (layerFilter.value === 'vencidos') {
       return p.estado === 'Abierto' && p.cumplimiento !== 'Cumple Plazo';
     }
+    if (layerFilter.value === 'abiertos_plazo') {
+      return p.estado === 'Abierto' && p.cumplimiento === 'Cumple Plazo';
+    }
     if (layerFilter.value === 'abiertos') {
       return p.estado === 'Abierto';
+    }
+    if (layerFilter.value === 'cerrados') {
+      return p.estado !== 'Abierto';
     }
     return true;
   });
 });
 
 const yearStats = computed(() => {
-  const pts = filteredPoints.value;
+  const pts = timeFilteredPoints.value;
   let cumple = 0;
   let excedeCerrado = 0;
   let abiertoVencido = 0;
@@ -186,6 +199,7 @@ function buildMapOption(tokens: any, isDark: boolean) {
   const lines = territoryStore.data?.map_lines || [];
 
   const cumplePoints: any[] = [];
+  const abiertosPlazoPoints: any[] = [];
   const atrasadoPoints: any[] = [];
   const vencidoPoints: any[] = [];
 
@@ -211,8 +225,12 @@ function buildMapOption(tokens: any, isDark: boolean) {
       value: [finalLon, finalLat, p.dias_abierto],
       raw: p,
     };
-    if (p.estado === 'Abierto' && p.cumplimiento !== 'Cumple Plazo') {
-      vencidoPoints.push(item);
+    if (p.estado === 'Abierto') {
+      if (p.cumplimiento === 'Cumple Plazo') {
+        abiertosPlazoPoints.push(item);
+      } else {
+        vencidoPoints.push(item);
+      }
     } else if (p.cumplimiento === 'Cumple Plazo') {
       cumplePoints.push(item);
     } else {
@@ -220,10 +238,12 @@ function buildMapOption(tokens: any, isDark: boolean) {
     }
   }
 
-  const lineData = lines.map((l) => ({
-    name: l.linea,
-    coords: l.coords,
-  }));
+  const lineData = showLines.value
+    ? lines.map((l) => ({
+        name: l.linea,
+        coords: l.coords,
+      }))
+    : [];
 
   return {
     backgroundColor: 'transparent',
@@ -346,6 +366,29 @@ function buildMapOption(tokens: any, isDark: boolean) {
         },
         data: cumplePoints,
         zlevel: 2,
+      },
+      {
+        name: 'Abiertos En Plazo',
+        type: 'scatter',
+        coordinateSystem: 'geo',
+        symbolSize: 9,
+        itemStyle: {
+          color: isDark ? '#38BDF8' : '#0284C7', // Azul cian para avisos activos dentro de norma
+          opacity: 0.95,
+          borderColor: '#FFFFFF',
+          borderWidth: 1.5,
+        },
+        emphasis: {
+          scale: true,
+          itemStyle: {
+            borderColor: '#FFFFFF',
+            borderWidth: 2.2,
+            shadowBlur: 8,
+            shadowColor: isDark ? 'rgba(56, 189, 248, 0.7)' : 'rgba(2, 132, 199, 0.6)',
+          },
+        },
+        data: abiertosPlazoPoints,
+        zlevel: 3,
       },
       {
         name: 'Cerrados con Retraso',
@@ -514,7 +557,7 @@ watch(
 // preserveView = true -> preserva el zoom y el encuadre para que NO se reinicie ni se reduzca al reproducir
 // Optimizado sin { deep: true } para evitar recorrer 3.118 objetos en cada tick del slider
 watch(
-  () => [territoryStore.data, selectedYear.value, timeMode.value, layerFilter.value, mapReady.value],
+  () => [territoryStore.data, selectedYear.value, timeMode.value, layerFilter.value, showLines.value, mapReady.value],
   () => {
     renderMap(true);
     if (isModalOpen.value) {
@@ -522,6 +565,13 @@ watch(
     }
   }
 );
+
+function recenterMap() {
+  renderMap(false);
+  if (isModalOpen.value) {
+    renderModalMap(false);
+  }
+}
 </script>
 
 <template>
@@ -538,6 +588,15 @@ watch(
         </div>
 
         <div class="header-actions-row">
+          <button
+            class="btn-expand"
+            title="Centrar mapa al territorio activo"
+            @click="recenterMap"
+          >
+            <Crosshair :size="14" />
+            <span>Centrar</span>
+          </button>
+
           <!-- Botón de Ampliación de Gráfica (Modal SRP) -->
           <button
             class="btn-expand"
@@ -553,13 +612,15 @@ watch(
             v-model:layer-filter="layerFilter"
             :total-count="yearStats.total"
             :open-count="yearStats.abiertoVencido + yearStats.abiertoEnPlazo"
+            :open-on-time-count="yearStats.abiertoEnPlazo"
             :overdue-count="yearStats.abiertoVencido"
+            :closed-count="yearStats.cumple + yearStats.excedeCerrado"
           />
         </div>
       </div>
 
       <p class="chart-reseña">
-        Recorrido espacial e histórico sobre las 44 líneas de transmisión y 5.409 torres georreferenciadas. La silueta nacional completa sitúa los corredores operativos; haz zoom o usa el reproductor para auditar la evolución de avisos sin saturación visual.
+        44 líneas y 5.409 torres georreferenciadas. Filtra por estado o usa la línea de tiempo inferior para auditar avisos sin saturación.
       </p>
     </div>
 
@@ -574,10 +635,13 @@ watch(
       </div>
 
       <MapSideSummary
+        v-model:layer-filter="layerFilter"
         :time-mode="timeMode"
         :selected-year="selectedYear"
+        :show-lines="showLines"
         :stats="yearStats"
         :transmission-lines-count="(territoryStore.data?.map_lines || []).length"
+        @toggle-lines="showLines = !showLines"
       />
     </div>
 
@@ -605,10 +669,13 @@ watch(
         <div class="modal-map-body-grid">
           <div ref="modalChartContainer" class="modal-map-canvas"></div>
           <MapSideSummary
+            v-model:layer-filter="layerFilter"
             :time-mode="timeMode"
             :selected-year="selectedYear"
+            :show-lines="showLines"
             :stats="yearStats"
             :transmission-lines-count="(territoryStore.data?.map_lines || []).length"
+            @toggle-lines="showLines = !showLines"
           />
         </div>
         <MapTimelineBar

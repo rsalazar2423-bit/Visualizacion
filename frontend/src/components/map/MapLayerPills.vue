@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { Layers } from 'lucide-vue-next';
 
+export type MapLayerFilter = 'all' | 'vencidos' | 'abiertos_plazo' | 'abiertos' | 'cerrados';
+
 defineProps<{
-  layerFilter: 'all' | 'vencidos' | 'abiertos';
+  layerFilter: MapLayerFilter;
   totalCount: number;
   openCount: number;
+  openOnTimeCount: number;
   overdueCount: number;
+  closedCount: number;
 }>();
 
 defineEmits<{
-  (e: 'update:layerFilter', val: 'all' | 'vencidos' | 'abiertos'): void;
+  (e: 'update:layerFilter', val: MapLayerFilter): void;
 }>();
 </script>
 
@@ -24,18 +28,32 @@ defineEmits<{
       Todos ({{ totalCount.toLocaleString() }})
     </button>
     <button
-      class="layer-btn info"
-      :class="{ active: layerFilter === 'abiertos' }"
-      @click="$emit('update:layerFilter', 'abiertos')"
-    >
-      Solo Abiertos ({{ openCount.toLocaleString() }})
-    </button>
-    <button
       class="layer-btn danger"
       :class="{ active: layerFilter === 'vencidos' }"
       @click="$emit('update:layerFilter', 'vencidos')"
     >
       ⚠ Abiertos Vencidos ({{ overdueCount.toLocaleString() }})
+    </button>
+    <button
+      class="layer-btn info"
+      :class="{ active: layerFilter === 'abiertos_plazo' }"
+      @click="$emit('update:layerFilter', 'abiertos_plazo')"
+    >
+      Abiertos En Plazo ({{ openOnTimeCount.toLocaleString() }})
+    </button>
+    <button
+      class="layer-btn info"
+      :class="{ active: layerFilter === 'abiertos' }"
+      @click="$emit('update:layerFilter', 'abiertos')"
+    >
+      Todos Abiertos ({{ openCount.toLocaleString() }})
+    </button>
+    <button
+      class="layer-btn success"
+      :class="{ active: layerFilter === 'cerrados' }"
+      @click="$emit('update:layerFilter', 'cerrados')"
+    >
+      Cerrados ({{ closedCount.toLocaleString() }})
     </button>
   </div>
 </template>
@@ -93,6 +111,12 @@ defineEmits<{
   background: var(--sla-danger-bg);
   border-color: var(--sla-danger);
   color: var(--sla-danger);
+}
+
+.layer-btn.success.active {
+  background: var(--sla-success-bg, rgba(16, 185, 129, 0.14));
+  border-color: var(--sla-success, #10B981);
+  color: var(--sla-success, #10B981);
 }
 </style>
 
