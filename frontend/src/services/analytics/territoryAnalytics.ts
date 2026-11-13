@@ -20,7 +20,7 @@ import {
   DEPTO_PALETTE,
   CORPORATE_PALETTE,
 } from '../../constants/themeTokens';
-import { getDataset, type EquipoRecord } from './datasetRepository';
+import { getDataset, getEquiposMap, getStaticLines } from './datasetRepository';
 import { calcQuantile, calcMedian, extractYear, filterAvisos } from './statsHelpers';
 
 const PRIO_CLARIFIED_LABELS: Record<string, string> = {
@@ -186,11 +186,8 @@ export async function computeTerritorialData(params: {
       return sumB - sumA;
     });
 
-  // 4. Puntos Geográficos para el Mapa Histórico
-  const eqMap = new Map<number, EquipoRecord>();
-  for (const e of equipos) {
-    eqMap.set(e.Equipo, e);
-  }
+  // 4. Puntos Geográficos para el Mapa Histórico (Lookup O(1) con eqMap cacheado)
+  const eqMap = await getEquiposMap();
 
   const yearsSet = new Set<number>();
   const mapPoints: MapAvisoPoint[] = [];
@@ -224,28 +221,11 @@ export async function computeTerritorialData(params: {
     });
   }
 
-  // Trazado de líneas de transmisión
-  const linesGroup: Record<string, { cte: string; pts: [number, number][] }> = {};
-  for (const e of fEquipos) {
-    if (e.Latitud == null || e.Longitud == null || !e.Linea || e.Linea === 'Sin Línea') continue;
-    if (!linesGroup[e.Linea]) {
-      linesGroup[e.Linea] = { cte: e.CTE, pts: [] };
-    }
-    linesGroup[e.Linea].pts.push([Number(e.Longitud), Number(e.Latitud)]);
-  }
-
-  const mapLines: MapLineTrace[] = Object.entries(linesGroup)
-    .filter(([, v]) => v.pts.length >= 2)
-    .map(([linea, v]) => {
-      const sortedPts = [...v.pts].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
-      const step = Math.max(1, Math.floor(sortedPts.length / 25));
-      const sampled = sortedPts.filter((_, idx) => idx % step === 0 || idx === sortedPts.length - 1);
-      return {
-        linea,
-        cte: v.cte,
-        coords: sampled,
-      };
-    });
+  // Trazado de líneas de transmisión (Optimizado: Geometría invariante precalculada)
+  const allStaticLines = await getStaticLines();
+  const mapLines: MapLineTrace[] = (params.cte && params.cte !== 'Todos')
+    ? allStaticLines.filter((l) => l.cte === params.cte)
+    : allStaticLines;
 
   // 5. Ranking de Municipios / Sectores con Mayores Retrasos
   const groupKey = params.depto && params.depto !== 'Todos' ? 'Sector' : 'Municipio';

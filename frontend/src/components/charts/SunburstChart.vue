@@ -4,7 +4,7 @@ import { Target, Clock } from 'lucide-vue-next';
 import type * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { useThemeStore } from '../../stores/themeStore';
-import { getEChartsThemeTokens, getTipoColor, getSlaColors } from '../../constants/themeTokens';
+import { getEChartsThemeTokens, getTipoColor, getSlaColors, PRIO_COLORS } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 import { formatSunburstTooltip } from '../../utils/chartFormatters';
 
@@ -67,11 +67,14 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
       children: (cat.children || []).map((ch) => {
         const isCumple = String(ch.name).startsWith('Cumple');
         const isExcede = String(ch.name).startsWith('Excede');
+        const childColor = mode.value === 'sla'
+          ? (isCumple ? (isDark ? '#10B981' : '#059669') : isExcede ? (isDark ? '#F43F5E' : '#DC2626') : tokens.sla.neutral)
+          : (PRIO_COLORS[ch.name] || tokens.sla.neutral);
         return {
           ...ch,
           itemStyle: {
-            color: isCumple ? parentColor : isExcede ? tokens.sla.excede : (ch.itemStyle?.color || tokens.sla.neutral),
-            opacity: isCumple ? 0.65 : 0.95,
+            color: childColor,
+            opacity: 1,
           },
         };
       }),
@@ -127,7 +130,12 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
               },
             },
             label: {
-              show: false,
+              show: true,
+              minAngle: 25,
+              color: '#FFFFFF',
+              fontWeight: 600,
+              fontSize: 11,
+              formatter: '{b}',
             },
           },
           {
@@ -231,7 +239,7 @@ watch(() => territoryStore.data, () => render(), { deep: true });
             <span class="sem-chip"><b>Núcleo Interior:</b> Causa técnica del aviso (55% Vegetación, Obras, Estructuras).</span>
             <span class="sem-chip" v-if="mode === 'sla'">
               <b>Anillo Exterior:</b>
-              <span class="badge-dot-neutral"></span> <b>Tono de la Causa (Suave):</b> Cumple Plazo en norma
+              <span class="badge-dot-success"></span> <b>Verde Esmeralda:</b> Cumple Plazo en norma
               <span class="badge-dot-danger"></span> <b>Rojo Carmín:</b> Excede Plazo (Alerta de Mora SLA)
             </span>
             <span class="sem-chip" v-else>

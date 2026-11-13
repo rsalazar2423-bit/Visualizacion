@@ -10,6 +10,7 @@ import MapSideSummary from '../map/MapSideSummary.vue';
 import MapTimelineBar from '../map/MapTimelineBar.vue';
 import ChartModal from '../common/ChartModal.vue';
 import { getAdaptiveGeoView } from '../../utils/geoBounds';
+import { loadColombiaGeoJson } from '../../services/analytics/datasetRepository';
 
 const territoryStore = useTerritoryStore();
 const themeStore = useThemeStore();
@@ -21,6 +22,7 @@ let modalChartInstance: echarts.ECharts | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let modalResizeObserver: ResizeObserver | null = null;
 let mapRegistered = false;
+const mapReady = ref(false);
 
 // Estado de Modal de Ampliación
 const isModalOpen = ref(false);
@@ -145,17 +147,13 @@ function setMode(mode: 'all' | 'cumulative' | 'single') {
 }
 
 async function ensureGeoJsonLoaded() {
-  if (mapRegistered) return;
-  try {
-    const res = await fetch('/data/colombia_deptos.json');
-    if (res.ok) {
-      const geojson = await res.json();
-      echarts.registerMap('colombia_red', geojson);
-      mapRegistered = true;
-    }
-  } catch (err) {
-    console.warn('No se pudo cargar colombia_deptos.json:', err);
+  if (mapRegistered) {
+    mapReady.value = true;
+    return;
   }
+  const ok = await loadColombiaGeoJson(echarts);
+  mapRegistered = ok;
+  mapReady.value = ok;
 }
 
 const OPERATIVE_DEPTOS = [
@@ -191,10 +189,26 @@ function buildMapOption(tokens: any, isDark: boolean) {
   const atrasadoPoints: any[] = [];
   const vencidoPoints: any[] = [];
 
+  // Control de co-ubicación para evitar oclusión (jittering radial determinista ~120m)
+  const coordCount = new Map<string, number>();
+
   for (const p of pts) {
+    const key = `${p.lon.toFixed(4)},${p.lat.toFixed(4)}`;
+    const count = coordCount.get(key) || 0;
+    coordCount.set(key, count + 1);
+
+    let finalLon = p.lon;
+    let finalLat = p.lat;
+    if (count > 0) {
+      const angle = count * 1.2566; // 2 * PI / 5
+      const offset = 0.0014 * Math.min(count, 3);
+      finalLon += Math.cos(angle) * offset;
+      finalLat += Math.sin(angle) * offset;
+    }
+
     const item = {
       name: `${p.mpio} (${p.aviso})`,
-      value: [p.lon, p.lat, p.dias_abierto],
+      value: [finalLon, finalLat, p.dias_abierto],
       raw: p,
     };
     if (p.estado === 'Abierto' && p.cumplimiento !== 'Cumple Plazo') {
@@ -311,14 +325,15 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cumple Plazo (A Tiempo)',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 8, // Nodo visible y nítido para contraste espacial inmediato
+        symbolSize: 8,
+        large: true,
+        largeThreshold: 400,
+        progressive: 600,
         itemStyle: {
-          color: isDark ? '#10B981' : '#059669', // Verde Esmeralda / Teal de Operación Conforme (BIEN)
-          opacity: 0.9,
+          color: isDark ? '#10B981' : '#059669', // Verde Esmeralda
+          opacity: 0.92,
           borderColor: '#FFFFFF',
           borderWidth: 1.4,
-          shadowColor: isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(5, 150, 105, 0.35)',
-          shadowBlur: 5,
         },
         emphasis: {
           scale: true,
@@ -336,14 +351,15 @@ function buildMapOption(tokens: any, isDark: boolean) {
         name: 'Cerrados con Retraso',
         type: 'scatter',
         coordinateSystem: 'geo',
-        symbolSize: 8.5, // Legibilidad inmediata en el corredor (aumentado de 5.5)
+        symbolSize: 8.5,
+        large: true,
+        largeThreshold: 400,
+        progressive: 600,
         itemStyle: {
-          color: isDark ? '#F59E0B' : '#D97706', // Ámbar cálido visible
-          opacity: 0.9,
+          color: isDark ? '#F59E0B' : '#D97706', // Ámbar cálido
+          opacity: 0.92,
           borderColor: '#FFFFFF',
           borderWidth: 1.2,
-          shadowColor: 'rgba(217, 119, 6, 0.35)',
-          shadowBlur: 4,
         },
         emphasis: {
           scale: true,
@@ -359,29 +375,27 @@ function buildMapOption(tokens: any, isDark: boolean) {
       },
       {
         name: 'Abiertos Vencidos (Alerta)',
-        type: 'effectScatter', // Efecto de radar/pulsación continua para alerta crítica
+        type: 'effectScatter', // Radar focal sutil y nítido (sin devorar torres vecinas)
         coordinateSystem: 'geo',
         showEffectOn: 'render',
         rippleEffect: {
           brushType: 'stroke',
-          scale: 3.2,
-          period: 3,
+          scale: 1.8, // Ondulación calibrada para no ocluir torres adyacentes
+          period: 3.5,
         },
-        symbolSize: 12, // Gran visibilidad focal prioritaria (aumentado de 8)
+        symbolSize: 7.5, // Calibre armónico con los nodos verdes (6.5) y naranjas (6.5)
         itemStyle: {
-          color: tokens.sla.excede, // Carmín Ladrillo de Alarma
+          color: tokens.sla.excede, // Carmín de Alarma
           borderColor: '#FFFFFF',
-          borderWidth: 2,
-          shadowColor: 'rgba(190, 18, 60, 0.75)',
-          shadowBlur: 10,
+          borderWidth: 1.5,
         },
         emphasis: {
           scale: true,
           itemStyle: {
             borderColor: '#FFFFFF',
-            borderWidth: 2.5,
-            shadowBlur: 14,
-            shadowColor: 'rgba(190, 18, 60, 0.9)',
+            borderWidth: 2.2,
+            shadowBlur: 10,
+            shadowColor: 'rgba(190, 18, 60, 0.85)',
           },
         },
         data: vencidoPoints,
@@ -468,8 +482,10 @@ onMounted(async () => {
     chartInstance = echarts.init(chartContainer.value);
     attachChartEvents(chartInstance);
 
+    let rafId: number | null = null;
     resizeObserver = new ResizeObserver(() => {
-      chartInstance?.resize();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => chartInstance?.resize());
     });
     resizeObserver.observe(chartContainer.value);
     renderMap();
@@ -496,15 +512,15 @@ watch(
 
 // Vigilante de la línea de tiempo (reproductor, años, filtros de capas):
 // preserveView = true -> preserva el zoom y el encuadre para que NO se reinicie ni se reduzca al reproducir
+// Optimizado sin { deep: true } para evitar recorrer 3.118 objetos en cada tick del slider
 watch(
-  () => [territoryStore.data, selectedYear.value, timeMode.value, layerFilter.value],
+  () => [territoryStore.data, selectedYear.value, timeMode.value, layerFilter.value, mapReady.value],
   () => {
     renderMap(true);
     if (isModalOpen.value) {
       renderModalMap(true);
     }
-  },
-  { deep: true }
+  }
 );
 </script>
 
@@ -549,7 +565,13 @@ watch(
 
     <!-- Lienzo del Mapa + Panel de Resumen Temporal (Componente SRP) -->
     <div class="map-body-grid">
-      <div ref="chartContainer" class="map-canvas"></div>
+      <div class="map-canvas-container">
+        <div ref="chartContainer" class="map-canvas"></div>
+        <div v-if="territoryStore.loading || !mapReady" class="map-loading-overlay">
+          <div class="map-spinner"></div>
+          <span class="map-loading-text">Cargando Red Eléctrica Georreferenciada (5.409 torres y 44 líneas)...</span>
+        </div>
+      </div>
 
       <MapSideSummary
         :time-mode="timeMode"
@@ -651,6 +673,13 @@ watch(
   align-items: stretch;
 }
 
+.map-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+}
+
 .map-canvas {
   width: 100%;
   height: 100%;
@@ -658,6 +687,44 @@ watch(
   background: var(--bg-subtle);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
+}
+
+.map-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-card);
+  opacity: 0.94;
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 10;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.map-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--color-brand, #0F766E);
+  border-radius: 50%;
+  animation: map-spin 0.8s linear infinite;
+}
+
+.map-loading-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+@keyframes map-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Estilos dentro del Modal */

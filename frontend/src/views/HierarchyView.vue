@@ -12,8 +12,11 @@ const territoryStore = useTerritoryStore();
 const activeSubView = ref<'map' | 'bottlenecks' | 'hierarchy' | 'audit'>('map');
 
 onMounted(async () => {
-  await territoryStore.loadFilterOptions();
-  await territoryStore.fetchData();
+  // Carga paralela de filtros y dataset para eliminar cuellos de botella en la inicialización
+  await Promise.all([
+    territoryStore.loadFilterOptions(),
+    territoryStore.fetchData(),
+  ]);
 });
 </script>
 

@@ -51,10 +51,18 @@ export function useChart(
     init();
 
     if (containerRef.value && typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => resize());
+      let rafId: number | null = null;
+      resizeObserver = new ResizeObserver(() => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => resize());
+      });
       resizeObserver.observe(containerRef.value);
     } else {
-      window.addEventListener('resize', resize);
+      let rafId: number | null = null;
+      window.addEventListener('resize', () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => resize());
+      });
     }
   });
 
