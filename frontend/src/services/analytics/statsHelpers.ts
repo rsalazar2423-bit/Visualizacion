@@ -114,12 +114,12 @@ export function buildTimeSeries(data: AvisoRecord[]): TimeSeriesPoint[] {
     const baseEval = cerradosRows.length > 0 ? cerradosRows : ingresadosRows;
     const cumpleEval = baseEval.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
 
-    const cumplePct =
+    const cumplePct: number | null =
       cerradosRows.length > 0
         ? Number(((cerradosEnPlazo / cerradosRows.length) * 100).toFixed(1))
         : baseEval.length > 0
           ? Number(((cumpleEval / baseEval.length) * 100).toFixed(1))
-          : 0;
+          : null; // Si no hubo avisos en el año (N=0), no se reporta 0% artificial sino null
 
     const diasList = baseEval.map((a) => a['Días abierto'] || 0).filter((d) => d >= 0);
 
@@ -130,7 +130,7 @@ export function buildTimeSeries(data: AvisoRecord[]): TimeSeriesPoint[] {
       cerrados: cerradosRows.length,
       abiertos_vencidos: vencidosRows.length,
       cumple_oportuno_pct: cumplePct,
-      mediana_dias: calcMedian(diasList),
+      mediana_dias: diasList.length > 0 ? calcMedian(diasList) : null,
     };
   });
 }

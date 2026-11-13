@@ -54,23 +54,35 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       backgroundColor: tokens.tooltipBg,
       borderColor: tokens.tooltipBorder,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 12 },
+      formatter: (params: any) => {
+        if (!Array.isArray(params) || params.length === 0) return '';
+        const yr = params[0].axisValue;
+        let html = `<div style="font-weight:800;margin-bottom:6px;color:${tokens.textColor};">Año ${yr}</div>`;
+        for (const s of params) {
+          const val = s.value;
+          let formattedVal = val;
+          if (val == null) {
+            formattedVal = `<span style="color:${tokens.textSecondary};font-style:italic;">Sin actividad</span>`;
+          } else if (s.seriesName.includes('%')) {
+            formattedVal = `<b>${val}%</b>`;
+          } else if (s.seriesName.includes('Mediana')) {
+            formattedVal = `<b>${val} días</b>`;
+          } else {
+            formattedVal = `<b>${val}</b>`;
+          }
+          html += `<div style="display:flex;justify-content:space-between;gap:14px;margin:3px 0;">
+            <span>${s.marker} ${s.seriesName}:</span>
+            <span>${formattedVal}</span>
+          </div>`;
+        }
+        return html;
+      },
     },
     legend: {
-      top: 0,
+      top: 2,
       left: 'center',
-      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontWeight: 600 },
-    },
-    toolbox: {
-      right: 12,
-      top: 0,
-      feature: {
-        dataZoom: {
-          title: { zoom: 'Seleccionar zona temporal', back: 'Restablecer zoom' },
-          yAxisIndex: 'none',
-        },
-        restore: { title: 'Restablecer vista' },
-      },
-      iconStyle: { borderColor: tokens.textSecondary },
+      itemGap: 16,
+      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
     },
     dataZoom: [
       {
@@ -90,9 +102,9 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     ],
     grid: {
       left: '3%',
-      right: '4%',
+      right: '5%',
       bottom: '42px',
-      top: '44px',
+      top: '58px', // Espacio suficiente para que el título del eje y la leyenda no choquen con el 100%
       containLabel: true,
     },
     xAxis: {
@@ -105,7 +117,8 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       {
         type: 'value',
         name: 'Volumen de Avisos',
-        nameTextStyle: { color: tokens.textSecondary, fontSize: 11 },
+        nameLocation: 'end',
+        nameTextStyle: { color: tokens.textSecondary, fontSize: 11, align: 'left', padding: [0, 0, 8, 0] },
         axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
         splitLine: { lineStyle: { color: tokens.gridColor } },
       },
@@ -113,7 +126,14 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         type: 'value',
         name: isCumpleMode ? '% Cumplimiento' : 'Mediana (Días)',
         max: isCumpleMode ? 100 : undefined,
-        nameTextStyle: { color: tokens.textSecondary, fontSize: 11 },
+        nameLocation: 'end',
+        nameTextStyle: {
+          color: tokens.textSecondary,
+          fontSize: 11,
+          fontWeight: 600,
+          align: 'right',
+          padding: [0, 0, 8, 0], // Evita colisión con la marca de 100%
+        },
         axisLabel: {
           formatter: isCumpleMode ? '{value}%' : '{value} d',
           color: tokens.textSecondary,
@@ -167,6 +187,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         smooth: 0.25,
         symbol: 'diamond',
         symbolSize: 7,
+        connectNulls: true, // Conecta elegantemente a través de años sin avisos (N=0) evitando caídas falsas a 0%
         lineStyle: {
           width: 2.2,
           type: 'dashed', // Punteada: Diferenciación inmediata de escala porcentual

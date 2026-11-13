@@ -58,8 +58,8 @@ export interface TimeSeriesPoint {
   ingresados: number;
   cerrados: number;
   abiertos_vencidos: number;
-  cumple_oportuno_pct: number;
-  mediana_dias: number;
+  cumple_oportuno_pct: number | null;
+  mediana_dias: number | null;
 }
 
 export interface TypologyPerformanceItem {
