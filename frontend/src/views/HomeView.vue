@@ -85,36 +85,14 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="hero-scope-card">
-          <div class="scope-brand-row">
-            <img
-              :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"
-              alt="EcoGrid Colombia"
-              class="hero-brand-logo"
-            />
-            <div class="scope-brand-text">
-              <span class="hero-brand-label">EcoGrid DEC · Colombia</span>
-              <span class="hero-brand-sublabel">Control de Red & Sostenibilidad</span>
-            </div>
-          </div>
-          <div class="scope-grid">
-            <div class="scope-item">
-              <span class="scope-val">{{ kpis ? kpis.total_avisos.toLocaleString() : '3,118' }}</span>
-              <span class="scope-lbl">Avisos históricos</span>
-            </div>
-            <div class="scope-item">
-              <span class="scope-val">{{ kpis ? kpis.total_equipos.toLocaleString() : '5,409' }}</span>
-              <span class="scope-lbl">Torres en red</span>
-            </div>
-            <div class="scope-item">
-              <span class="scope-val">2008 – 2023</span>
-              <span class="scope-lbl">Ventana temporal</span>
-            </div>
-            <div class="scope-item">
-              <span class="scope-val">Transmisión</span>
-              <span class="scope-lbl">Suroccidente & Centro</span>
-            </div>
-          </div>
+        <div class="hero-logo-box">
+          <img
+            :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"
+            alt="EcoGrid Colombia"
+            class="hero-brand-logo"
+          />
+          <span class="hero-brand-label">EcoGrid DEC · Colombia</span>
+          <span class="hero-brand-sublabel">Control de Red & Sostenibilidad</span>
         </div>
       </div>
     </section>
@@ -305,51 +283,40 @@ onMounted(async () => {
   max-width: 780px;
 }
 
-.hero-scope-card {
+.hero-logo-box {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  min-width: 300px;
+  min-width: 210px;
   flex-shrink: 0;
-}
-
-.scope-brand-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-subtle);
 }
 
 .hero-brand-logo {
-  height: 40px;
+  height: 60px;
   width: auto;
-  max-width: 48px;
+  max-width: 160px;
   object-fit: contain;
-  flex-shrink: 0;
-}
-
-.scope-brand-text {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 6px;
 }
 
 .hero-brand-label {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-primary);
-  line-height: 1.15;
+  text-align: center;
 }
 
 .hero-brand-sublabel {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-brand);
+  text-align: center;
   margin-top: 1px;
 }
 
