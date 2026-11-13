@@ -218,6 +218,6 @@ watch(
 .diag-canvas {
   width: 100%;
   height: 100%;
-  min-height: 380px;
+  min-height: 0;
 }
 </style>

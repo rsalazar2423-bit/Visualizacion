@@ -255,7 +255,7 @@ watch(() => [opsStore.data, opsStore.selectedTipos, themeStore.isDark], () => re
 .performance-canvas {
   width: 100%;
   flex: 1;
-  min-height: 280px;
+  min-height: 0;
 }
 
 .active-tipo-bar {

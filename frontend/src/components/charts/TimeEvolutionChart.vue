@@ -163,10 +163,10 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       },
     ],
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '42px',
-      top: '40px', // Canvas despejado: los botones ahora viven limpiamente en el toolbar superior
+      left: '2%',
+      right: '3%',
+      bottom: '34px',
+      top: '56px', // Espacio limpio para leyenda superior + títulos de ejes sin colisiones
       containLabel: true,
     },
     xAxis: {
@@ -376,22 +376,24 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 .evolution-controls-right {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 10px;
-  flex: 1;
-  flex-wrap: wrap;
+  flex: 1 1 360px;
+  flex-wrap: nowrap;
 }
 
 .overlay-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .toggle-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .btn-toggle-sm {
@@ -403,6 +405,7 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  white-space: nowrap;
   transition: all var(--transition-fast);
 }
 
@@ -418,6 +421,7 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
   align-items: center;
   gap: 5px;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .btn-tool-sm {
@@ -450,6 +454,6 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
 .chart-canvas-evolution {
   width: 100%;
   flex: 1;
-  min-height: 260px;
+  min-height: 0;
 }
 </style>

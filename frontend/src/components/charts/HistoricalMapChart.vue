@@ -677,13 +677,13 @@ watch(
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 380px;
+  min-height: 0;
 }
 
 .map-canvas {
   width: 100%;
   height: 100%;
-  min-height: 380px;
+  min-height: 0;
   background: var(--bg-subtle);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);

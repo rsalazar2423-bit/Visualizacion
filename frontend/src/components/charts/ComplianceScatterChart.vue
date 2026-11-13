@@ -252,7 +252,7 @@ watch(
 .cap-canvas {
   width: 100%;
   flex: 1;
-  min-height: 280px;
+  min-height: 0;
 }
 
 .scatter-legend-bar {

@@ -205,7 +205,7 @@ watch(() => territoryStore.data, () => render(), { deep: true });
 .treemap-canvas {
   width: 100%;
   flex: 1;
-  min-height: 260px;
+  min-height: 0;
   position: relative;
 }
 

@@ -4,9 +4,7 @@ import { Activity, Map, Sliders, ChevronRight, Palette } from 'lucide-vue-next';
 import { apiService } from '../services/api';
 import type { PortadaKpis } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
-import { useThemeStore } from '../stores/themeStore';
 
-const themeStore = useThemeStore();
 const loading = ref(true);
 const kpis = ref<PortadaKpis | null>(null);
 
@@ -37,15 +35,7 @@ onMounted(async () => {
           <div class="hero-actions">
             <router-link to="/operaciones" class="btn">
               <Activity :size="16" />
-              <span>01 · Seguimiento y Cumplimiento</span>
-            </router-link>
-            <router-link to="/territorio" class="btn btn-secondary">
-              <Map :size="16" />
-              <span>02 · Mapa Histórico y Territorio</span>
-            </router-link>
-            <router-link to="/capacidad" class="btn btn-secondary">
-              <Sliders :size="16" />
-              <span>03 · Capacidad y Mejora</span>
+              <span>01 · Iniciar en Operaciones</span>
             </router-link>
             <router-link to="/diseno" class="btn btn-secondary">
               <Palette :size="16" />
@@ -54,14 +44,26 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="hero-logo-box">
-          <img
-            :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"
-            alt="EcoGrid Colombia"
-            class="hero-brand-logo"
-          />
-          <span class="hero-brand-label">EcoGrid DEC · Colombia</span>
-          <span class="hero-brand-sublabel">Control de Red & Sostenibilidad</span>
+        <div class="hero-scope-card">
+          <div class="scope-header">Alcance del Tablero</div>
+          <div class="scope-grid">
+            <div class="scope-item">
+              <span class="scope-val">{{ kpis ? kpis.total_avisos.toLocaleString() : '3,118' }}</span>
+              <span class="scope-lbl">Avisos históricos</span>
+            </div>
+            <div class="scope-item">
+              <span class="scope-val">{{ kpis ? kpis.total_equipos.toLocaleString() : '5,409' }}</span>
+              <span class="scope-lbl">Torres en red</span>
+            </div>
+            <div class="scope-item">
+              <span class="scope-val">2008 – 2023</span>
+              <span class="scope-lbl">Ventana temporal</span>
+            </div>
+            <div class="scope-item">
+              <span class="scope-val">Transmisión</span>
+              <span class="scope-lbl">Suroccidente & Centro</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -84,7 +86,7 @@ onMounted(async () => {
         <KpiCard
           title="Cumplimiento Oportuno"
           :value="`${kpis.cumplimiento_oportuno_pct ?? kpis.pct_cumplimiento}%`"
-          :badge="`Global: ${kpis.pct_cumplimiento}%`"
+          :badge="`Total red: ${kpis.pct_cumplimiento}%`"
           subtitle="Porcentaje de avisos cerrados dentro del plazo de su prioridad"
           color="success"
         />
@@ -166,16 +168,15 @@ onMounted(async () => {
 .home-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  height: 100%;
-  max-height: 100%;
-  overflow: hidden;
-  padding: 4px 6px;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+  padding: 2px 4px;
 }
 
 .hero-card {
   background: linear-gradient(135deg, var(--color-brand-soft) 0%, var(--color-accent-soft) 100%), var(--bg-card);
-  padding: 18px 24px;
+  padding: 16px 22px;
   border: 1px solid var(--border-strong);
   flex-shrink: 0;
 }
@@ -189,43 +190,53 @@ onMounted(async () => {
 
 .hero-content {
   flex: 1;
-  max-width: 820px;
+  max-width: 780px;
 }
 
-.hero-logo-box {
+.hero-scope-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 20px;
+  gap: 8px;
+  padding: 12px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  min-width: 200px;
+  min-width: 280px;
+  flex-shrink: 0;
 }
 
-.hero-brand-logo {
-  height: 60px;
-  width: auto;
-  max-width: 160px;
-  object-fit: contain;
-  margin-bottom: 6px;
+.scope-header {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-brand);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 4px;
 }
 
-.hero-brand-label {
-  font-size: 0.9rem;
+.scope-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+}
+
+.scope-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.scope-val {
+  font-size: 0.92rem;
   font-weight: 800;
   color: var(--text-primary);
-  text-align: center;
+  line-height: 1.15;
 }
 
-.hero-brand-sublabel {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--color-brand);
-  text-align: center;
-  margin-top: 1px;
+.scope-lbl {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
 }
 
 .hero-title {
@@ -254,7 +265,7 @@ onMounted(async () => {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   gap: 12px;
   flex-wrap: wrap;
 }
