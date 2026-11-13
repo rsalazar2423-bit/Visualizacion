@@ -86,11 +86,27 @@ function renderDonut(chartInstance: echarts.ECharts, isDark: boolean) {
           scaleSize: 6,
           label: {
             show: true,
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: tokens.textColor,
-            fontFamily: tokens.fontFamily,
-            formatter: '{b}\n{d}%',
+            position: 'center',
+            formatter: (params: any) => {
+              const pct = Number(params.percent).toFixed(1);
+              return `{name|${params.name}}\n{pct|${pct}%}`;
+            },
+            rich: {
+              name: {
+                fontSize: 13,
+                fontWeight: 600,
+                color: tokens.textSecondary,
+                fontFamily: tokens.fontFamily,
+                lineHeight: 22,
+              },
+              pct: {
+                fontSize: 20,
+                fontWeight: 800,
+                color: tokens.textColor,
+                fontFamily: tokens.fontFamily,
+                lineHeight: 28,
+              },
+            },
           },
         },
         labelLine: {

@@ -129,6 +129,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
   min-height: calc(100vh - 120px);
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { ZoomIn, RotateCcw } from 'lucide-vue-next';
+import { ZoomIn, Undo2, RotateCcw } from 'lucide-vue-next';
 import * as echarts from 'echarts';
 import { useOperationsStore } from '../../stores/operationsStore';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -44,10 +44,31 @@ function toggleZoomMode() {
   });
 }
 
+function undoZoom() {
+  const inst = getChartInstance();
+  if (!inst) return;
+  isZoomActive.value = false;
+  inst.dispatchAction({
+    type: 'takeGlobalCursor',
+    key: 'dataZoomSelect',
+    dataZoomSelectActive: false,
+  });
+  inst.dispatchAction({
+    type: 'dataZoom',
+    start: 0,
+    end: 100,
+  });
+}
+
 function resetView() {
   const inst = getChartInstance();
   if (!inst) return;
   isZoomActive.value = false;
+  inst.dispatchAction({
+    type: 'takeGlobalCursor',
+    key: 'dataZoomSelect',
+    dataZoomSelectActive: false,
+  });
   inst.dispatchAction({
     type: 'dataZoom',
     start: 0,
@@ -113,6 +134,17 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       left: 'center',
       itemGap: 16,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
+    },
+    // Mantiene el controlador nativo de selección de área (dataZoomSelect) activo en ECharts,
+    // mientras los botones visibles viven limpiamente en el toolbar HTML superior sin colisiones.
+    toolbox: {
+      show: true,
+      top: -100,
+      right: 0,
+      feature: {
+        dataZoom: { yAxisIndex: 'none' },
+        restore: {},
+      },
     },
     dataZoom: [
       {
@@ -270,24 +302,29 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
           </button>
         </div>
 
-        <!-- Herramientas de Navegación ubicadas en el espacio vacío superior (Cero superposición en el gráfico) -->
+        <!-- Herramientas de Navegación ubicadas en el espacio vacío derecho (Cero superposición en el gráfico) -->
         <div class="zoom-tools-cluster">
           <button
             class="btn-tool-sm"
             :class="{ active: isZoomActive }"
-            title="Activar selección de área para acercar período"
+            title="Seleccionar zona temporal para acercar"
             @click="toggleZoomMode"
           >
-            <ZoomIn :size="12" />
-            <span>Zoom Área</span>
+            <ZoomIn :size="13" />
           </button>
           <button
             class="btn-tool-sm"
-            title="Restablecer período completo (2008 – 2023)"
+            title="Restablecer zoom"
+            @click="undoZoom"
+          >
+            <Undo2 :size="13" />
+          </button>
+          <button
+            class="btn-tool-sm"
+            title="Restablecer vista completa (2008 – 2023)"
             @click="resetView"
           >
-            <RotateCcw :size="12" />
-            <span>Restablecer</span>
+            <RotateCcw :size="13" />
           </button>
         </div>
       </div>
