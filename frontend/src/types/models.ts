@@ -76,6 +76,14 @@ export interface TypologyPerformanceItem {
   significado: string;
 }
 
+export interface ViolinGroupData {
+  group: string;
+  sla_days: number | null;
+  cerrados: number[];
+  abiertos: number[];
+  cumple_pct: number;
+}
+
 export interface OperationsDataResponse {
   kpis: OperationsKpis;
   stacked_bar: StackedBarItem[];
@@ -84,6 +92,8 @@ export interface OperationsDataResponse {
   selected_prioridad?: string;
   time_series?: TimeSeriesPoint[];
   typology_performance?: TypologyPerformanceItem[];
+  violin_prioridad?: ViolinGroupData[];
+  violin_tipologia?: ViolinGroupData[];
 }
 
 export interface TerritorialKpis {

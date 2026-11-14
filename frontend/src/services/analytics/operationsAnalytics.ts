@@ -9,6 +9,7 @@ import type {
   OperationsDataResponse,
   StackedBarItem,
   TypologyPerformanceItem,
+  ViolinGroupData,
 } from '../../types/models';
 import { PRIO_ORDER, TIPO_COLORS } from '../../constants/themeTokens';
 import { getDataset } from './datasetRepository';
@@ -219,6 +220,56 @@ export async function computeOperationsData(params: {
       };
     });
 
+  const SLA_DAYS_MAP: Record<string, number | null> = {
+    Semana: 7,
+    Mes: 30,
+    Trimestre: 90,
+    Semestre: 180,
+    Año: 365,
+    'Dos años': 730,
+    'Tres años': 1095,
+    'Seis años': 2190,
+    'No asignada': null,
+  };
+
+  function buildViolinGroups(
+    source: typeof donutDf,
+    getGroup: (a: (typeof donutDf)[number]) => string,
+    orderedKeys?: string[]
+  ): ViolinGroupData[] {
+    const grouped: Record<string, { cerrados: number[]; abiertos: number[]; cumple: number; total: number }> = {};
+    for (const a of source) {
+      const key = getGroup(a);
+      if (!grouped[key]) grouped[key] = { cerrados: [], abiertos: [], cumple: 0, total: 0 };
+      const dias = Math.max(0, Number(a['Días abierto'] || 0));
+      if ((a['Estado aviso'] || 'Cerrado') === 'Abierto') {
+        grouped[key].abiertos.push(dias);
+      } else {
+        grouped[key].cerrados.push(dias);
+      }
+      grouped[key].total += 1;
+      if (a.Cumplimiento_Estado === 'Cumple Plazo') grouped[key].cumple += 1;
+    }
+
+    const keys = orderedKeys
+      ? orderedKeys.filter((k) => grouped[k] && grouped[k].total > 0)
+      : Object.keys(grouped).sort((a, b) => grouped[b].total - grouped[a].total);
+
+    return keys.map((k) => {
+      const g = grouped[k];
+      return {
+        group: k,
+        sla_days: k in SLA_DAYS_MAP ? SLA_DAYS_MAP[k] : null,
+        cerrados: g.cerrados.sort((x, y) => x - y),
+        abiertos: g.abiertos.sort((x, y) => x - y),
+        cumple_pct: g.total > 0 ? Number(((g.cumple / g.total) * 100).toFixed(1)) : 0,
+      };
+    });
+  }
+
+  const violinPrioridad = buildViolinGroups(filteredBase, (a) => a.Prioridad || 'No asignada', PRIO_ORDER);
+  const violinTipologia = buildViolinGroups(donutDf, (a) => a['Tipo de aviso'] || 'Otros');
+
   return {
     kpis,
     donut: buildDonutDistribution(donutDf),
@@ -226,6 +277,8 @@ export async function computeOperationsData(params: {
     stacked_bar: stackedBar,
     time_series: buildTimeSeries(donutDf),
     typology_performance: typologyPerformance,
+    violin_prioridad: violinPrioridad,
+    violin_tipologia: violinTipologia,
   };
 }
 

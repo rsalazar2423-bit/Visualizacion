@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { TrendingUp, Target, RefreshCw } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
-import StackedBarChart from '../components/charts/StackedBarChart.vue';
+import ViolinDistributionChart from '../components/charts/ViolinDistributionChart.vue';
 import DonutChart from '../components/charts/DonutChart.vue';
 import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
@@ -122,10 +122,10 @@ onMounted(async () => {
         </ExpandableChartCard>
 
         <ExpandableChartCard
-          title="Cumplimiento de Plazo por Prioridad SLA (100%)"
-          subtitle="Relación porcentual de atención oportuna frente a vencimiento"
+          title="Distribución de Tiempos por Prioridad SLA (Violín)"
+          subtitle="Densidad KDE, mediana, rango intercuartílico (Q1–Q3) y límite normativo SLA"
         >
-          <StackedBarChart />
+          <ViolinDistributionChart />
         </ExpandableChartCard>
       </section>
 
