@@ -18,9 +18,9 @@ const selectedCity = ref<string>('Todas');
 
 const topParetoLineas = computed(() => {
   const list = insights.value?.pareto_lineas || [];
-  const top8 = list.slice(0, 8);
-  const maxVencidos = top8[0]?.vencidos || 1;
-  return top8.map((item) => ({
+  const top10 = list.slice(0, 10);
+  const maxVencidos = top10[0]?.vencidos || 1;
+  return top10.map((item) => ({
     ...item,
     barWidth: Number(((item.vencidos / maxVencidos) * 100).toFixed(1)),
   }));
@@ -217,7 +217,7 @@ onMounted(async () => {
         </div>
 
         <p class="insight-callout">
-          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b>; intervenir las <b>8 líneas principales</b> resuelve el <b>{{ overOneYearStats.topLinesCum }}%</b> del rezago.
+          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b>; intervenir las <b>10 líneas principales</b> resuelve el <b>{{ overOneYearStats.topLinesCum }}%</b> del rezago.
         </p>
 
         <div class="typology-bars">
@@ -228,6 +228,13 @@ onMounted(async () => {
             </div>
             <span class="typo-val">{{ l.vencidos }} venc. · {{ l.cum_pct }}%</span>
           </div>
+        </div>
+
+        <div class="recurrence-footer">
+          <span class="rec-badge">
+            <b>{{ insights.lines_for_80_pct }}</b> de <b>{{ insights.total_lines_with_overdue }}</b> líneas concentran el <b>80%</b> de la mora
+          </span>
+          <router-link to="/territorio" class="pulse-link">Ver territorio →</router-link>
         </div>
       </div>
 
@@ -582,12 +589,12 @@ onMounted(async () => {
 .typology-bars {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  justify-content: flex-start;
-  padding-top: 2px;
+  justify-content: space-between;
+  padding: 4px 0;
 }
 
 .typo-row {
@@ -630,11 +637,12 @@ onMounted(async () => {
 .critical-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   flex: 1;
-  justify-content: flex-start;
+  justify-content: space-between;
   min-height: 0;
   overflow-y: auto;
+  padding: 2px 0;
 }
 
 .critical-row {
@@ -642,7 +650,7 @@ onMounted(async () => {
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 8px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
