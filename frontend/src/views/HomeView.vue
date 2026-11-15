@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Activity, Palette } from 'lucide-vue-next';
 import { apiService } from '../services/api';
 import type { PortadaKpis, ActionableInsightsResponse } from '../types/models';
@@ -26,18 +26,12 @@ const topParetoLineas = computed(() => {
   }));
 });
 
-const cityOptions = computed(() => {
-  const list = insights.value?.top_critical_notices || [];
-  const cities = Array.from(new Set(list.map((i) => i.municipio).filter(Boolean))).sort();
-  return ['Todas', ...cities];
-});
-
-const filteredCriticalList = computed(() => {
+const agingAndScopeFiltered = computed(() => {
   let list = insights.value?.top_critical_notices || [];
 
   if (selectedAging.value !== 'Todos') {
     list = list.filter((item) => {
-      const d = item.exceso_dias;
+      const d = item.dias_abierto;
       if (selectedAging.value.includes('< 90')) return d < 90;
       if (selectedAging.value.includes('90')) return d >= 90 && d <= 365;
       if (selectedAging.value.includes('1 – 3')) return d > 365 && d <= 1095;
@@ -54,6 +48,25 @@ const filteredCriticalList = computed(() => {
       return selectedQueueScope.value === 'campo' ? isCampo : !isCampo;
     });
   }
+
+  return list;
+});
+
+const cityOptions = computed(() => {
+  const cities = Array.from(
+    new Set(agingAndScopeFiltered.value.map((i) => i.municipio).filter(Boolean))
+  ).sort();
+  return ['Todas', ...cities];
+});
+
+watch(cityOptions, (opts) => {
+  if (selectedCity.value !== 'Todas' && !opts.includes(selectedCity.value)) {
+    selectedCity.value = 'Todas';
+  }
+});
+
+const filteredCriticalList = computed(() => {
+  let list = agingAndScopeFiltered.value;
 
   if (selectedCity.value !== 'Todas') {
     list = list.filter((item) => item.municipio === selectedCity.value);

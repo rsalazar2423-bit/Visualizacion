@@ -171,13 +171,13 @@ export async function computeActionableInsights(params?: {
   return {
     total_vencidos: totalVencidos,
     aging_buckets,
-    pareto_lineas: pareto_lineas.slice(0, 8),
+    pareto_lineas: pareto_lineas.slice(0, 10),
     lines_for_80_pct: linesFor80,
     total_lines_with_overdue: linesWithOverdue.length,
     recurrent_towers_count: recurrentList.length,
     recurrent_notices_count: recurrentNoticesCount,
     top_recurrent_towers: recurrentList.slice(0, 5),
-    top_critical_notices: criticalScored.slice(0, 10),
+    top_critical_notices: criticalScored,
   };
 }
 
