@@ -25,6 +25,29 @@ const topCriticalList = computed(() => {
   return (insights.value?.top_critical_notices || []).slice(0, 5);
 });
 
+const overOneYearStats = computed(() => {
+  const buckets = insights.value?.aging_buckets || [];
+  const oldBuckets = buckets.filter((b) => b.label.includes('1 – 3') || b.label.includes('> 3'));
+  const count = oldBuckets.reduce((acc, b) => acc + b.count, 0);
+  const total = insights.value?.total_vencidos || 0;
+  const pct = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
+  const top5Cum = topParetoLineas.value[topParetoLineas.value.length - 1]?.cum_pct ?? 0;
+  return { count, pct, top5Cum };
+});
+
+const recurrencePct = computed(() => {
+  const total = kpis.value?.total_avisos || 0;
+  const rec = insights.value?.recurrent_notices_count || 0;
+  return total > 0 ? Number(((rec / total) * 100).toFixed(1)) : 0;
+});
+
+function formatOverdueYears(days: number): string {
+  if (days >= 365) {
+    return `${(days / 365).toFixed(1)} años vencido`;
+  }
+  return `+${days.toLocaleString()}d vencido`;
+}
+
 onMounted(async () => {
   try {
     const [portadaRes, insightsRes] = await Promise.all([
@@ -157,13 +180,17 @@ onMounted(async () => {
           </div>
         </div>
 
+        <p class="insight-callout">
+          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b> de atraso; intervenir las <b>5 líneas principales</b> resuelve el <b>{{ overOneYearStats.top5Cum }}%</b> del rezago.
+        </p>
+
         <div class="typology-bars">
           <div v-for="l in topParetoLineas" :key="l.linea" class="typo-row">
             <span class="typo-name" :title="`${l.linea} (${l.cte})`">{{ l.linea }}</span>
             <div class="typo-track">
               <div class="typo-fill danger-fill" :style="{ width: `${l.barWidth}%` }"></div>
             </div>
-            <span class="typo-val">{{ l.vencidos }} venc. · {{ l.cum_pct }}% acum.</span>
+            <span class="typo-val">{{ l.vencidos }} venc. · {{ l.cum_pct }}%</span>
           </div>
         </div>
       </div>
@@ -173,7 +200,7 @@ onMounted(async () => {
           <div>
             <h3 class="pulse-title">Cola de Atención Inmediata y Reincidencia</h3>
             <p class="pulse-sub">
-              Top avisos abiertos ordenados por exceso de días sobre su plazo SLA
+              Avisos abiertos con mayor tiempo vencido sobre su SLA y recurrencia por torre
             </p>
           </div>
           <router-link to="/territorio?tab=audit" class="pulse-link">Auditar todos →</router-link>
@@ -183,19 +210,22 @@ onMounted(async () => {
           <div v-for="item in topCriticalList" :key="item.aviso" class="critical-row">
             <div class="crit-main">
               <span class="crit-id">#{{ item.aviso }}</span>
-              <span class="crit-loc">{{ item.municipio }} · {{ item.linea }}</span>
+              <span class="crit-loc">{{ item.municipio }} · {{ item.linea }} · Torre {{ item.equipo }}</span>
             </div>
+            <span v-if="item.reincidencias_torre >= 2" class="crit-rec" title="Avisos históricos en la misma torre">
+              {{ item.reincidencias_torre }}× torre
+            </span>
             <span class="crit-tipo">{{ item.tipo }}</span>
-            <span class="crit-excess" :title="`Abierto ${item.dias_abierto}d (SLA ${item.prioridad_dias}d)`">
-              +{{ item.exceso_dias.toLocaleString() }}d SLA
+            <span class="crit-excess" :title="`Abierto ${item.dias_abierto.toLocaleString()}d (SLA ${item.prioridad_dias}d, +${item.exceso_dias.toLocaleString()}d exceso)`">
+              {{ formatOverdueYears(item.exceso_dias) }}
             </span>
           </div>
         </div>
 
         <div class="recurrence-footer">
           <span class="rec-badge">
-            <b>{{ insights.recurrent_towers_count.toLocaleString() }}</b> torres reincidentes (≥2 avisos) concentran
-            <b>{{ insights.recurrent_notices_count.toLocaleString() }}</b> registros
+            <b>{{ insights.recurrent_towers_count.toLocaleString() }}</b> torres reincidentes (≥2 avisos) explican el
+            <b>{{ recurrencePct }}%</b> del historial (<b>{{ insights.recurrent_notices_count.toLocaleString() }}</b> registros)
           </span>
           <router-link to="/territorio" class="pulse-link">Ver mapa →</router-link>
         </div>
@@ -464,6 +494,17 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
+.insight-callout {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--color-brand, #0f766e);
+  border-radius: 4px;
+}
+
 .typology-bars {
   display: flex;
   flex-direction: column;
@@ -472,7 +513,7 @@ onMounted(async () => {
 
 .typo-row {
   display: grid;
-  grid-template-columns: 165px 1fr 125px;
+  grid-template-columns: 150px 1fr 122px;
   align-items: center;
   gap: 10px;
   font-size: 0.74rem;
@@ -508,6 +549,7 @@ onMounted(async () => {
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .critical-list {
@@ -520,14 +562,24 @@ onMounted(async () => {
 
 .critical-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 6px 10px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
+}
+
+.crit-rec {
+  font-size: 0.69rem;
+  font-weight: 700;
+  color: var(--color-brand, #0f766e);
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.1));
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
 }
 
 .crit-main {
