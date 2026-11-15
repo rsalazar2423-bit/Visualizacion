@@ -13,6 +13,7 @@ import { computeCapacityData } from './analytics/capacityAnalytics';
 import {
   computeActionableInsights,
   computeCoordinatorWorkspace,
+  computeOpenBacklogMatrix,
 } from './analytics/actionableInsights';
 
 export const clientDataService = {
@@ -23,4 +24,5 @@ export const clientDataService = {
   getCapacityData: computeCapacityData,
   getActionableInsights: computeActionableInsights,
   getCoordinatorWorkspace: computeCoordinatorWorkspace,
+  getOpenBacklogMatrix: computeOpenBacklogMatrix,
 };

@@ -15,6 +15,7 @@ import type {
   CriticalNoticeItem,
   CteBalanceItem,
   ExecutionBucket,
+  OpenBacklogCell,
   ParetoLineaItem,
   PreventiveNoticeItem,
   RecurrentTowerItem,
@@ -387,5 +388,33 @@ export async function computeCoordinatorWorkspace(params: {
       vencidos.length > 0 ? Number(((chronicRaw.length / vencidos.length) * 100).toFixed(1)) : 0,
     chronic_notices: chronic_notices.slice(0, 15),
   };
+}
+
+/**
+ * Matriz tridimensional (Departamento × Año × Tipo) exclusivamente sobre avisos ABIERTOS.
+ */
+export async function computeOpenBacklogMatrix(params?: {
+  cte?: string | null;
+  depto?: string | null;
+  tipo?: string | null;
+}): Promise<OpenBacklogCell[]> {
+  const { avisos: rawAvisos } = await getDataset();
+  const avisos = filterAvisos(rawAvisos, params || {});
+
+  const map = new Map<string, OpenBacklogCell>();
+  for (const a of avisos) {
+    if (a['Estado aviso'] !== 'Abierto') continue;
+    const depto = a.Departamento || 'Sin Depto';
+    const anio = Number(a.Año || 0);
+    if (!anio) continue;
+    const tipo = a['Tipo de aviso'] || 'Otros';
+    const key = `${depto}__${anio}__${tipo}`;
+    const prev = map.get(key) || { depto, anio, tipo, total: 0, vencidos: 0 };
+    prev.total += 1;
+    if (a.Cumplimiento_Estado === 'Excede Plazo') prev.vencidos += 1;
+    map.set(key, prev);
+  }
+
+  return Array.from(map.values());
 }
 

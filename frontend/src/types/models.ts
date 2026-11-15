@@ -190,6 +190,14 @@ export interface CoordinatorWorkspaceResponse {
   chronic_notices: CriticalNoticeItem[];
 }
 
+export interface OpenBacklogCell {
+  depto: string;
+  anio: number;
+  tipo: string;
+  total: number;
+  vencidos: number;
+}
+
 export interface OperationsDataResponse {
   kpis: OperationsKpis;
   stacked_bar: StackedBarItem[];

@@ -8,6 +8,7 @@ import type {
   CapacityDataResponse,
   ActionableInsightsResponse,
   CoordinatorWorkspaceResponse,
+  OpenBacklogCell,
 } from '../types/models';
 
 const USE_REMOTE = import.meta.env.VITE_USE_REMOTE_API === 'true';
@@ -118,5 +119,13 @@ export const apiService = {
     params?: { cte?: string | null; depto?: string | null }
   ): Promise<CoordinatorWorkspaceResponse> {
     return clientDataService.getCoordinatorWorkspace(params ?? {});
+  },
+
+  async getOpenBacklogMatrix(params?: {
+    cte?: string | null;
+    depto?: string | null;
+    tipo?: string | null;
+  }): Promise<OpenBacklogCell[]> {
+    return clientDataService.getOpenBacklogMatrix(params);
   },
 };
