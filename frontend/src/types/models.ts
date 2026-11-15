@@ -341,6 +341,7 @@ export interface TerritorialDataResponse {
   sector_ranking?: SectorDelayItem[];
   typology_durations?: TypologyDurationItem[];
   risk_matrix?: RiskMatrixData;
+  risk_matrix_time?: RiskMatrixData;
   line_pareto?: TerritoryParetoData;
 }
 

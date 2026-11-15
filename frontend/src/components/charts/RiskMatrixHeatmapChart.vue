@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { Grid3X3, RotateCcw } from 'lucide-vue-next';
+import { Grid3X3 } from 'lucide-vue-next';
 import type * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -8,33 +8,14 @@ import { useChart } from '../../composables/useChart';
 
 const territoryStore = useTerritoryStore();
 const chartContainer = ref<HTMLDivElement | null>(null);
-const showAllRows = ref(false);
+const matrixMode = ref<'time' | 'typology'>('time');
 
-const fullMatrix = computed(() => territoryStore.data?.risk_matrix || null);
 const matrix = computed(() => {
-  const m = fullMatrix.value;
-  if (!m) return null;
-  if (showAllRows.value || m.rows.length <= 6) return m;
-  const topRows = new Set(m.rows.slice(0, 6));
-  return {
-    ...m,
-    rows: m.rows.slice(0, 6),
-    cells: m.cells.filter((c) => topRows.has(c.row)),
-  };
-});
-
-function handleClick(params: any) {
-  if (!matrix.value || !params?.value) return;
-  const rowIdx = params.value[1];
-  const rowName = matrix.value.rows[rowIdx];
-  if (!rowName) return;
-
-  if (matrix.value.level === 'departamento' && !territoryStore.selectedDepto) {
-    territoryStore.drillIntoDepto(rowName);
-  } else if (matrix.value.level === 'municipio' && territoryStore.selectedDepto && !territoryStore.selectedMunicipio) {
-    territoryStore.drillIntoMunicipio(territoryStore.selectedDepto, rowName);
+  if (matrixMode.value === 'time') {
+    return territoryStore.data?.risk_matrix_time || null;
   }
-}
+  return territoryStore.data?.risk_matrix || null;
+});
 
 function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
   const m = matrix.value;
@@ -44,14 +25,13 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
   }
 
   const tokens = getEChartsThemeTokens(isDark);
-  // Invert rows so highest-risk territory appears at top
   const rowsAsc = [...m.rows].reverse();
 
   const seriesData = m.cells.map((cell) => {
     const xIdx = m.cols.indexOf(cell.col);
     const yIdx = rowsAsc.indexOf(cell.row);
     const labelColor =
-      cell.total === 0
+      cell.vencidos <= 0
         ? tokens.textSecondary
         : isDark
           ? '#F8FAFC'
@@ -92,9 +72,9 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
     },
     grid: {
       top: 10,
-      left: 118,
-      right: 18,
-      bottom: 58,
+      left: 112,
+      right: 16,
+      bottom: 54,
     },
     xAxis: {
       type: 'category',
@@ -104,7 +84,6 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
         fontSize: 11,
         fontWeight: 600,
         interval: 0,
-        rotate: 12,
       },
       axisLine: { lineStyle: { color: tokens.borderColor } },
       splitArea: { show: false },
@@ -115,8 +94,8 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
       axisLabel: {
         color: tokens.textColor,
         fontSize: 11,
-        fontWeight: 600,
-        width: 110,
+        fontWeight: 700,
+        width: 104,
         overflow: 'truncate',
       },
       axisLine: { lineStyle: { color: tokens.borderColor } },
@@ -135,22 +114,22 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textSecondary, fontSize: 10 },
       inRange: {
         color: isDark
-          ? ['#1E293B', '#334155', '#B45309', '#E11D48', '#9F1239']
-          : ['#F1F5F9', '#E2E8F0', '#FDE68A', '#FB7185', '#BE123C'],
+          ? ['#0F172A', '#1E293B', '#115E59', '#0D9488', '#2DD4BF']
+          : ['#F8FAFC', '#CCFBF1', '#5EEAD4', '#0F766E', '#115E59'],
       },
       outOfRange: {
-        color: isDark ? '#1E293B' : '#F1F5F9',
+        color: isDark ? '#0F172A' : '#F8FAFC',
       },
     },
     series: [
       {
-        name: 'Matriz de Riesgo',
+        name: 'Top 5 Ciudades',
         type: 'heatmap',
         data: seriesData,
         label: {
           show: true,
-          fontSize: 11,
-          fontWeight: 700,
+          fontSize: 12,
+          fontWeight: 800,
           formatter: (p: any) => {
             const d = p.data;
             if (!d || d.vencidos <= 0) return '';
@@ -160,7 +139,7 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
         itemStyle: {
           borderColor: tokens.cardBg,
           borderWidth: 2,
-          borderRadius: 4,
+          borderRadius: 6,
         },
         emphasis: {
           itemStyle: {
@@ -175,8 +154,8 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
   chartInstance.setOption(option, true);
 }
 
-const { render } = useChart(chartContainer, renderHeatmap, handleClick);
-watch([() => territoryStore.data?.risk_matrix, showAllRows], () => render(), { deep: true });
+const { render } = useChart(chartContainer, renderHeatmap);
+watch([() => territoryStore.data, matrixMode], () => render(), { deep: true });
 </script>
 
 <template>
@@ -185,34 +164,33 @@ watch([() => territoryStore.data?.risk_matrix, showAllRows], () => render(), { d
       <div class="risk-title-wrap">
         <span class="badge-pill">
           <Grid3X3 :size="12" />
-          <span>Focos de Mora</span>
+          <span>Top 5 Ciudades</span>
         </span>
         <h3>
-          {{ matrix?.level === 'municipio' ? `Municipios (${territoryStore.selectedDepto}) × Tipología` : 'Departamento × Tipología' }}
+          {{ matrixMode === 'time' ? 'Evolución de Mora por Ciudad' : 'Causa de Mora por Ciudad' }}
         </h3>
       </div>
 
-      <div class="risk-actions">
+      <div class="mode-switch">
         <button
-          v-if="fullMatrix && fullMatrix.rows.length > 6"
-          class="btn-back-chip"
-          @click="showAllRows = !showAllRows"
+          class="switch-btn"
+          :class="{ active: matrixMode === 'time' }"
+          @click="matrixMode = 'time'"
         >
-          <span>{{ showAllRows ? 'Top 6' : `Todos (${fullMatrix.rows.length})` }}</span>
+          Por Tiempo
         </button>
         <button
-          v-if="territoryStore.selectedDepto"
-          class="btn-back-chip"
-          @click="territoryStore.resetToNational()"
+          class="switch-btn"
+          :class="{ active: matrixMode === 'typology' }"
+          @click="matrixMode = 'typology'"
         >
-          <RotateCcw :size="12" />
-          <span>Volver</span>
+          Por Tipología
         </button>
       </div>
     </header>
 
     <p class="risk-sub">
-      Número = <strong>abiertos vencidos</strong> · Color = <strong>% incumplimiento SLA</strong>. Clic en fila para detallar.
+      Top 5 municipios con mayor mora: número = <strong>abiertos vencidos</strong> · color = <strong>% incumplimiento SLA</strong>.
     </p>
 
     <div ref="chartContainer" class="risk-canvas"></div>
@@ -261,33 +239,37 @@ watch([() => territoryStore.data?.risk_matrix, showAllRows], () => render(), { d
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
-  color: var(--color-brand, #0F766E);
+  color: var(--color-brand, #0f766e);
 }
 
-.risk-actions {
-  display: flex;
+.mode-switch {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
+  background: var(--bg-subtle);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
 
-.btn-back-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+.switch-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
   font-size: 0.74rem;
   font-weight: 600;
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.btn-back-chip:hover {
-  border-color: var(--color-brand);
+.switch-btn.active {
+  background: var(--bg-card);
   color: var(--color-brand);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
 }
 
 .risk-sub {

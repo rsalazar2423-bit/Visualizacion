@@ -251,28 +251,37 @@ onMounted(() => {
 
 .kpi-micro-chip {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 9px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  font-size: 0.82rem;
+  border-left: 3px solid var(--color-brand, #0f766e);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-sm);
 }
 
 .chip-label {
   color: var(--text-secondary);
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .chip-val {
-  font-size: 0.95rem;
+  font-size: 1.35rem;
+  line-height: 1.15;
   color: var(--text-primary);
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .danger-chip {
   border-color: var(--sla-danger-border);
+  border-left-color: var(--sla-danger, #be123c);
   background: var(--sla-danger-bg);
 }
 

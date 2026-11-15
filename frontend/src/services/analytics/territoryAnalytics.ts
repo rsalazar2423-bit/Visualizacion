@@ -364,66 +364,94 @@ export async function computeTerritorialData(params: {
     };
   }
 
-  // 9. Matriz de Riesgo (Territorio x Tipología)
-  const matrixLevel: 'departamento' | 'municipio' =
-    params.depto && params.depto !== 'Todos' ? 'municipio' : 'departamento';
-  const rowTotals = new Map<string, { total: number; vencidos: number }>();
+  // 9. Matriz de Riesgo (Top Municipios x Tipología y Top Municipios x Tiempo)
+  const TIME_BUCKETS = ['≤ 2017', '2018–2019', '2020–2021', '2022', '2023'];
+  const getTimeBucket = (yr: number | null): string => {
+    if (!yr || yr <= 2017) return '≤ 2017';
+    if (yr <= 2019) return '2018–2019';
+    if (yr <= 2021) return '2020–2021';
+    if (yr === 2022) return '2022';
+    return '2023';
+  };
+
+  const mpioTotals = new Map<string, { total: number; vencidos: number }>();
   const colTotals = new Map<string, number>();
-  const cellMap = new Map<string, { total: number; vencidos: number; excede: number }>();
+  const cellTypoMap = new Map<string, { total: number; vencidos: number; excede: number }>();
+  const cellTimeMap = new Map<string, { total: number; vencidos: number; excede: number }>();
 
   for (const a of fAvisos) {
-    const rowKey =
-      matrixLevel === 'municipio'
-        ? a.Municipio || 'No Identificado'
-        : a.Departamento || 'No Identificado';
+    const mpio = a.Municipio && a.Municipio !== 'No Identificado' ? a.Municipio : null;
+    if (!mpio) continue;
     const colKey = a['Tipo de aviso'] || 'Otros';
+    const timeKey = getTimeBucket(extractYear(a['Fecha de aviso'], a['Año']));
     const isOverdue = a['Estado aviso'] === 'Abierto' && a.Cumplimiento_Estado === 'Excede Plazo';
     const isExcede = a.Cumplimiento_Estado === 'Excede Plazo';
 
-    const rt = rowTotals.get(rowKey) || { total: 0, vencidos: 0 };
-    rt.total += 1;
-    if (isOverdue) rt.vencidos += 1;
-    rowTotals.set(rowKey, rt);
+    const mt = mpioTotals.get(mpio) || { total: 0, vencidos: 0 };
+    mt.total += 1;
+    if (isOverdue) mt.vencidos += 1;
+    mpioTotals.set(mpio, mt);
 
     colTotals.set(colKey, (colTotals.get(colKey) || 0) + (isOverdue ? 1 : 0));
 
-    const ck = `${rowKey}|||${colKey}`;
-    const cell = cellMap.get(ck) || { total: 0, vencidos: 0, excede: 0 };
-    cell.total += 1;
-    if (isOverdue) cell.vencidos += 1;
-    if (isExcede) cell.excede += 1;
-    cellMap.set(ck, cell);
+    const tk = `${mpio}|||${colKey}`;
+    const cTypo = cellTypoMap.get(tk) || { total: 0, vencidos: 0, excede: 0 };
+    cTypo.total += 1;
+    if (isOverdue) cTypo.vencidos += 1;
+    if (isExcede) cTypo.excede += 1;
+    cellTypoMap.set(tk, cTypo);
+
+    const tmk = `${mpio}|||${timeKey}`;
+    const cTime = cellTimeMap.get(tmk) || { total: 0, vencidos: 0, excede: 0 };
+    cTime.total += 1;
+    if (isOverdue) cTime.vencidos += 1;
+    if (isExcede) cTime.excede += 1;
+    cellTimeMap.set(tmk, cTime);
   }
 
-  const matrixRows = Array.from(rowTotals.entries())
+  const topMpios = Array.from(mpioTotals.entries())
     .sort((a, b) => b[1].vencidos - a[1].vencidos || b[1].total - a[1].total)
-    .slice(0, 12)
+    .slice(0, 5)
     .map(([k]) => k);
 
   const matrixCols = Array.from(colTotals.entries())
     .sort((a, b) => b[1] - a[1])
     .map(([k]) => k);
 
-  const matrixCells: RiskMatrixCell[] = [];
-  for (const row of matrixRows) {
-    for (const col of matrixCols) {
-      const stats = cellMap.get(`${row}|||${col}`) || { total: 0, vencidos: 0, excede: 0 };
-      matrixCells.push({
-        row,
-        col,
-        total: stats.total,
-        vencidos: stats.vencidos,
-        excede_total: stats.excede,
-        excede_pct: stats.total > 0 ? Number(((stats.excede / stats.total) * 100).toFixed(1)) : 0,
-      });
+  const buildCells = (
+    rows: string[],
+    cols: string[],
+    source: Map<string, { total: number; vencidos: number; excede: number }>
+  ): RiskMatrixCell[] => {
+    const out: RiskMatrixCell[] = [];
+    for (const row of rows) {
+      for (const col of cols) {
+        const stats = source.get(`${row}|||${col}`) || { total: 0, vencidos: 0, excede: 0 };
+        out.push({
+          row,
+          col,
+          total: stats.total,
+          vencidos: stats.vencidos,
+          excede_total: stats.excede,
+          excede_pct: stats.total > 0 ? Number(((stats.excede / stats.total) * 100).toFixed(1)) : 0,
+        });
+      }
     }
-  }
+    return out;
+  };
 
   const riskMatrix: RiskMatrixData = {
-    level: matrixLevel,
-    rows: matrixRows,
+    level: 'municipio',
+    rows: topMpios,
     cols: matrixCols,
-    cells: matrixCells,
+    cells: buildCells(topMpios, matrixCols, cellTypoMap),
+  };
+
+  const riskMatrixTime: RiskMatrixData = {
+    level: 'municipio',
+    rows: topMpios,
+    cols: TIME_BUCKETS,
+    cells: buildCells(topMpios, TIME_BUCKETS, cellTimeMap),
   };
 
   // 10. Pareto 80/20 de Líneas de Transmisión en Mora + Torres Reincidentes
@@ -516,6 +544,7 @@ export async function computeTerritorialData(params: {
     sector_ranking: sectorRanking,
     typology_durations: typologyDurations,
     risk_matrix: riskMatrix,
+    risk_matrix_time: riskMatrixTime,
     line_pareto: linePareto,
   };
 }

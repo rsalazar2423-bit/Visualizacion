@@ -93,15 +93,16 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
       {
         name: usingOverdue ? 'Abiertos Vencidos' : 'Avisos Abiertos',
         type: 'bar',
+        itemStyle: { color: tokens.brandColor },
         data: barValues.map((v, idx) => ({
           value: v,
           itemStyle: {
             color:
               topItems[idx].cum_pct <= 80 || idx < p.lines_for_80_pct
-                ? tokens.sla.excede
+                ? tokens.brandColor
                 : isDark
                   ? '#475569'
-                  : '#94A3B8',
+                  : '#CBD5E1',
             borderRadius: [4, 4, 0, 0],
           },
         })),
@@ -114,16 +115,16 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
         smooth: 0.2,
         symbol: 'circle',
         symbolSize: 6,
-        lineStyle: { color: tokens.brandColor, width: 2.5 },
-        itemStyle: { color: tokens.brandColor },
+        lineStyle: { color: isDark ? '#94A3B8' : '#334155', width: 2.2 },
+        itemStyle: { color: isDark ? '#94A3B8' : '#334155' },
         data: cumValues,
         markLine: {
           silent: true,
           symbol: 'none',
-          lineStyle: { type: 'dashed', color: tokens.sla.warning, width: 1.5 },
+          lineStyle: { type: 'dashed', color: tokens.textSecondary, width: 1.5 },
           label: {
             formatter: '80% Pareto',
-            color: tokens.sla.warning,
+            color: tokens.textSecondary,
             fontSize: 10,
             fontWeight: 700,
             position: 'insideEndTop',
@@ -209,8 +210,8 @@ watch(() => territoryStore.data?.line_pareto, () => render(), { deep: true });
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--sla-danger-bg, rgba(190, 18, 60, 0.1));
-  color: var(--sla-danger, #be123c);
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
+  color: var(--color-brand, #0f766e);
 }
 
 .pareto-chips {
