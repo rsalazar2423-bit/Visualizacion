@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { BarChart3, Sliders, ClipboardList, RefreshCw } from 'lucide-vue-next';
+import { BarChart3, Sliders, ClipboardList, RefreshCw, RadioTower, AlertCircle, Gauge, CheckCircle2 } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import RegionalLoadChart from '../components/charts/RegionalLoadChart.vue';
 import ComplianceScatterChart from '../components/charts/ComplianceScatterChart.vue';
@@ -84,23 +84,47 @@ onMounted(() => {
       </nav>
     </header>
 
-    <!-- KPIS COMPACTOS EN LÍNEA (1 sola fila) -->
+    <!-- KPIS EJECUTIVOS EN LÍNEA -->
     <div v-if="store.capacityData?.kpis" class="kpi-micro-row">
       <div class="kpi-micro-chip">
-        <span class="chip-label">Torres Totales:</span>
-        <b class="chip-val">{{ store.capacityData.kpis.total_torres.toLocaleString() }}</b>
+        <div class="kpi-main">
+          <span class="chip-label">Torres Totales</span>
+          <b class="chip-val">{{ store.capacityData.kpis.total_torres.toLocaleString() }}</b>
+          <span class="chip-sub">Infraestructura monitoreada</span>
+        </div>
+        <div class="kpi-icon-box">
+          <RadioTower :size="18" />
+        </div>
       </div>
       <div class="kpi-micro-chip danger-chip">
-        <span class="chip-label">Avisos Abiertos:</span>
-        <b class="chip-val danger-text">{{ store.capacityData.kpis.avisos_abiertos.toLocaleString() }}</b>
+        <div class="kpi-main">
+          <span class="chip-label">Avisos Abiertos</span>
+          <b class="chip-val danger-text">{{ store.capacityData.kpis.avisos_abiertos.toLocaleString() }}</b>
+          <span class="chip-sub">{{ store.capacityData.kpis.abiertos_vencidos.toLocaleString() }} ya vencidos en mora</span>
+        </div>
+        <div class="kpi-icon-box danger-icon">
+          <AlertCircle :size="18" />
+        </div>
       </div>
       <div class="kpi-micro-chip">
-        <span class="chip-label">Carga x 100 Torres:</span>
-        <b class="chip-val">{{ store.capacityData.kpis.carga_por_100_torres }}</b>
+        <div class="kpi-main">
+          <span class="chip-label">Carga × 100 Torres</span>
+          <b class="chip-val">{{ store.capacityData.kpis.carga_por_100_torres }}</b>
+          <span class="chip-sub">Densidad operativa relativa</span>
+        </div>
+        <div class="kpi-icon-box">
+          <Gauge :size="18" />
+        </div>
       </div>
       <div class="kpi-micro-chip">
-        <span class="chip-label">Cumplimiento:</span>
-        <b class="chip-val success-text">{{ store.capacityData.kpis.cumplimiento_oportuno_pct }}%</b>
+        <div class="kpi-main">
+          <span class="chip-label">Cumplimiento SLA</span>
+          <b class="chip-val success-text">{{ store.capacityData.kpis.cumplimiento_oportuno_pct }}%</b>
+          <span class="chip-sub">Atención dentro del plazo</span>
+        </div>
+        <div class="kpi-icon-box">
+          <CheckCircle2 :size="18" />
+        </div>
       </div>
     </div>
 
@@ -251,16 +275,23 @@ onMounted(() => {
 
 .kpi-micro-chip {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2px;
-  padding: 9px 16px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-left: 3px solid var(--color-brand, #0f766e);
+  border-left: 4px solid var(--color-brand, #0f766e);
   border-radius: var(--radius-md, 8px);
   box-shadow: var(--shadow-sm);
+}
+
+.kpi-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .chip-label {
@@ -268,21 +299,46 @@ onMounted(() => {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .chip-val {
-  font-size: 1.35rem;
-  line-height: 1.15;
+  font-size: 1.65rem;
+  line-height: 1.1;
   color: var(--text-primary);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.chip-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
+  color: var(--color-brand, #0f766e);
+  flex-shrink: 0;
 }
 
 .danger-chip {
   border-color: var(--sla-danger-border);
   border-left-color: var(--sla-danger, #be123c);
   background: var(--sla-danger-bg);
+}
+
+.kpi-icon-box.danger-icon {
+  background: rgba(190, 18, 60, 0.14);
+  color: var(--sla-danger, #be123c);
 }
 
 /* Escenario de Gráficas */

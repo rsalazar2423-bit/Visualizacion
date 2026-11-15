@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { Compass, BarChart3, Layers, FileText, RefreshCw } from 'lucide-vue-next';
+import { Compass, BarChart3, Layers, FileText, RefreshCw, RadioTower, MapPin, CheckCircle2, AlertCircle } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TerritoryDiagnosticsRow from '../components/territory/TerritoryDiagnosticsRow.vue';
@@ -134,23 +134,47 @@ onMounted(async () => {
       </nav>
     </header>
 
-    <!-- KPIS COMPACTOS EN LÍNEA (1 sola fila) -->
+    <!-- KPIS EJECUTIVOS EN LÍNEA -->
     <div v-if="territoryStore.data?.kpis" class="kpi-micro-row">
       <div class="kpi-micro-chip">
-        <span class="chip-label">Torres Activas:</span>
-        <b class="chip-val">{{ territoryStore.data.kpis.equipos.toLocaleString() }}</b>
+        <div class="kpi-main">
+          <span class="chip-label">Torres Activas</span>
+          <b class="chip-val">{{ territoryStore.data.kpis.equipos.toLocaleString() }}</b>
+          <span class="chip-sub">Activos en red eléctrica</span>
+        </div>
+        <div class="kpi-icon-box">
+          <RadioTower :size="18" />
+        </div>
       </div>
       <div class="kpi-micro-chip">
-        <span class="chip-label">Municipios:</span>
-        <b class="chip-val">{{ territoryStore.data.kpis.mpios.toLocaleString() }}</b>
+        <div class="kpi-main">
+          <span class="chip-label">Municipios</span>
+          <b class="chip-val">{{ territoryStore.data.kpis.mpios.toLocaleString() }}</b>
+          <span class="chip-sub">Cobertura territorial</span>
+        </div>
+        <div class="kpi-icon-box">
+          <MapPin :size="18" />
+        </div>
       </div>
       <div class="kpi-micro-chip">
-        <span class="chip-label">Cumplimiento:</span>
-        <b class="chip-val success-text">{{ territoryStore.data.kpis.cumple_pct }}%</b>
+        <div class="kpi-main">
+          <span class="chip-label">Cumplimiento SLA</span>
+          <b class="chip-val success-text">{{ territoryStore.data.kpis.cumple_pct }}%</b>
+          <span class="chip-sub">Atención dentro del plazo</span>
+        </div>
+        <div class="kpi-icon-box">
+          <CheckCircle2 :size="18" />
+        </div>
       </div>
       <div class="kpi-micro-chip danger-chip">
-        <span class="chip-label">Abiertos Vencidos:</span>
-        <b class="chip-val danger-text">{{ (territoryStore.data.kpis.abiertos_vencidos ?? 0).toLocaleString() }}</b>
+        <div class="kpi-main">
+          <span class="chip-label">Abiertos Vencidos</span>
+          <b class="chip-val danger-text">{{ (territoryStore.data.kpis.abiertos_vencidos ?? 0).toLocaleString() }}</b>
+          <span class="chip-sub">Requieren intervención priorizada</span>
+        </div>
+        <div class="kpi-icon-box danger-icon">
+          <AlertCircle :size="18" />
+        </div>
       </div>
     </div>
 
@@ -293,16 +317,23 @@ onMounted(async () => {
 
 .kpi-micro-chip {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2px;
-  padding: 9px 16px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-left: 3px solid var(--color-brand, #0f766e);
+  border-left: 4px solid var(--color-brand, #0f766e);
   border-radius: var(--radius-md, 8px);
   box-shadow: var(--shadow-sm);
+}
+
+.kpi-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .chip-label {
@@ -310,21 +341,46 @@ onMounted(async () => {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .chip-val {
-  font-size: 1.35rem;
-  line-height: 1.15;
+  font-size: 1.65rem;
+  line-height: 1.1;
   color: var(--text-primary);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.chip-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
+  color: var(--color-brand, #0f766e);
+  flex-shrink: 0;
 }
 
 .danger-chip {
   border-color: var(--sla-danger-border);
   border-left-color: var(--sla-danger, #be123c);
   background: var(--sla-danger-bg);
+}
+
+.kpi-icon-box.danger-icon {
+  background: rgba(190, 18, 60, 0.14);
+  color: var(--sla-danger, #be123c);
 }
 
 /* Escenario de Gráficas */
