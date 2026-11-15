@@ -6,6 +6,7 @@ import type {
   OperationsDataResponse,
   TerritorialDataResponse,
   CapacityDataResponse,
+  ActionableInsightsResponse,
 } from '../types/models';
 
 const USE_REMOTE = import.meta.env.VITE_USE_REMOTE_API === 'true';
@@ -98,5 +99,9 @@ export const apiService = {
     depto?: string | null;
   }): Promise<CapacityDataResponse> {
     return clientDataService.getCapacityData(params);
+  },
+
+  async getActionableInsights(): Promise<ActionableInsightsResponse> {
+    return clientDataService.getActionableInsights();
   },
 };

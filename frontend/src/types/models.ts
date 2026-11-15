@@ -84,6 +84,56 @@ export interface ViolinGroupData {
   cumple_pct: number;
 }
 
+export interface AgingBucketItem {
+  label: string;
+  count: number;
+  pct: number;
+  cls: string;
+}
+
+export interface ParetoLineaItem {
+  linea: string;
+  cte: string;
+  vencidos: number;
+  total: number;
+  cum_pct: number;
+}
+
+export interface RecurrentTowerItem {
+  equipo: number;
+  linea: string;
+  municipio: string;
+  depto: string;
+  total: number;
+  abiertos_vencidos: number;
+}
+
+export interface CriticalNoticeItem {
+  aviso: string;
+  equipo: number;
+  linea: string;
+  municipio: string;
+  depto: string;
+  tipo: string;
+  prioridad: string;
+  dias_abierto: number;
+  prioridad_dias: number;
+  exceso_dias: number;
+  reincidencias_torre: number;
+}
+
+export interface ActionableInsightsResponse {
+  total_vencidos: number;
+  aging_buckets: AgingBucketItem[];
+  pareto_lineas: ParetoLineaItem[];
+  lines_for_80_pct: number;
+  total_lines_with_overdue: number;
+  recurrent_towers_count: number;
+  recurrent_notices_count: number;
+  top_recurrent_towers: RecurrentTowerItem[];
+  top_critical_notices: CriticalNoticeItem[];
+}
+
 export interface OperationsDataResponse {
   kpis: OperationsKpis;
   stacked_bar: StackedBarItem[];

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { Compass, BarChart3, Layers, FileText, RefreshCw } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
@@ -8,8 +9,22 @@ import TreemapPanel from '../components/territory/TreemapPanel.vue';
 import SunburstPanel from '../components/territory/SunburstPanel.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
 
+const route = useRoute();
 const territoryStore = useTerritoryStore();
-const activeSubView = ref<'map' | 'bottlenecks' | 'hierarchy' | 'audit'>('map');
+const validTabs = ['map', 'bottlenecks', 'hierarchy', 'audit'] as const;
+const initialTab = validTabs.includes(route.query.tab as any)
+  ? (route.query.tab as 'map' | 'bottlenecks' | 'hierarchy' | 'audit')
+  : 'map';
+const activeSubView = ref<'map' | 'bottlenecks' | 'hierarchy' | 'audit'>(initialTab);
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (validTabs.includes(tab as any)) {
+      activeSubView.value = tab as 'map' | 'bottlenecks' | 'hierarchy' | 'audit';
+    }
+  }
+);
 
 onMounted(async () => {
   // Carga paralela de filtros y dataset para eliminar cuellos de botella en la inicialización

@@ -2,56 +2,37 @@
 import { ref, computed, onMounted } from 'vue';
 import { Activity, Map, Sliders, ChevronRight, Palette } from 'lucide-vue-next';
 import { apiService } from '../services/api';
-import type { PortadaKpis, OperationsDataResponse } from '../types/models';
+import type { PortadaKpis, ActionableInsightsResponse } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
 import { useThemeStore } from '../stores/themeStore';
 
 const themeStore = useThemeStore();
 const loading = ref(true);
 const kpis = ref<PortadaKpis | null>(null);
-const opsData = ref<OperationsDataResponse | null>(null);
+const insights = ref<ActionableInsightsResponse | null>(null);
 
-const portfolioBreakdown = computed(() => {
-  if (!kpis.value) return [];
-  const total = kpis.value.total_avisos || 1;
-  const abiertos = kpis.value.avisos_abiertos ?? 0;
-  const vencidos = kpis.value.abiertos_vencidos ?? 0;
-  const abiertosPlazo = Math.max(0, abiertos - vencidos);
-  const cerrados = Math.max(0, total - abiertos);
-  const cumplePct = kpis.value.cumplimiento_oportuno_pct ?? kpis.value.pct_cumplimiento;
-  const cerradosTiempo = Math.round((cerrados * cumplePct) / 100);
-  const cerradosRetraso = Math.max(0, cerrados - cerradosTiempo);
-
-  return [
-    { label: 'Cerrados a Tiempo', count: cerradosTiempo, pct: Number(((cerradosTiempo / total) * 100).toFixed(1)), cls: 'seg-success' },
-    { label: 'Cerrados con Retraso', count: cerradosRetraso, pct: Number(((cerradosRetraso / total) * 100).toFixed(1)), cls: 'seg-warning' },
-    { label: 'Abiertos En Plazo', count: abiertosPlazo, pct: Number(((abiertosPlazo / total) * 100).toFixed(1)), cls: 'seg-info' },
-    { label: 'Abiertos Vencidos', count: vencidos, pct: Number(((vencidos / total) * 100).toFixed(1)), cls: 'seg-danger' },
-  ];
-});
-
-const topTypologies = computed(() => {
-  const items = opsData.value?.donut || [];
-  return items.slice(0, 5).map((item) => ({
-    name: item.name,
-    value: item.value,
-    pct: Number(item.pct.toFixed(1)),
+const topParetoLineas = computed(() => {
+  const list = insights.value?.pareto_lineas || [];
+  const top5 = list.slice(0, 5);
+  const maxVencidos = top5[0]?.vencidos || 1;
+  return top5.map((item) => ({
+    ...item,
+    barWidth: Number(((item.vencidos / maxVencidos) * 100).toFixed(1)),
   }));
 });
 
-const slaBars = computed(() => {
-  const rows = opsData.value?.stacked_bar || [];
-  return rows.filter((r) => r.prioridad !== 'No asignada').slice(0, 6);
+const topCriticalList = computed(() => {
+  return (insights.value?.top_critical_notices || []).slice(0, 5);
 });
 
 onMounted(async () => {
   try {
-    const [portadaRes, opsRes] = await Promise.all([
+    const [portadaRes, insightsRes] = await Promise.all([
       apiService.getPortadaKpis(),
-      apiService.getOperationsData({}),
+      apiService.getActionableInsights(),
     ]);
     kpis.value = portadaRes;
-    opsData.value = opsRes;
+    insights.value = insightsRes;
   } catch (err) {
     console.error('Error cargando KPIs de portada:', err);
   } finally {
@@ -143,20 +124,24 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- Resumen Ejecutivo Visual (Ocupa el espacio central con datos reales) -->
-    <section v-if="kpis" class="executive-pulse-grid">
+    <!-- Inteligencia Accionable (Sin duplicar gráficas de las vistas) -->
+    <section v-if="kpis && insights" class="executive-pulse-grid">
       <div class="pulse-card card">
         <div class="pulse-header">
           <div>
-            <h3 class="pulse-title">Estado del Portafolio y Causas Técnicas</h3>
-            <p class="pulse-sub">Distribución de los {{ kpis.total_avisos.toLocaleString() }} avisos por estado de cierre y tipología</p>
+            <h3 class="pulse-title">Envejecimiento del Backlog y Pareto por Línea</h3>
+            <p class="pulse-sub">
+              Antigüedad de los {{ insights.total_vencidos.toLocaleString() }} abiertos vencidos y líneas que concentran la mora
+            </p>
           </div>
-          <span class="badge">Causa líder: {{ kpis.pct_vegetacion }}% Vegetación</span>
+          <span class="badge">
+            {{ insights.lines_for_80_pct }}/{{ insights.total_lines_with_overdue }} líneas = 80% mora
+          </span>
         </div>
 
         <div class="stacked-portfolio-bar">
           <div
-            v-for="seg in portfolioBreakdown"
+            v-for="seg in insights.aging_buckets"
             :key="seg.label"
             class="port-seg"
             :class="seg.cls"
@@ -166,19 +151,19 @@ onMounted(async () => {
         </div>
 
         <div class="portfolio-legend">
-          <div v-for="seg in portfolioBreakdown" :key="seg.label" class="port-leg-item">
+          <div v-for="seg in insights.aging_buckets" :key="seg.label" class="port-leg-item">
             <span class="leg-dot" :class="seg.cls"></span>
             <span class="leg-txt">{{ seg.label }}: <b>{{ seg.count.toLocaleString() }}</b> ({{ seg.pct }}%)</span>
           </div>
         </div>
 
         <div class="typology-bars">
-          <div v-for="t in topTypologies" :key="t.name" class="typo-row">
-            <span class="typo-name">{{ t.name }}</span>
+          <div v-for="l in topParetoLineas" :key="l.linea" class="typo-row">
+            <span class="typo-name" :title="`${l.linea} (${l.cte})`">{{ l.linea }}</span>
             <div class="typo-track">
-              <div class="typo-fill" :style="{ width: `${t.pct}%` }"></div>
+              <div class="typo-fill danger-fill" :style="{ width: `${l.barWidth}%` }"></div>
             </div>
-            <span class="typo-val">{{ t.value.toLocaleString() }} ({{ t.pct }}%)</span>
+            <span class="typo-val">{{ l.vencidos }} venc. · {{ l.cum_pct }}% acum.</span>
           </div>
         </div>
       </div>
@@ -186,31 +171,33 @@ onMounted(async () => {
       <div class="pulse-card card">
         <div class="pulse-header">
           <div>
-            <h3 class="pulse-title">Cumplimiento por Prioridad SLA</h3>
-            <p class="pulse-sub">Porcentaje de atención oportuna vs. vencimiento por nivel de servicio</p>
+            <h3 class="pulse-title">Cola de Atención Inmediata y Reincidencia</h3>
+            <p class="pulse-sub">
+              Top avisos abiertos ordenados por exceso de días sobre su plazo SLA
+            </p>
           </div>
-          <router-link to="/operaciones" class="pulse-link">Ver detalle →</router-link>
+          <router-link to="/territorio?tab=audit" class="pulse-link">Auditar todos →</router-link>
         </div>
 
-        <div class="sla-mini-list">
-          <div v-for="row in slaBars" :key="row.prioridad" class="sla-mini-row">
-            <span class="sla-prio-lbl">{{ row.prioridad }}</span>
-            <div class="sla-track">
-              <div class="sla-fill-ok" :style="{ width: `${row.cumple_pct}%` }">
-                <span v-if="row.cumple_pct >= 18">{{ row.cumple_pct }}%</span>
-              </div>
-              <div class="sla-fill-late" :style="{ width: `${row.excede_pct}%` }">
-                <span v-if="row.excede_pct >= 18">{{ row.excede_pct }}%</span>
-              </div>
+        <div class="critical-list">
+          <div v-for="item in topCriticalList" :key="item.aviso" class="critical-row">
+            <div class="crit-main">
+              <span class="crit-id">#{{ item.aviso }}</span>
+              <span class="crit-loc">{{ item.municipio }} · {{ item.linea }}</span>
             </div>
-            <span class="sla-total-lbl">{{ row.total.toLocaleString() }}</span>
+            <span class="crit-tipo">{{ item.tipo }}</span>
+            <span class="crit-excess" :title="`Abierto ${item.dias_abierto}d (SLA ${item.prioridad_dias}d)`">
+              +{{ item.exceso_dias.toLocaleString() }}d SLA
+            </span>
           </div>
         </div>
 
-        <div class="sla-mini-legend">
-          <span><i class="leg-dot seg-sla-ok"></i> Cumple Plazo</span>
-          <span><i class="leg-dot seg-danger"></i> Excede Plazo</span>
-          <span class="sla-note">Volumen total a la derecha</span>
+        <div class="recurrence-footer">
+          <span class="rec-badge">
+            <b>{{ insights.recurrent_towers_count.toLocaleString() }}</b> torres reincidentes (≥2 avisos) concentran
+            <b>{{ insights.recurrent_notices_count.toLocaleString() }}</b> registros
+          </span>
+          <router-link to="/territorio" class="pulse-link">Ver mapa →</router-link>
         </div>
       </div>
     </section>
@@ -447,6 +434,7 @@ onMounted(async () => {
 .seg-success { background: var(--sla-success, #10B981); }
 .seg-sla-ok { background: #475569; }
 .seg-warning { background: var(--sla-warning, #F59E0B); }
+.seg-orange { background: #F97316; }
 .seg-info { background: var(--sla-info, #38BDF8); }
 .seg-danger { background: var(--sla-danger, #E11D48); }
 
@@ -484,10 +472,10 @@ onMounted(async () => {
 
 .typo-row {
   display: grid;
-  grid-template-columns: 140px 1fr 95px;
+  grid-template-columns: 165px 1fr 125px;
   align-items: center;
   gap: 10px;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
 }
 
 .typo-name {
@@ -511,6 +499,10 @@ onMounted(async () => {
   border-radius: var(--radius-full);
 }
 
+.typo-fill.danger-fill {
+  background: var(--sla-danger, #E11D48);
+}
+
 .typo-val {
   text-align: right;
   color: var(--text-secondary);
@@ -518,74 +510,82 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.sla-mini-list {
+.critical-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
   flex: 1;
   justify-content: center;
 }
 
-.sla-mini-row {
+.critical-row {
   display: grid;
-  grid-template-columns: 76px 1fr 44px;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 10px;
+  padding: 6px 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
 }
 
-.sla-prio-lbl {
+.crit-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.crit-id {
+  font-weight: 800;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.crit-loc {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crit-tipo {
+  font-size: 0.7rem;
   font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
   white-space: nowrap;
 }
 
-.sla-track {
-  display: flex;
-  height: 16px;
-  border-radius: 4px;
-  overflow: hidden;
-  background: var(--bg-subtle);
-}
-
-.sla-fill-ok {
-  background: #475569;
-  color: #F8FAFC;
-  font-size: 0.66rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sla-fill-late {
-  background: var(--sla-danger, #E11D48);
-  color: #FFFFFF;
-  font-size: 0.66rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sla-total-lbl {
-  text-align: right;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-}
-
-.sla-mini-legend {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.crit-excess {
   font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--sla-danger, #E11D48);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.recurrence-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.73rem;
+}
+
+.rec-badge {
   color: var(--text-secondary);
 }
 
-.sla-note {
-  margin-left: auto;
-  color: var(--text-muted);
+.rec-badge b {
+  color: var(--text-primary);
 }
 
 .grid-3 {

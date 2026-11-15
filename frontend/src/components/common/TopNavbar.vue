@@ -18,7 +18,6 @@ const topNavLinks = [
   { label: '01 · Seguimiento y SLA', path: '/operaciones', icon: Activity },
   { label: '02 · Territorio y Mapa Histórico', path: '/territorio', icon: Map },
   { label: '03 · Capacidad y Mejora', path: '/capacidad', icon: Sliders },
-  { label: 'Paleta y Diseño', path: '/diseno', icon: Palette },
 ];
 </script>
 
@@ -64,6 +63,14 @@ const topNavLinks = [
         <span class="inst-dot"></span>
         <span class="inst-text">Suroccidente & Centro · Transmisión</span>
       </div>
+
+      <router-link
+        to="/diseno"
+        :class="['qr-access-btn', { active: route.path === '/diseno' }]"
+        title="Paleta y Gobernanza de Diseño"
+      >
+        <Palette :size="15" />
+      </router-link>
 
       <!-- Botón de Acceso Móvil por QR -->
       <button
