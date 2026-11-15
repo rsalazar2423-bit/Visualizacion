@@ -10,7 +10,10 @@ import {
 } from './analytics/operationsAnalytics';
 import { computeTerritorialData } from './analytics/territoryAnalytics';
 import { computeCapacityData } from './analytics/capacityAnalytics';
-import { computeActionableInsights } from './analytics/actionableInsights';
+import {
+  computeActionableInsights,
+  computeCoordinatorWorkspace,
+} from './analytics/actionableInsights';
 
 export const clientDataService = {
   getPortadaKpis: computePortadaKpis,
@@ -19,4 +22,5 @@ export const clientDataService = {
   getTerritorialData: computeTerritorialData,
   getCapacityData: computeCapacityData,
   getActionableInsights: computeActionableInsights,
+  getCoordinatorWorkspace: computeCoordinatorWorkspace,
 };

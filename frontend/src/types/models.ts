@@ -134,6 +134,62 @@ export interface ActionableInsightsResponse {
   top_critical_notices: CriticalNoticeItem[];
 }
 
+export interface PreventiveNoticeItem {
+  aviso: string;
+  equipo: number;
+  linea: string;
+  municipio: string;
+  tipo: string;
+  prioridad: string;
+  dias_abierto: number;
+  prioridad_dias: number;
+  dias_restantes: number;
+  pct_consumido: number;
+}
+
+export interface ExecutionBucket {
+  category: 'campo' | 'predial';
+  label: string;
+  abiertos: number;
+  vencidos: number;
+  pct: number;
+}
+
+export interface CorridorBatchItem {
+  id: string;
+  linea: string;
+  tipo: string;
+  cte: string;
+  municipio_principal: string;
+  abiertos: number;
+  vencidos: number;
+  radio_km: number;
+  center_lat: number | null;
+  center_lon: number | null;
+}
+
+export interface CteBalanceItem {
+  region: string;
+  ingresados: number;
+  cerrados: number;
+  abiertos: number;
+  vencidos: number;
+  tasa_cierre_pct: number;
+}
+
+export interface CoordinatorWorkspaceResponse {
+  total_abiertos: number;
+  total_vencidos: number;
+  preventive_count: number;
+  preventive_notices: PreventiveNoticeItem[];
+  execution_split: ExecutionBucket[];
+  corridor_batches: CorridorBatchItem[];
+  cte_balance: CteBalanceItem[];
+  chronic_count: number;
+  chronic_pct_of_overdue: number;
+  chronic_notices: CriticalNoticeItem[];
+}
+
 export interface OperationsDataResponse {
   kpis: OperationsKpis;
   stacked_bar: StackedBarItem[];

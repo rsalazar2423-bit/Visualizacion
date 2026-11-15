@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { BarChart3, Sliders, RefreshCw } from 'lucide-vue-next';
+import { BarChart3, Sliders, ClipboardList, RefreshCw } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import RegionalLoadChart from '../components/charts/RegionalLoadChart.vue';
 import ComplianceScatterChart from '../components/charts/ComplianceScatterChart.vue';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
+import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
 const store = useCapacityStore();
-const activeSubView = ref<'diagnosis' | 'simulator'>('diagnosis');
+const activeSubView = ref<'diagnosis' | 'simulator' | 'coordinator'>('diagnosis');
 
 function onSelectRegion(region: string) {
   if (store.filterOptions.ctes.includes(region)) {
@@ -71,6 +72,15 @@ onMounted(() => {
           <Sliders :size="14" />
           <span>2. Simulador de Cuadrillas (Hoja Táctica)</span>
         </button>
+
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'coordinator' }"
+          @click="activeSubView = 'coordinator'"
+        >
+          <ClipboardList :size="14" />
+          <span>3. Centro del Coordinador</span>
+        </button>
       </nav>
     </header>
 
@@ -119,6 +129,14 @@ onMounted(() => {
       <!-- HOJA 2: Simulador Táctico de Cuadrillas (Hoja Dedicada) -->
       <section v-show="activeSubView === 'simulator'" class="stage-pane simulator-pane">
         <CapacitySimulatorPanel />
+      </section>
+
+      <!-- HOJA 3: Centro del Coordinador (Operación Diaria) -->
+      <section v-show="activeSubView === 'coordinator'" class="stage-pane simulator-pane">
+        <CoordinatorWorkspacePanel
+          :cte="store.selectedCte"
+          :depto="store.selectedDepto"
+        />
       </section>
     </main>
   </div>

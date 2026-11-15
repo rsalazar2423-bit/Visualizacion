@@ -7,6 +7,7 @@ import type {
   TerritorialDataResponse,
   CapacityDataResponse,
   ActionableInsightsResponse,
+  CoordinatorWorkspaceResponse,
 } from '../types/models';
 
 const USE_REMOTE = import.meta.env.VITE_USE_REMOTE_API === 'true';
@@ -103,5 +104,11 @@ export const apiService = {
 
   async getActionableInsights(): Promise<ActionableInsightsResponse> {
     return clientDataService.getActionableInsights();
+  },
+
+  async getCoordinatorWorkspace(
+    params?: { cte?: string | null; depto?: string | null }
+  ): Promise<CoordinatorWorkspaceResponse> {
+    return clientDataService.getCoordinatorWorkspace(params ?? {});
   },
 };
