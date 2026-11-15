@@ -7,7 +7,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiService } from '../services/api';
-import type { CapacityDataResponse, FilterOptionsResponse } from '../types/models';
+import type { CapacityDataResponse, CoordinatorWorkspaceResponse, FilterOptionsResponse } from '../types/models';
 
 export const useCapacityStore = defineStore('capacity', () => {
   const loading = ref(true);
@@ -21,20 +21,33 @@ export const useCapacityStore = defineStore('capacity', () => {
   const selectedCte = ref<string>('Todos');
   const selectedDepto = ref<string>('Todos');
   const capacityData = ref<CapacityDataResponse | null>(null);
+  const workspaceData = ref<CoordinatorWorkspaceResponse | null>(null);
 
-  // Parámetros del Simulador de Capacidad y Asignación de Recursos (Vista 3 del Documento)
+  // Parámetros del Simulador de Capacidad y Asignación de Recursos
   const crewsCount = ref<number>(8);
   const closuresPerCrewMonth = ref<number>(6);
   const pctFocusVencidos = ref<number>(70);
+  const expectedMonthlyIntake = ref<number>(18);
 
   async function loadAll() {
     loading.value = true;
     try {
-      filterOptions.value = await apiService.getFilterOptions(selectedCte.value, selectedDepto.value);
-      capacityData.value = await apiService.getCapacityData({
-        cte: selectedCte.value,
-        depto: selectedDepto.value,
-      });
+      const [opts, cap, ws] = await Promise.all([
+        apiService.getFilterOptions(selectedCte.value, selectedDepto.value),
+        apiService.getCapacityData({
+          cte: selectedCte.value,
+          depto: selectedDepto.value,
+        }),
+        typeof apiService.getCoordinatorWorkspace === 'function'
+          ? apiService.getCoordinatorWorkspace({
+              cte: selectedCte.value,
+              depto: selectedDepto.value,
+            })
+          : Promise.resolve(null),
+      ]);
+      filterOptions.value = opts;
+      capacityData.value = cap;
+      workspaceData.value = ws;
     } finally {
       loading.value = false;
     }
@@ -62,22 +75,58 @@ export const useCapacityStore = defineStore('capacity', () => {
     if (!k) {
       return {
         monthlyCapacity: 0,
+        netMonthlyCapacity: 0,
+        isDeficit: false,
+        campoAbiertos: 0,
+        campoVencidos: 0,
+        predialAbiertos: 0,
+        predialVencidos: 0,
         monthlyVencidosCleared: 0,
         monthsToClearVencidos: 0,
         monthsToClearAllOpen: 0,
+        monthsToClearCampoVencidos: null as number | null,
+        monthsToClearAllCampo: null as number | null,
         projectedCompliance6m: 0,
       };
     }
+
+    const campoBucket = workspaceData.value?.execution_split.find((b) => b.category === 'campo');
+    const predialBucket = workspaceData.value?.execution_split.find((b) => b.category === 'predial');
+    const campoAbiertos = campoBucket ? campoBucket.abiertos : k.avisos_abiertos;
+    const campoVencidos = campoBucket ? campoBucket.vencidos : k.abiertos_vencidos;
+    const predialAbiertos = predialBucket ? predialBucket.abiertos : 0;
+    const predialVencidos = predialBucket ? predialBucket.vencidos : 0;
+
     const monthlyCapacity = crewsCount.value * closuresPerCrewMonth.value;
+    const netMonthlyCapacity = monthlyCapacity - expectedMonthlyIntake.value;
+    const isDeficit = netMonthlyCapacity <= 0;
+
     const monthlyVencidosCleared = Math.max(1, Math.round(monthlyCapacity * (pctFocusVencidos.value / 100)));
+    const netVencidosCleared = Math.max(0, Math.round(netMonthlyCapacity * (pctFocusVencidos.value / 100)));
+
     const monthsToClearVencidos =
       k.abiertos_vencidos > 0 ? Number((k.abiertos_vencidos / monthlyVencidosCleared).toFixed(1)) : 0;
     const monthsToClearAllOpen =
       k.avisos_abiertos > 0 ? Number((k.avisos_abiertos / Math.max(1, monthlyCapacity)).toFixed(1)) : 0;
 
+    const monthsToClearCampoVencidos =
+      campoVencidos <= 0
+        ? 0
+        : isDeficit || netVencidosCleared <= 0
+          ? null
+          : Number((campoVencidos / netVencidosCleared).toFixed(1));
+
+    const monthsToClearAllCampo =
+      campoAbiertos <= 0
+        ? 0
+        : isDeficit
+          ? null
+          : Number((campoAbiertos / netMonthlyCapacity).toFixed(1));
+
+    const effectiveNet = Math.max(0, netMonthlyCapacity);
     const onTimeClearedIn6m = Math.min(
-      k.avisos_abiertos - k.abiertos_vencidos,
-      Math.round(monthlyCapacity * ((100 - pctFocusVencidos.value) / 100) * 6)
+      Math.max(0, campoAbiertos - campoVencidos),
+      Math.round(effectiveNet * ((100 - pctFocusVencidos.value) / 100) * 6)
     );
     const currentClosedEstimate = Math.max(
       1,
@@ -92,9 +141,17 @@ export const useCapacityStore = defineStore('capacity', () => {
 
     return {
       monthlyCapacity,
+      netMonthlyCapacity,
+      isDeficit,
+      campoAbiertos,
+      campoVencidos,
+      predialAbiertos,
+      predialVencidos,
       monthlyVencidosCleared,
       monthsToClearVencidos,
       monthsToClearAllOpen,
+      monthsToClearCampoVencidos,
+      monthsToClearAllCampo,
       projectedCompliance6m,
     };
   });
@@ -105,9 +162,11 @@ export const useCapacityStore = defineStore('capacity', () => {
     selectedCte,
     selectedDepto,
     capacityData,
+    workspaceData,
     crewsCount,
     closuresPerCrewMonth,
     pctFocusVencidos,
+    expectedMonthlyIntake,
     scenarioProjection,
     loadAll,
     setCte,

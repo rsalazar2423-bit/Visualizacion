@@ -90,3 +90,4 @@
 
 - **Qué mostrar brevemente**: Consistencia semántica de color (por qué rojo/ámbar/esmeralda/cian mantienen un único significado en todo el tablero, soporte claro/oscuro y diseño `0` scroll adaptado a pantallas ejecutivas).
 - **Frase de cierre**: *"El tablero integra diagnóstico estadístico, trazabilidad territorial y simulación operativa en una sola herramienta lista para toma de decisiones."*
+

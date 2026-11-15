@@ -40,39 +40,70 @@ const store = useCapacityStore();
         <div class="sim-slider-group">
           <div class="sim-label-row">
             <span>Dedicación Prioritaria a Abiertos Vencidos</span>
-            <b>{{ store.pctFocusVencidos }}% de la capacidad ({{ store.scenarioProjection.monthlyVencidosCleared }} avisos/mes)</b>
+            <b>{{ store.pctFocusVencidos }}% de capacidad neta</b>
           </div>
           <input v-model.number="store.pctFocusVencidos" type="range" min="20" max="100" step="5" class="sim-range" />
+        </div>
+
+        <div class="sim-slider-group">
+          <div class="sim-label-row">
+            <span>Demanda Mensual Esperada (Nuevos Ingresos)</span>
+            <b>{{ store.expectedMonthlyIntake }} avisos / mes</b>
+          </div>
+          <input v-model.number="store.expectedMonthlyIntake" type="range" min="0" max="60" step="2" class="sim-range" />
+        </div>
+
+        <div class="sim-scope-note">
+          <span><b>Ejecutable en Campo:</b> {{ store.scenarioProjection.campoAbiertos }} abiertos ({{ store.scenarioProjection.campoVencidos }} vencidos).</span>
+          <span><b>Bloqueo Predial/Legal:</b> {{ store.scenarioProjection.predialAbiertos }} avisos no evacuables solo con cuadrilla física.</span>
         </div>
       </div>
 
       <div class="sim-results-col">
         <div class="sim-result-header">
           <Users :size="16" />
-          <span>Resultado Proyectado del Escenario</span>
+          <span>Resultado Proyectado sobre Backlog de Campo</span>
         </div>
 
         <div class="sim-metrics-grid">
           <div class="sim-metric-box">
-            <span class="sim-m-label">Capacidad Total de Cierre</span>
-            <div class="sim-m-val brand">{{ store.scenarioProjection.monthlyCapacity }} <small>avisos / mes</small></div>
-            <span class="sim-m-sub">Con {{ store.crewsCount }} cuadrillas activas</span>
+            <span class="sim-m-label">Capacidad Neta Mensual</span>
+            <div class="sim-m-val" :class="store.scenarioProjection.isDeficit ? 'danger' : 'brand'">
+              {{ store.scenarioProjection.netMonthlyCapacity > 0 ? '+' : '' }}{{ store.scenarioProjection.netMonthlyCapacity }} <small>avisos / mes</small>
+            </div>
+            <span class="sim-m-sub">Bruta {{ store.scenarioProjection.monthlyCapacity }} − {{ store.expectedMonthlyIntake }} ingresos/mes</span>
           </div>
 
           <div class="sim-metric-box">
-            <span class="sim-m-label">Evacuación de Abiertos Vencidos</span>
-            <div class="sim-m-val danger">{{ store.scenarioProjection.monthsToClearVencidos }} <small>meses</small></div>
-            <span class="sim-m-sub">Para cerrar {{ store.capacityData?.kpis.abiertos_vencidos || 0 }} vencidos</span>
+            <span class="sim-m-label">Evacuación de Mora (Campo)</span>
+            <div class="sim-m-val danger">
+              <template v-if="store.scenarioProjection.monthsToClearCampoVencidos !== null">
+                {{ store.scenarioProjection.monthsToClearCampoVencidos }} <small>meses</small>
+              </template>
+              <template v-else>
+                Déficit
+              </template>
+            </div>
+            <span class="sim-m-sub">
+              {{ store.scenarioProjection.isDeficit ? 'Capacidad bruta ≤ demanda nueva' : `Para cerrar ${store.scenarioProjection.campoVencidos} vencidos de campo` }}
+            </span>
           </div>
 
           <div class="sim-metric-box">
-            <span class="sim-m-label">Saneamiento Total de Abiertos</span>
-            <div class="sim-m-val info">{{ store.scenarioProjection.monthsToClearAllOpen }} <small>meses</small></div>
-            <span class="sim-m-sub">Para evacuar {{ store.capacityData?.kpis.avisos_abiertos || 0 }} pendientes</span>
+            <span class="sim-m-label">Saneamiento Total (Campo)</span>
+            <div class="sim-m-val info">
+              <template v-if="store.scenarioProjection.monthsToClearAllCampo !== null">
+                {{ store.scenarioProjection.monthsToClearAllCampo }} <small>meses</small>
+              </template>
+              <template v-else>
+                No converge
+              </template>
+            </div>
+            <span class="sim-m-sub">Para evacuar {{ store.scenarioProjection.campoAbiertos }} abiertos de campo</span>
           </div>
 
           <div class="sim-metric-box">
-            <span class="sim-m-label">Cumplimiento Oportuno (Horizonte 6M)</span>
+            <span class="sim-m-label">Cumplimiento Oportuno (6M)</span>
             <div class="sim-m-val success">{{ store.scenarioProjection.projectedCompliance6m }}%</div>
             <span class="sim-m-sub">Desde {{ store.capacityData?.kpis.cumplimiento_oportuno_pct || 0 }}% actual</span>
           </div>
@@ -196,6 +227,22 @@ const store = useCapacityStore();
 .sim-m-sub {
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+
+.sim-scope-note {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--color-brand);
+  border-radius: 4px;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.sim-scope-note b {
+  color: var(--text-primary);
 }
 
 @media (max-width: 900px) {

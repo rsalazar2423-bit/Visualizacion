@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { Home, Activity, Map, Sliders, Leaf, X, ShieldCheck, Palette } from 'lucide-vue-next';
+import { Home, Activity, Map, Sliders, Leaf, X, ShieldCheck } from 'lucide-vue-next';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -14,7 +14,6 @@ const navItems = [
   { name: '01 · Seguimiento y Cumplimiento', path: '/operaciones', icon: Activity },
   { name: '02 · Diagnóstico Territorial y Técnico', path: '/territorio', icon: Map },
   { name: '03 · Capacidad y Mejora Operativa', path: '/capacidad', icon: Sliders },
-  { name: 'Gobernanza de Color y Diseño', path: '/diseno', icon: Palette },
 ];
 </script>
 

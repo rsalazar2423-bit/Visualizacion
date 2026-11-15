@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { Sun, Moon, Activity, Map, Sliders, Home, Palette, QrCode } from 'lucide-vue-next';
+import { Sun, Moon, Activity, Map, Sliders, Home, QrCode } from 'lucide-vue-next';
 import { useThemeStore } from '../../stores/themeStore';
 import QrAccessModal from './QrAccessModal.vue';
 
@@ -63,14 +63,6 @@ const topNavLinks = [
         <span class="inst-dot"></span>
         <span class="inst-text">Suroccidente & Centro · Transmisión</span>
       </div>
-
-      <router-link
-        to="/diseno"
-        :class="['qr-access-btn', { active: route.path === '/diseno' }]"
-        title="Paleta y Gobernanza de Diseño"
-      >
-        <Palette :size="15" />
-      </router-link>
 
       <!-- Botón de Acceso Móvil por QR -->
       <button
