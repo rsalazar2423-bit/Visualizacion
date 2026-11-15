@@ -1,28 +1,36 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Activity, Map, Sliders, ChevronRight, Palette } from 'lucide-vue-next';
+import { RefreshCw, ArrowRight } from 'lucide-vue-next';
 import { apiService } from '../services/api';
-import type { PortadaKpis, ActionableInsightsResponse } from '../types/models';
+import type { PortadaKpis, ActionableInsightsResponse, FilterOptionsResponse } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
-import { useThemeStore } from '../stores/themeStore';
 
-const themeStore = useThemeStore();
 const loading = ref(true);
 const kpis = ref<PortadaKpis | null>(null);
 const insights = ref<ActionableInsightsResponse | null>(null);
+const filterOptions = ref<FilterOptionsResponse>({
+  ctes: ['Todos'],
+  departamentos: ['Todos'],
+  municipios: [],
+  tipos: ['Todos'],
+});
+
+const selectedCte = ref('Todos');
+const selectedDepto = ref('Todos');
+const selectedTipo = ref('Todos');
 
 const topParetoLineas = computed(() => {
   const list = insights.value?.pareto_lineas || [];
-  const top5 = list.slice(0, 5);
-  const maxVencidos = top5[0]?.vencidos || 1;
-  return top5.map((item) => ({
+  const top8 = list.slice(0, 8);
+  const maxVencidos = top8[0]?.vencidos || 1;
+  return top8.map((item) => ({
     ...item,
     barWidth: Number(((item.vencidos / maxVencidos) * 100).toFixed(1)),
   }));
 });
 
 const topCriticalList = computed(() => {
-  return (insights.value?.top_critical_notices || []).slice(0, 5);
+  return (insights.value?.top_critical_notices || []).slice(0, 15);
 });
 
 const overOneYearStats = computed(() => {
@@ -31,8 +39,8 @@ const overOneYearStats = computed(() => {
   const count = oldBuckets.reduce((acc, b) => acc + b.count, 0);
   const total = insights.value?.total_vencidos || 0;
   const pct = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
-  const top5Cum = topParetoLineas.value[topParetoLineas.value.length - 1]?.cum_pct ?? 0;
-  return { count, pct, top5Cum };
+  const topCum = topParetoLineas.value[topParetoLineas.value.length - 1]?.cum_pct ?? 0;
+  return { count, pct, topCum, lineCount: topParetoLineas.value.length };
 });
 
 const recurrencePct = computed(() => {
@@ -48,106 +56,148 @@ function formatOverdueYears(days: number): string {
   return `+${days.toLocaleString()}d vencido`;
 }
 
-onMounted(async () => {
+async function refreshAll() {
+  loading.value = true;
   try {
-    const [portadaRes, insightsRes] = await Promise.all([
-      apiService.getPortadaKpis(),
-      apiService.getActionableInsights(),
+    const params = {
+      cte: selectedCte.value,
+      depto: selectedDepto.value,
+      tipo: selectedTipo.value,
+    };
+    const [optsRes, portadaRes, insightsRes] = await Promise.all([
+      apiService.getFilterOptions(selectedCte.value, selectedDepto.value),
+      apiService.getPortadaKpis(params),
+      apiService.getActionableInsights(params),
     ]);
+    filterOptions.value = optsRes;
     kpis.value = portadaRes;
     insights.value = insightsRes;
   } catch (err) {
-    console.error('Error cargando KPIs de portada:', err);
+    console.error('Error cargando resumen ejecutivo:', err);
   } finally {
     loading.value = false;
   }
+}
+
+async function onCteChange(val: string) {
+  selectedCte.value = val;
+  selectedDepto.value = 'Todos';
+  await refreshAll();
+}
+
+async function onDeptoChange(val: string) {
+  selectedDepto.value = val;
+  await refreshAll();
+}
+
+async function onTipoChange(val: string) {
+  selectedTipo.value = val;
+  await refreshAll();
+}
+
+async function resetFilters() {
+  selectedCte.value = 'Todos';
+  selectedDepto.value = 'Todos';
+  selectedTipo.value = 'Todos';
+  await refreshAll();
+}
+
+onMounted(() => {
+  refreshAll();
 });
 </script>
 
 <template>
   <div class="home-view">
-    <!-- Hero Banner -->
-    <section class="hero-card card">
-      <div class="hero-layout">
-        <div class="hero-content">
-          <div class="badge">EcoGrid DEC · Dirección de Operaciones</div>
-          <h1 class="hero-title">
-            Dashboard de Gestión Operativa y Cumplimiento de la Atención
-          </h1>
-          <p class="hero-description">
-            Herramienta táctico-operacional para evaluar el cumplimiento de plazos por prioridad, localizar retrasos en el territorio a lo largo de la historia (2008–2023) y optimizar la asignación de equipos especializados sobre la infraestructura de transmisión eléctrica.
-          </p>
-          <div class="hero-actions">
-            <router-link to="/operaciones" class="btn">
-              <Activity :size="16" />
-              <span>01 · Iniciar en Operaciones</span>
-            </router-link>
-            <router-link to="/diseno" class="btn btn-secondary">
-              <Palette :size="16" />
-              <span>Gobernanza de Color</span>
-            </router-link>
-          </div>
-        </div>
-
-        <div class="hero-logo-box">
-          <img
-            :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"
-            alt="EcoGrid Colombia"
-            class="hero-brand-logo"
-          />
-          <span class="hero-brand-label">EcoGrid DEC · Colombia</span>
-          <span class="hero-brand-sublabel">Control de Red & Sostenibilidad</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4 Indicadores Principales del Documento Rector -->
-    <section class="kpi-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">Indicadores Principales de la Operación (KPIs)</h2>
-          <p class="section-subtitle">Lectura inmediata del estado de atención sobre {{ kpis ? kpis.total_avisos.toLocaleString() : '...' }} avisos y {{ kpis ? kpis.total_equipos.toLocaleString() : '...' }} torres georreferenciadas</p>
-        </div>
-        <span class="badge">Corte Histórico 2008 – 2023</span>
+    <!-- Barra Superior de Control y Filtros Globales del Resumen -->
+    <header class="compact-control-bar card">
+      <div class="brand-zone">
+        <span class="badge badge-tag">Resumen Ejecutivo</span>
+        <span class="brand-desc">Gestión Operativa & Cumplimiento SLA (2008–2023)</span>
       </div>
 
-      <div v-if="loading" class="spinner-container">
-        <div class="spinner"></div>
+      <div class="minimal-filters">
+        <select
+          :value="selectedCte"
+          class="form-select-sm"
+          @change="onCteChange(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="c in filterOptions.ctes" :key="c" :value="c">
+            {{ c === 'Todos' ? 'Todas las CTEs' : `CTE ${c}` }}
+          </option>
+        </select>
+
+        <select
+          :value="selectedDepto"
+          class="form-select-sm"
+          @change="onDeptoChange(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="d in filterOptions.departamentos" :key="d" :value="d">
+            {{ d === 'Todos' ? 'Todos Deptos' : d }}
+          </option>
+        </select>
+
+        <select
+          :value="selectedTipo"
+          class="form-select-sm"
+          @change="onTipoChange(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="t in filterOptions.tipos" :key="t" :value="t">
+            {{ t === 'Todos' ? 'Todas las Tipologías' : t }}
+          </option>
+        </select>
+
+        <button
+          v-if="selectedCte !== 'Todos' || selectedDepto !== 'Todos' || selectedTipo !== 'Todos'"
+          class="btn-reset-icon"
+          title="Restablecer filtros"
+          @click="resetFilters"
+        >
+          <RefreshCw :size="13" />
+        </button>
       </div>
 
-      <div v-else-if="kpis" class="grid-4">
+      <router-link to="/operaciones" class="btn-quick-go">
+        <span>Ir a Análisis Detallado</span>
+        <ArrowRight :size="14" />
+      </router-link>
+    </header>
+
+    <!-- KPIs Ejecutivos Dinámicos -->
+    <section v-if="kpis" class="kpi-section">
+      <div class="grid-4">
         <KpiCard
-          title="Cumplimiento Oportuno"
-          :value="`${kpis.cumplimiento_oportuno_pct ?? kpis.pct_cumplimiento}%`"
-          :badge="`Total red: ${kpis.pct_cumplimiento}%`"
-          subtitle="Porcentaje de avisos cerrados dentro del plazo de su prioridad"
+          title="Total Avisos"
+          :value="kpis.total_avisos"
+          badge="2008–2023"
+          :subtitle="`Sobre ${kpis.total_equipos.toLocaleString()} torres en red`"
+          color="brand"
+        />
+        <KpiCard
+          title="Cumplimiento SLA"
+          :value="`${kpis.pct_cumplimiento}%`"
+          badge="Global"
+          subtitle="Atención dentro del plazo normativo"
           color="success"
         />
         <KpiCard
-          title="Avisos Abiertos"
-          :value="(kpis.avisos_abiertos ?? 0).toLocaleString()"
-          :badge="`${kpis.total_avisos.toLocaleString()} históricos`"
-          subtitle="Cantidad de avisos pendientes de cierre a la fecha de corte"
-          color="info"
-        />
-        <KpiCard
           title="Abiertos Vencidos"
-          :value="(kpis.abiertos_vencidos ?? 0).toLocaleString()"
-          badge="Atención Inmediata"
-          subtitle="Avisos pendientes cuyo plazo de atención ya se superó"
+          :value="kpis.abiertos_vencidos ?? 0"
+          badge="Crítico"
+          :subtitle="`De ${(kpis.avisos_abiertos ?? 0).toLocaleString()} avisos aún abiertos`"
           color="danger"
         />
         <KpiCard
-          title="Tiempo Típico de Atención"
-          :value="`${Math.round(kpis.tiempo_tipico_mediana ?? 383)} días`"
+          title="Tiempo Típico"
+          :value="`${kpis.tiempo_tipico_mediana ?? 0} días`"
           badge="Mediana Cerrados"
-          subtitle="Duración mediana en días de los avisos cerrados"
+          subtitle="Duración mediana de resolución"
           color="warning"
         />
       </div>
     </section>
 
-    <!-- Inteligencia Accionable (Sin duplicar gráficas de las vistas) -->
+    <!-- Escenario Principal de Datos Prioritarios (Ocupa todo el alto restante) -->
     <section v-if="kpis && insights" class="executive-pulse-grid">
       <div class="pulse-card card">
         <div class="pulse-header">
@@ -162,7 +212,7 @@ onMounted(async () => {
           </span>
         </div>
 
-        <div class="stacked-portfolio-bar">
+        <div class="stacked-portfolio-bar" v-if="insights.total_vencidos > 0">
           <div
             v-for="seg in insights.aging_buckets"
             :key="seg.label"
@@ -180,11 +230,14 @@ onMounted(async () => {
           </div>
         </div>
 
-        <p class="insight-callout">
-          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b> de atraso; intervenir las <b>5 líneas principales</b> resuelve el <b>{{ overOneYearStats.top5Cum }}%</b> del rezago.
+        <p v-if="insights.total_vencidos > 0" class="insight-callout">
+          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b> de atraso; intervenir las <b>{{ overOneYearStats.lineCount }} líneas principales</b> resuelve el <b>{{ overOneYearStats.topCum }}%</b> del rezago.
         </p>
 
-        <div class="typology-bars">
+        <div class="typology-bars scroll-inner">
+          <div v-if="topParetoLineas.length === 0" class="empty-msg">
+            No se registran avisos abiertos vencidos con los filtros actuales.
+          </div>
           <div v-for="l in topParetoLineas" :key="l.linea" class="typo-row">
             <span class="typo-name" :title="`${l.linea} (${l.cte})`">{{ l.linea }}</span>
             <div class="typo-track">
@@ -200,13 +253,16 @@ onMounted(async () => {
           <div>
             <h3 class="pulse-title">Cola de Atención Inmediata y Reincidencia</h3>
             <p class="pulse-sub">
-              Avisos abiertos con mayor tiempo vencido sobre su SLA y recurrencia por torre
+              Top {{ topCriticalList.length }} avisos abiertos ordenados por exceso sobre su plazo SLA
             </p>
           </div>
           <router-link to="/territorio?tab=audit" class="pulse-link">Auditar todos →</router-link>
         </div>
 
-        <div class="critical-list">
+        <div class="critical-list scroll-inner">
+          <div v-if="topCriticalList.length === 0" class="empty-msg">
+            No hay avisos abiertos en mora bajo los filtros seleccionados.
+          </div>
           <div v-for="item in topCriticalList" :key="item.aviso" class="critical-row">
             <div class="crit-main">
               <span class="crit-id">#{{ item.aviso }}</span>
@@ -216,7 +272,10 @@ onMounted(async () => {
               {{ item.reincidencias_torre }}× torre
             </span>
             <span class="crit-tipo">{{ item.tipo }}</span>
-            <span class="crit-excess" :title="`Abierto ${item.dias_abierto.toLocaleString()}d (SLA ${item.prioridad_dias}d, +${item.exceso_dias.toLocaleString()}d exceso)`">
+            <span
+              class="crit-excess"
+              :title="`Abierto ${item.dias_abierto.toLocaleString()}d (SLA ${item.prioridad_dias}d, +${item.exceso_dias.toLocaleString()}d exceso)`"
+            >
               {{ formatOverdueYears(item.exceso_dias) }}
             </span>
           </div>
@@ -231,43 +290,6 @@ onMounted(async () => {
         </div>
       </div>
     </section>
-
-    <!-- Acceso Rápido Compacto a las 3 Vistas -->
-    <section class="features-section grid-3">
-      <router-link to="/operaciones" class="feature-card-compact card">
-        <div class="fc-head">
-          <span class="step-num">VISTA 01</span>
-          <Activity :size="18" class="feat-icon brand" />
-        </div>
-        <h3 class="feature-title">Seguimiento y Cumplimiento</h3>
-        <p class="feature-text">Evolución 2008–2023, plazos SLA y composición por tipología técnica.</p>
-        <span class="fc-cta">Abrir Vista 01 <ChevronRight :size="14" /></span>
-      </router-link>
-
-      <router-link to="/territorio" class="feature-card-compact card">
-        <div class="fc-head">
-          <span class="step-num">VISTA 02</span>
-          <Map :size="18" class="feat-icon accent" />
-        </div>
-        <h3 class="feature-title">Diagnóstico Territorial y Técnico</h3>
-        <p class="feature-text">
-          Mapa georreferenciado sobre {{ kpis ? kpis.total_deptos : 10 }} deptos y {{ kpis ? kpis.total_municipios : 166 }} municipios, ranking y tabla.
-        </p>
-        <span class="fc-cta">Abrir Vista 02 <ChevronRight :size="14" /></span>
-      </router-link>
-
-      <router-link to="/capacidad" class="feature-card-compact card">
-        <div class="fc-head">
-          <span class="step-num">VISTA 03</span>
-          <Sliders :size="18" class="feat-icon brand" />
-        </div>
-        <h3 class="feature-title">Capacidad y Mejora Operativa</h3>
-        <p class="feature-text">
-          Carga sobre {{ kpis ? kpis.total_equipos.toLocaleString() : '5,409' }} torres, dispersión y simulador de cuadrillas.
-        </p>
-        <span class="fc-cta">Abrir Vista 03 <ChevronRight :size="14" /></span>
-      </router-link>
-    </section>
   </div>
 </template>
 
@@ -275,149 +297,122 @@ onMounted(async () => {
 .home-view {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   flex: 1;
+  height: 100%;
   min-height: 0;
-  padding: 2px 4px;
+  overflow: hidden;
 }
 
-.hero-card {
-  background: linear-gradient(135deg, var(--color-brand-soft) 0%, var(--color-accent-soft) 100%), var(--bg-card);
-  padding: 16px 22px;
-  border: 1px solid var(--border-strong);
-  flex-shrink: 0;
-}
-
-.hero-layout {
+.compact-control-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-}
-
-.hero-content {
-  flex: 1;
-  max-width: 780px;
-}
-
-.hero-logo-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 22px;
+  gap: 12px;
+  padding: 8px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  min-width: 210px;
   flex-shrink: 0;
 }
 
-.hero-brand-logo {
-  height: 60px;
-  width: auto;
-  max-width: 160px;
-  object-fit: contain;
-  margin-bottom: 6px;
-}
-
-.hero-brand-label {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  text-align: center;
-}
-
-.hero-brand-sublabel {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--color-brand);
-  text-align: center;
-  margin-top: 1px;
-}
-
-.scope-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
-}
-
-.scope-item {
+.brand-zone {
   display: flex;
-  flex-direction: column;
-}
-
-.scope-val {
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.15;
-}
-
-.scope-lbl {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-}
-
-.hero-title {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.2;
-  margin: 6px 0 6px;
-  letter-spacing: -0.4px;
-}
-
-.hero-description {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.45;
-  margin-bottom: 14px;
-}
-
-.hero-actions {
-  display: flex;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  min-width: 0;
 }
 
-.section-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.section-subtitle {
-  font-size: 0.85rem;
+.brand-desc {
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--text-secondary);
-  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.minimal-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 660px;
+}
+
+.form-select-sm {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-reset-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.btn-reset-icon:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.btn-quick-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-quick-go:hover {
+  opacity: 0.92;
+}
+
+.kpi-section {
+  flex-shrink: 0;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 
 .executive-pulse-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 12px;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .pulse-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   gap: 10px;
   padding: 14px 18px;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -425,11 +420,12 @@ onMounted(async () => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .pulse-title {
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -438,47 +434,56 @@ onMounted(async () => {
 .pulse-sub {
   font-size: 0.76rem;
   color: var(--text-secondary);
-  margin-top: 2px;
+  margin: 2px 0 0;
 }
 
 .pulse-link {
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-brand);
+  text-decoration: none;
   white-space: nowrap;
+}
+
+.pulse-link:hover {
+  text-decoration: underline;
 }
 
 .stacked-portfolio-bar {
   display: flex;
-  height: 12px;
+  height: 10px;
+  width: 100%;
   border-radius: var(--radius-full);
   overflow: hidden;
   background: var(--bg-subtle);
-  gap: 2px;
+  gap: 1px;
+  flex-shrink: 0;
 }
 
 .port-seg {
   height: 100%;
+  transition: width 0.3s ease;
 }
 
 .seg-success { background: var(--sla-success, #10B981); }
 .seg-sla-ok { background: #475569; }
 .seg-warning { background: var(--sla-warning, #F59E0B); }
-.seg-orange { background: #F97316; }
+.seg-warning-alt { background: #EA580C; }
 .seg-info { background: var(--sla-info, #38BDF8); }
 .seg-danger { background: var(--sla-danger, #E11D48); }
 
 .portfolio-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 10px 14px;
+  flex-shrink: 0;
 }
 
 .port-leg-item {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.73rem;
+  font-size: 0.74rem;
   color: var(--text-secondary);
 }
 
@@ -496,27 +501,35 @@ onMounted(async () => {
 
 .insight-callout {
   margin: 0;
-  padding: 6px 10px;
-  font-size: 0.74rem;
-  line-height: 1.35;
+  padding: 7px 12px;
+  font-size: 0.77rem;
+  line-height: 1.4;
   color: var(--text-primary);
   background: var(--bg-subtle);
   border-left: 3px solid var(--color-brand, #0f766e);
   border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.scroll-inner {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .typology-bars {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 9px;
 }
 
 .typo-row {
   display: grid;
-  grid-template-columns: 150px 1fr 122px;
+  grid-template-columns: 155px 1fr 122px;
   align-items: center;
   gap: 10px;
-  font-size: 0.74rem;
+  font-size: 0.77rem;
 }
 
 .typo-name {
@@ -528,7 +541,7 @@ onMounted(async () => {
 }
 
 .typo-track {
-  height: 8px;
+  height: 9px;
   background: var(--bg-subtle);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -555,9 +568,7 @@ onMounted(async () => {
 .critical-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  justify-content: center;
+  gap: 7px;
 }
 
 .critical-row {
@@ -565,21 +576,11 @@ onMounted(async () => {
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 7px 11px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-}
-
-.crit-rec {
-  font-size: 0.69rem;
-  font-weight: 700;
-  color: var(--color-brand, #0f766e);
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.1));
-  padding: 2px 6px;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
+  font-size: 0.76rem;
 }
 
 .crit-main {
@@ -603,6 +604,16 @@ onMounted(async () => {
   text-overflow: ellipsis;
 }
 
+.crit-rec {
+  font-size: 0.69rem;
+  font-weight: 700;
+  color: var(--color-brand, #0f766e);
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.1));
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
 .crit-tipo {
   font-size: 0.7rem;
   font-weight: 600;
@@ -615,7 +626,7 @@ onMounted(async () => {
 }
 
 .crit-excess {
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   font-weight: 800;
   color: var(--sla-danger, #E11D48);
   font-variant-numeric: tabular-nums;
@@ -627,95 +638,51 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-subtle);
-  font-size: 0.73rem;
-}
-
-.rec-badge {
+  font-size: 0.75rem;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .rec-badge b {
   color: var(--text-primary);
 }
 
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.feature-card-compact {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
-  cursor: pointer;
-}
-
-.feature-card-compact:hover {
-  border-color: var(--color-brand);
-  transform: translateY(-2px);
-}
-
-.fc-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.step-num {
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: var(--bg-subtle);
+.empty-msg {
+  padding: 24px;
+  text-align: center;
   color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.feat-icon.brand {
-  color: var(--color-brand);
-}
-
-.feat-icon.accent {
-  color: var(--color-accent);
-}
-
-.feature-title {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 2px 0 0;
-}
-
-.feature-text {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.35;
-}
-
-.fc-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-brand);
+  font-size: 0.82rem;
 }
 
 @media (max-width: 1024px) {
-  .executive-pulse-grid,
-  .grid-3 {
-    grid-template-columns: 1fr;
+  .home-view,
+  .executive-pulse-grid {
+    height: auto;
+    overflow: visible;
   }
-  .hero-layout {
+  .compact-control-bar {
     flex-direction: column;
     align-items: stretch;
+  }
+  .brand-desc {
+    display: none;
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .executive-pulse-grid {
+    grid-template-columns: 1fr;
+  }
+  .scroll-inner {
+    max-height: 340px;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid-4 {
+    grid-template-columns: 1fr;
   }
 }
 </style>

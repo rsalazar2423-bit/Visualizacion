@@ -15,8 +15,21 @@ import { PRIO_ORDER, TIPO_COLORS } from '../../constants/themeTokens';
 import { getDataset } from './datasetRepository';
 import { calcMedian, filterAvisos, buildDonutDistribution, buildTimeSeries } from './statsHelpers';
 
-export async function computePortadaKpis(): Promise<PortadaKpis> {
-  const { equipos, avisos } = await getDataset();
+export async function computePortadaKpis(params?: {
+  cte?: string | null;
+  depto?: string | null;
+  tipo?: string | null;
+}): Promise<PortadaKpis> {
+  const { equipos, avisos: rawAvisos } = await getDataset();
+  const avisos = filterAvisos(rawAvisos, params || {});
+  let fEquipos = equipos;
+  if (params?.cte && params.cte !== 'Todos') {
+    fEquipos = fEquipos.filter((e) => e.CTE === params.cte);
+  }
+  if (params?.depto && params.depto !== 'Todos') {
+    fEquipos = fEquipos.filter((e) => e.Departamento === params.depto);
+  }
+
   const cumpleCount = avisos.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
   const vegCount = avisos.filter((a) => (a['Tipo de aviso'] || '').toLowerCase() === 'vegetación').length;
 
@@ -25,13 +38,13 @@ export async function computePortadaKpis(): Promise<PortadaKpis> {
   const abiertosVencidos = abiertos.filter((a) => a.Cumplimiento_Estado === 'Excede Plazo');
   const cerradosCumple = cerrados.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo');
 
-  const uniqueDeptos = new Set(equipos.map((e) => e.Departamento).filter((d) => d && d !== 'No Identificado'));
-  const uniqueMpios = new Set(equipos.map((e) => e.Municipio).filter((m) => m && m !== 'No Identificado'));
+  const uniqueDeptos = new Set(fEquipos.map((e) => e.Departamento).filter((d) => d && d !== 'No Identificado'));
+  const uniqueMpios = new Set(fEquipos.map((e) => e.Municipio).filter((m) => m && m !== 'No Identificado'));
 
   const medianaCerrados = calcMedian(cerrados.map((a) => a['Días abierto'] || 0));
 
   return {
-    total_equipos: equipos.length,
+    total_equipos: fEquipos.length,
     total_avisos: avisos.length,
     pct_cumplimiento: avisos.length > 0 ? Number(((cumpleCount / avisos.length) * 100).toFixed(1)) : 0,
     pct_vegetacion: avisos.length > 0 ? Number(((vegCount / avisos.length) * 100).toFixed(1)) : 0,

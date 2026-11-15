@@ -35,8 +35,13 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export async function computeActionableInsights(): Promise<ActionableInsightsResponse> {
-  const { avisos } = await getDataset();
+export async function computeActionableInsights(params?: {
+  cte?: string | null;
+  depto?: string | null;
+  tipo?: string | null;
+}): Promise<ActionableInsightsResponse> {
+  const { avisos: rawAvisos } = await getDataset();
+  const avisos = filterAvisos(rawAvisos, params || {});
 
   // 1. Mapa de reincidencia por torre / equipo sobre todo el histórico
   const towerStats = new Map<

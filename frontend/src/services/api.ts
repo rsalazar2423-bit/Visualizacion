@@ -22,16 +22,20 @@ const apiClient = axios.create({
 });
 
 export const apiService = {
-  async getPortadaKpis(): Promise<PortadaKpis> {
+  async getPortadaKpis(params?: {
+    cte?: string | null;
+    depto?: string | null;
+    tipo?: string | null;
+  }): Promise<PortadaKpis> {
     if (USE_REMOTE) {
       try {
-        const res = await apiClient.get<PortadaKpis>('/portada/kpis');
+        const res = await apiClient.get<PortadaKpis>('/portada/kpis', { params });
         return res.data;
       } catch (e) {
         console.warn('Fallo API remota, usando motor local GitOps:', e);
       }
     }
-    return clientDataService.getPortadaKpis();
+    return clientDataService.getPortadaKpis(params);
   },
 
   async getFilterOptions(cte?: string | null, depto?: string | null): Promise<FilterOptionsResponse> {
@@ -102,8 +106,12 @@ export const apiService = {
     return clientDataService.getCapacityData(params);
   },
 
-  async getActionableInsights(): Promise<ActionableInsightsResponse> {
-    return clientDataService.getActionableInsights();
+  async getActionableInsights(params?: {
+    cte?: string | null;
+    depto?: string | null;
+    tipo?: string | null;
+  }): Promise<ActionableInsightsResponse> {
+    return clientDataService.getActionableInsights(params);
   },
 
   async getCoordinatorWorkspace(
