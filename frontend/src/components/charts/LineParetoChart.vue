@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { TrendingDown, AlertTriangle } from 'lucide-vue-next';
+import { TrendingDown } from 'lucide-vue-next';
 import type * as echarts from 'echarts';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -20,9 +20,10 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
 
   const tokens = getEChartsThemeTokens(isDark);
   const usingOverdue = p.total_vencidos > 0;
-  const labels = p.items.map((i) => i.linea);
-  const barValues = p.items.map((i) => (usingOverdue ? i.vencidos : i.abiertos));
-  const cumValues = p.items.map((i) => i.cum_pct);
+  const topItems = p.items.slice(0, 8);
+  const labels = topItems.map((i) => i.linea);
+  const barValues = topItems.map((i) => (usingOverdue ? i.vencidos : i.abiertos));
+  const cumValues = topItems.map((i) => i.cum_pct);
 
   const option: echarts.EChartsOption = {
     backgroundColor: 'transparent',
@@ -34,11 +35,11 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 12 },
       formatter: (params: any) => {
         const idx = params?.[0]?.dataIndex ?? 0;
-        const item = p.items[idx];
+        const item = topItems[idx];
         if (!item) return '';
         return [
           `<b>${item.linea}</b>`,
-          `Abiertos vencidos: <b style="color:#dc2626">${item.vencidos.toLocaleString('es-CO')}</b>`,
+          `Abiertos vencidos: <b style="color:${tokens.sla.excede}">${item.vencidos.toLocaleString('es-CO')}</b>`,
           `Total abiertos: <b>${item.abiertos.toLocaleString('es-CO')}</b>`,
           `Aporte al total: <b>${item.pct_of_overdue}%</b> (Acum: <b>${item.cum_pct}%</b>)`,
           `Torres reincidentes (≥3 avisos): <b>${item.torres_reincidentes}</b>`,
@@ -47,12 +48,12 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
     },
     legend: {
       top: 0,
-      right: 6,
+      left: 'center',
       textStyle: { color: tokens.textSecondary, fontSize: 11 },
       data: [usingOverdue ? 'Abiertos Vencidos' : 'Avisos Abiertos', '% Acumulado (80/20)'],
     },
     grid: {
-      top: 32,
+      top: 38,
       left: 44,
       right: 48,
       bottom: 64,
@@ -96,10 +97,8 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
           value: v,
           itemStyle: {
             color:
-              p.items[idx].cum_pct <= 80 || idx < p.lines_for_80_pct
-                ? isDark
-                  ? '#F43F5E'
-                  : '#DC2626'
+              topItems[idx].cum_pct <= 80 || idx < p.lines_for_80_pct
+                ? tokens.sla.excede
                 : isDark
                   ? '#475569'
                   : '#94A3B8',
@@ -115,16 +114,16 @@ function renderPareto(chartInstance: echarts.ECharts, isDark: boolean) {
         smooth: 0.2,
         symbol: 'circle',
         symbolSize: 6,
-        lineStyle: { color: isDark ? '#38BDF8' : '#0284C7', width: 2.5 },
-        itemStyle: { color: isDark ? '#38BDF8' : '#0284C7' },
+        lineStyle: { color: tokens.brandColor, width: 2.5 },
+        itemStyle: { color: tokens.brandColor },
         data: cumValues,
         markLine: {
           silent: true,
           symbol: 'none',
-          lineStyle: { type: 'dashed', color: '#D97706', width: 1.5 },
+          lineStyle: { type: 'dashed', color: tokens.sla.warning, width: 1.5 },
           label: {
             formatter: '80% Pareto',
-            color: '#D97706',
+            color: tokens.sla.warning,
             fontSize: 10,
             fontWeight: 700,
             position: 'insideEndTop',
@@ -148,24 +147,20 @@ watch(() => territoryStore.data?.line_pareto, () => render(), { deep: true });
       <div class="pareto-title-wrap">
         <span class="badge-pill">
           <TrendingDown :size="12" />
-          <span>Pareto 80/20 de Corredores</span>
+          <span>Pareto 80/20</span>
         </span>
-        <h3>Líneas de Transmisión que Concentran la Mora</h3>
+        <h3>Top 8 Líneas con Mayor Mora</h3>
       </div>
 
       <div v-if="pareto" class="pareto-chips">
         <span class="info-chip">
           <strong>{{ pareto.lines_for_80_pct }}</strong> de {{ pareto.total_lines_with_overdue }} líneas = 80% mora
         </span>
-        <span class="info-chip warn">
-          <AlertTriangle :size="11" />
-          <strong>{{ pareto.recurrent_towers_count }}</strong> torres reincidentes (≥3)
-        </span>
       </div>
     </header>
 
     <p class="pareto-sub">
-      Las barras rojas identifican los corredores críticos necesarios para abatir el <strong>80% de los avisos vencidos</strong> en el filtro territorial actual.
+      Corredores prioritarios (barras) y acumulado porcentual hasta la meta del <strong>80%</strong>.
     </p>
 
     <div ref="chartContainer" class="pareto-canvas"></div>
@@ -214,8 +209,8 @@ watch(() => territoryStore.data?.line_pareto, () => render(), { deep: true });
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(220, 38, 38, 0.12);
-  color: #dc2626;
+  background: var(--sla-danger-bg, rgba(190, 18, 60, 0.1));
+  color: var(--sla-danger, #be123c);
 }
 
 .pareto-chips {

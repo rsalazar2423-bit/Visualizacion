@@ -8,8 +8,20 @@ import { useChart } from '../../composables/useChart';
 
 const territoryStore = useTerritoryStore();
 const chartContainer = ref<HTMLDivElement | null>(null);
+const showAllRows = ref(false);
 
-const matrix = computed(() => territoryStore.data?.risk_matrix || null);
+const fullMatrix = computed(() => territoryStore.data?.risk_matrix || null);
+const matrix = computed(() => {
+  const m = fullMatrix.value;
+  if (!m) return null;
+  if (showAllRows.value || m.rows.length <= 6) return m;
+  const topRows = new Set(m.rows.slice(0, 6));
+  return {
+    ...m,
+    rows: m.rows.slice(0, 6),
+    cells: m.cells.filter((c) => topRows.has(c.row)),
+  };
+});
 
 function handleClick(params: any) {
   if (!matrix.value || !params?.value) return;
@@ -43,7 +55,7 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
         ? tokens.textSecondary
         : isDark
           ? '#F8FAFC'
-          : cell.excede_pct >= 55
+          : cell.excede_pct >= 58
             ? '#FFFFFF'
             : '#0F172A';
     return {
@@ -73,7 +85,7 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
         return [
           `<b>${d.rowName} · ${d.colName}</b>`,
           `Total avisos: <b>${d.total.toLocaleString('es-CO')}</b>`,
-          `Abiertos vencidos: <b style="color:#dc2626">${d.vencidos.toLocaleString('es-CO')}</b>`,
+          `Abiertos vencidos: <b style="color:${tokens.sla.excede}">${d.vencidos.toLocaleString('es-CO')}</b>`,
           `Incumplimiento SLA histórico: <b>${d.excedePct}%</b> (${d.excedeTotal}/${d.total})`,
         ].join('<br/>');
       },
@@ -123,8 +135,8 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
       textStyle: { color: tokens.textSecondary, fontSize: 10 },
       inRange: {
         color: isDark
-          ? ['#065F46', '#0F766E', '#D97706', '#DC2626', '#991B1B']
-          : ['#ECFDF5', '#A7F3D0', '#FDE68A', '#FCA5A5', '#DC2626'],
+          ? ['#1E293B', '#334155', '#B45309', '#E11D48', '#9F1239']
+          : ['#F1F5F9', '#E2E8F0', '#FDE68A', '#FB7185', '#BE123C'],
       },
       outOfRange: {
         color: isDark ? '#1E293B' : '#F1F5F9',
@@ -141,8 +153,8 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
           fontWeight: 700,
           formatter: (p: any) => {
             const d = p.data;
-            if (!d || d.total === 0) return '—';
-            return d.vencidos > 0 ? `${d.vencidos}` : '0';
+            if (!d || d.vencidos <= 0) return '';
+            return `${d.vencidos}`;
           },
         },
         itemStyle: {
@@ -164,7 +176,7 @@ function renderHeatmap(chartInstance: echarts.ECharts, isDark: boolean) {
 }
 
 const { render } = useChart(chartContainer, renderHeatmap, handleClick);
-watch(() => territoryStore.data?.risk_matrix, () => render(), { deep: true });
+watch([() => territoryStore.data?.risk_matrix, showAllRows], () => render(), { deep: true });
 </script>
 
 <template>
@@ -173,25 +185,34 @@ watch(() => territoryStore.data?.risk_matrix, () => render(), { deep: true });
       <div class="risk-title-wrap">
         <span class="badge-pill">
           <Grid3X3 :size="12" />
-          <span>Matriz de Riesgo Territorial</span>
+          <span>Focos de Mora</span>
         </span>
         <h3>
-          {{ matrix?.level === 'municipio' ? `Municipios (${territoryStore.selectedDepto}) × Tipología` : 'Departamento × Tipología (Abiertos Vencidos y % Mora)' }}
+          {{ matrix?.level === 'municipio' ? `Municipios (${territoryStore.selectedDepto}) × Tipología` : 'Departamento × Tipología' }}
         </h3>
       </div>
 
-      <button
-        v-if="territoryStore.selectedDepto"
-        class="btn-back-chip"
-        @click="territoryStore.resetToNational()"
-      >
-        <RotateCcw :size="12" />
-        <span>Ver Departamentos</span>
-      </button>
+      <div class="risk-actions">
+        <button
+          v-if="fullMatrix && fullMatrix.rows.length > 6"
+          class="btn-back-chip"
+          @click="showAllRows = !showAllRows"
+        >
+          <span>{{ showAllRows ? 'Top 6' : `Todos (${fullMatrix.rows.length})` }}</span>
+        </button>
+        <button
+          v-if="territoryStore.selectedDepto"
+          class="btn-back-chip"
+          @click="territoryStore.resetToNational()"
+        >
+          <RotateCcw :size="12" />
+          <span>Volver</span>
+        </button>
+      </div>
     </header>
 
     <p class="risk-sub">
-      Cada celda muestra los <strong>avisos abiertos vencidos</strong>; el color indica la <strong>tasa histórica de incumplimiento SLA</strong>. Haz clic en una fila para hacer drill-down.
+      Número = <strong>abiertos vencidos</strong> · Color = <strong>% incumplimiento SLA</strong>. Clic en fila para detallar.
     </p>
 
     <div ref="chartContainer" class="risk-canvas"></div>
@@ -239,8 +260,15 @@ watch(() => territoryStore.data?.risk_matrix, () => render(), { deep: true });
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(14, 165, 233, 0.12);
-  color: #0284c7;
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
+  color: var(--color-brand, #0F766E);
+}
+
+.risk-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .btn-back-chip {
