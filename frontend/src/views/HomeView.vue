@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Activity, Palette } from 'lucide-vue-next';
+import { Activity } from 'lucide-vue-next';
 import { apiService } from '../services/api';
 import type { PortadaKpis, OpenBacklogCell } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
@@ -46,10 +46,6 @@ onMounted(async () => {
               <Activity :size="16" />
               <span>01 · Iniciar en Operaciones</span>
             </router-link>
-            <router-link to="/diseno" class="btn btn-secondary">
-              <Palette :size="16" />
-              <span>Gobernanza de Color</span>
-            </router-link>
           </div>
         </div>
 
@@ -77,9 +73,9 @@ onMounted(async () => {
         />
         <KpiCard
           title="Cumplimiento SLA"
-          :value="`${kpis.pct_cumplimiento}%`"
-          badge="Global"
-          subtitle="Avisos atendidos dentro del plazo"
+          :value="`${kpis.cumplimiento_oportuno_pct ?? kpis.pct_cumplimiento}%`"
+          badge="Cerrados"
+          subtitle="Cerrados en plazo (corte 2023-05-06)"
           color="brand"
         />
         <KpiCard

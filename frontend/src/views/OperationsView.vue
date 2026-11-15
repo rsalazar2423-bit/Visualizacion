@@ -16,7 +16,11 @@ const worstPriority = computed(() => {
     (p) => p.total > 0 && p.prioridad !== 'No asignada'
   );
   if (!list.length) return null;
-  return [...list].sort((a, b) => b.excede_pct - a.excede_pct)[0];
+  const significant = list.filter((p) => p.total >= 30);
+  if (significant.length > 0) {
+    return [...significant].sort((a, b) => b.excede_pct - a.excede_pct)[0];
+  }
+  return [...list].sort((a, b) => b.excede_count - a.excede_count)[0];
 });
 
 onMounted(async () => {
@@ -103,8 +107,8 @@ onMounted(async () => {
       <div class="kpi-micro-chip">
         <div class="kpi-main">
           <span class="chip-label">Cumplimiento SLA</span>
-          <b class="chip-val success-text">{{ opsStore.data.kpis.cumple_pct }}%</b>
-          <span class="chip-sub">Avisos atendidos en plazo</span>
+          <b class="chip-val success-text">{{ opsStore.data.kpis.cumplimiento_oportuno_pct ?? opsStore.data.kpis.cumple_pct }}%</b>
+          <span class="chip-sub">Cerrados atendidos en plazo</span>
         </div>
         <div class="kpi-icon-box">
           <CheckCircle2 :size="18" />

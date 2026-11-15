@@ -130,8 +130,6 @@ export async function computeOperationsData(params: {
 
   const total = donutDf.length;
   const cumpleCount = donutDf.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
-  const totalDias = donutDf.reduce((sum, a) => sum + (a['Días abierto'] || 0), 0);
-  const diasProm = total > 0 ? Number((totalDias / total).toFixed(1)) : null;
 
   const cerrados = donutDf.filter((a) => (a['Estado aviso'] || 'Cerrado') === 'Cerrado');
   const abiertos = donutDf.filter((a) => a['Estado aviso'] === 'Abierto');
@@ -139,6 +137,9 @@ export async function computeOperationsData(params: {
   const cerradosCumple = cerrados.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo');
 
   const sourceMediana = cerrados.length > 0 ? cerrados : donutDf;
+  const totalDiasCerrados = sourceMediana.reduce((sum, a) => sum + (a['Días abierto'] || 0), 0);
+  const diasProm =
+    sourceMediana.length > 0 ? Number((totalDiasCerrados / sourceMediana.length).toFixed(1)) : null;
   const medianaCerrados =
     sourceMediana.length > 0 ? calcMedian(sourceMediana.map((a) => a['Días abierto'] || 0)) : null;
 

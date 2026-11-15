@@ -321,7 +321,10 @@ export async function computeTerritorialData(params: {
   const tickets: TicketItem[] = fAvisos.slice(0, 120).map((a) => ({
     numero_aviso: String(a.Aviso || 'N/D'),
     fecha_aviso: String(a['Fecha de aviso'] || 'N/D'),
-    fecha_cierre: a['Fecha de cierre'] || 'Pendiente',
+    fecha_cierre:
+      a['Estado aviso'] === 'Abierto'
+        ? `Abierto (corte ${a['Fecha de cierre'] || '2023-05-06'})`
+        : a['Fecha de cierre'] || 'Pendiente',
     estado_aviso: a['Estado aviso'] || 'Cerrado',
     sector: a.Sector || 'General',
     equipo: String(a.Equipo || 'N/D'),
@@ -333,12 +336,16 @@ export async function computeTerritorialData(params: {
     dias_abierto: Math.round(a['Días abierto'] || 0),
   }));
 
-  // 8. KPIs Territoriales
+  // 8. KPIs Territoriales (Cumplimiento SLA medido estrictamente sobre avisos cerrados)
   const vencidosTotal = fAvisos.filter(
     (a) => a['Estado aviso'] === 'Abierto' && a.Cumplimiento_Estado === 'Excede Plazo'
   ).length;
-  const cumpleTotal = fAvisos.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
-  const cumplePctTerr = fAvisos.length > 0 ? Number(((cumpleTotal / fAvisos.length) * 100).toFixed(1)) : 0;
+  const fCerrados = fAvisos.filter((a) => (a['Estado aviso'] || 'Cerrado') === 'Cerrado');
+  const fCerradosCumple = fCerrados.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
+  const cumplePctTerr =
+    fCerrados.length > 0
+      ? Number(((fCerradosCumple / fCerrados.length) * 100).toFixed(1))
+      : 0;
 
   let territorialKpis;
   if (params.municipio && params.municipio !== 'Todos') {
