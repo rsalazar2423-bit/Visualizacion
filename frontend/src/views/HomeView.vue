@@ -528,12 +528,12 @@ onMounted(async () => {
   opacity: 0.28;
 }
 
-.seg-success { background: #14b8a6; }
-.seg-sla-ok { background: #94a3b8; }
-.seg-info { background: #0f766e; }
-.seg-warning { background: #f59e0b; }
-.seg-orange { background: #ea580c; }
-.seg-danger { background: #E11D48; }
+.seg-success { background: var(--sla-success); }
+.seg-sla-ok { background: var(--text-muted); }
+.seg-info { background: var(--sla-success); }
+.seg-warning { background: var(--cat-3, #0284C7); }
+.seg-orange { background: var(--sla-warning); }
+.seg-danger { background: var(--sla-danger); }
 
 .portfolio-legend {
   display: flex;
@@ -622,7 +622,7 @@ onMounted(async () => {
 
 .typo-fill {
   height: 100%;
-  background: var(--color-brand, #0f766e);
+  background: var(--color-brand);
   border-radius: var(--radius-full);
 }
 
@@ -681,8 +681,8 @@ onMounted(async () => {
 .crit-rec {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--color-brand, #0f766e);
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.1));
+  color: var(--color-brand);
+  background: var(--color-brand-soft);
   padding: 2px 6px;
   border-radius: var(--radius-full);
   white-space: nowrap;
@@ -702,7 +702,7 @@ onMounted(async () => {
 .crit-excess {
   font-size: 0.72rem;
   font-weight: 800;
-  color: var(--sla-danger, #E11D48);
+  color: var(--sla-danger);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
