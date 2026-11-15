@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { TrendingUp, Target, RefreshCw, CheckCircle2, Clock, FileText, AlertCircle } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
+import { TrendingUp, Target, RefreshCw, CheckCircle2, Clock, AlertTriangle, AlertCircle } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
-import ViolinDistributionChart from '../components/charts/ViolinDistributionChart.vue';
+import StackedBarChart from '../components/charts/StackedBarChart.vue';
 import DonutChart from '../components/charts/DonutChart.vue';
 import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
 const opsStore = useOperationsStore();
 const activeSubView = ref<'evolution' | 'sla'>('evolution');
+
+const worstPriority = computed(() => {
+  const list = (opsStore.data?.stacked_bar || []).filter(
+    (p) => p.total > 0 && p.prioridad !== 'No asignada'
+  );
+  if (!list.length) return null;
+  return [...list].sort((a, b) => b.excede_pct - a.excede_pct)[0];
+});
 
 onMounted(async () => {
   await opsStore.loadFilterOptions();
@@ -104,9 +112,9 @@ onMounted(async () => {
       </div>
       <div class="kpi-micro-chip">
         <div class="kpi-main">
-          <span class="chip-label">Tiempo Típico</span>
+          <span class="chip-label">Mediana vs. Promedio</span>
           <b class="chip-val">{{ opsStore.data.kpis.tiempo_tipico_mediana ?? opsStore.data.kpis.dias_prom ?? 0 }} días</b>
-          <span class="chip-sub">Mediana de atención</span>
+          <span class="chip-sub">Prom: {{ opsStore.data.kpis.dias_prom ?? 0 }} d · {{ (opsStore.data.kpis.avisos_cerrados ?? 0).toLocaleString() }} cerrados</span>
         </div>
         <div class="kpi-icon-box">
           <Clock :size="18" />
@@ -114,12 +122,12 @@ onMounted(async () => {
       </div>
       <div class="kpi-micro-chip">
         <div class="kpi-main">
-          <span class="chip-label">Total Avisos</span>
-          <b class="chip-val">{{ opsStore.data.kpis.total.toLocaleString() }}</b>
-          <span class="chip-sub">Histórico filtrado 2008–2023</span>
+          <span class="chip-label">Prioridad Más Crítica</span>
+          <b class="chip-val">{{ worstPriority ? worstPriority.prioridad : '—' }}</b>
+          <span class="chip-sub">{{ worstPriority ? `${worstPriority.excede_pct}% fuera de plazo (${worstPriority.total} av.)` : 'Sin datos' }}</span>
         </div>
         <div class="kpi-icon-box">
-          <FileText :size="18" />
+          <AlertTriangle :size="18" />
         </div>
       </div>
       <div class="kpi-micro-chip danger-chip">
@@ -146,10 +154,10 @@ onMounted(async () => {
         </ExpandableChartCard>
 
         <ExpandableChartCard
-          title="Distribución de Tiempos por Prioridad SLA (Violín)"
-          subtitle="Densidad KDE, mediana, rango intercuartílico (Q1–Q3) y límite normativo SLA"
+          title="Cumplimiento SLA por Prioridad (100%)"
+          subtitle="Proporción en norma vs. fuera de plazo por horizonte SLA. Haz clic para filtrar."
         >
-          <ViolinDistributionChart />
+          <StackedBarChart />
         </ExpandableChartCard>
       </section>
 

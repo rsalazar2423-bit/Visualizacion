@@ -9,7 +9,13 @@ import { useChart } from '../../composables/useChart';
 const opsStore = useOperationsStore();
 const metricOverlay = ref<'cumplimiento' | 'mediana'>('cumplimiento');
 
-const seriesPoints = computed(() => opsStore.data?.time_series || []);
+const seriesPoints = computed(() => {
+  const raw = opsStore.data?.time_series || [];
+  const firstActiveIdx = raw.findIndex(
+    (p) => p.ingresados > 0 || p.cerrados > 0 || (p.abiertos_vencidos ?? 0) > 0
+  );
+  return firstActiveIdx >= 0 ? raw.slice(firstActiveIdx) : raw;
+});
 
 const summaryStats = computed(() => {
   const pts = seriesPoints.value;
