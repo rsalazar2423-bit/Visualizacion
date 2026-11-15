@@ -1,36 +1,65 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { RefreshCw, ArrowRight } from 'lucide-vue-next';
+import { Activity, Map, Sliders, ChevronRight, Palette } from 'lucide-vue-next';
 import { apiService } from '../services/api';
-import type { PortadaKpis, ActionableInsightsResponse, FilterOptionsResponse } from '../types/models';
+import type { PortadaKpis, ActionableInsightsResponse } from '../types/models';
 import KpiCard from '../components/common/KpiCard.vue';
+import { useThemeStore } from '../stores/themeStore';
 
+const themeStore = useThemeStore();
 const loading = ref(true);
 const kpis = ref<PortadaKpis | null>(null);
 const insights = ref<ActionableInsightsResponse | null>(null);
-const filterOptions = ref<FilterOptionsResponse>({
-  ctes: ['Todos'],
-  departamentos: ['Todos'],
-  municipios: [],
-  tipos: ['Todos'],
-});
 
-const selectedCte = ref('Todos');
-const selectedDepto = ref('Todos');
-const selectedTipo = ref('Todos');
+// Filtros contextuales dentro de las tarjetas (sin recargar la portada)
+const selectedAging = ref<string>('Todos');
+const selectedQueueScope = ref<'all' | 'campo' | 'predial'>('all');
+const selectedCity = ref<string>('Todas');
 
 const topParetoLineas = computed(() => {
   const list = insights.value?.pareto_lineas || [];
-  const top8 = list.slice(0, 8);
-  const maxVencidos = top8[0]?.vencidos || 1;
-  return top8.map((item) => ({
+  const top5 = list.slice(0, 5);
+  const maxVencidos = top5[0]?.vencidos || 1;
+  return top5.map((item) => ({
     ...item,
     barWidth: Number(((item.vencidos / maxVencidos) * 100).toFixed(1)),
   }));
 });
 
-const topCriticalList = computed(() => {
-  return (insights.value?.top_critical_notices || []).slice(0, 15);
+const cityOptions = computed(() => {
+  const list = insights.value?.top_critical_notices || [];
+  const cities = Array.from(new Set(list.map((i) => i.municipio).filter(Boolean))).sort();
+  return ['Todas', ...cities];
+});
+
+const filteredCriticalList = computed(() => {
+  let list = insights.value?.top_critical_notices || [];
+
+  if (selectedAging.value !== 'Todos') {
+    list = list.filter((item) => {
+      const d = item.exceso_dias;
+      if (selectedAging.value.includes('< 90')) return d < 90;
+      if (selectedAging.value.includes('90')) return d >= 90 && d <= 365;
+      if (selectedAging.value.includes('1 – 3')) return d > 365 && d <= 1095;
+      if (selectedAging.value.includes('> 3')) return d > 1095;
+      return true;
+    });
+  }
+
+  if (selectedQueueScope.value !== 'all') {
+    const campoTypes = ['VEGETACI', 'OBRAS'];
+    list = list.filter((item) => {
+      const upper = (item.tipo || '').toUpperCase();
+      const isCampo = campoTypes.some((k) => upper.includes(k));
+      return selectedQueueScope.value === 'campo' ? isCampo : !isCampo;
+    });
+  }
+
+  if (selectedCity.value !== 'Todas') {
+    list = list.filter((item) => item.municipio === selectedCity.value);
+  }
+
+  return list.slice(0, 5);
 });
 
 const overOneYearStats = computed(() => {
@@ -39,8 +68,8 @@ const overOneYearStats = computed(() => {
   const count = oldBuckets.reduce((acc, b) => acc + b.count, 0);
   const total = insights.value?.total_vencidos || 0;
   const pct = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
-  const topCum = topParetoLineas.value[topParetoLineas.value.length - 1]?.cum_pct ?? 0;
-  return { count, pct, topCum, lineCount: topParetoLineas.value.length };
+  const top5Cum = topParetoLineas.value[topParetoLineas.value.length - 1]?.cum_pct ?? 0;
+  return { count, pct, top5Cum };
 });
 
 const recurrencePct = computed(() => {
@@ -49,6 +78,10 @@ const recurrencePct = computed(() => {
   return total > 0 ? Number(((rec / total) * 100).toFixed(1)) : 0;
 });
 
+function toggleAging(label: string) {
+  selectedAging.value = selectedAging.value === label ? 'Todos' : label;
+}
+
 function formatOverdueYears(days: number): string {
   if (days >= 365) {
     return `${(days / 365).toFixed(1)} años vencido`;
@@ -56,114 +89,60 @@ function formatOverdueYears(days: number): string {
   return `+${days.toLocaleString()}d vencido`;
 }
 
-async function refreshAll() {
-  loading.value = true;
+onMounted(async () => {
   try {
-    const params = {
-      cte: selectedCte.value,
-      depto: selectedDepto.value,
-      tipo: selectedTipo.value,
-    };
-    const [optsRes, portadaRes, insightsRes] = await Promise.all([
-      apiService.getFilterOptions(selectedCte.value, selectedDepto.value),
-      apiService.getPortadaKpis(params),
-      apiService.getActionableInsights(params),
+    const [portadaRes, insightsRes] = await Promise.all([
+      apiService.getPortadaKpis(),
+      apiService.getActionableInsights(),
     ]);
-    filterOptions.value = optsRes;
     kpis.value = portadaRes;
     insights.value = insightsRes;
   } catch (err) {
-    console.error('Error cargando resumen ejecutivo:', err);
+    console.error('Error cargando KPIs de portada:', err);
   } finally {
     loading.value = false;
   }
-}
-
-async function onCteChange(val: string) {
-  selectedCte.value = val;
-  selectedDepto.value = 'Todos';
-  await refreshAll();
-}
-
-async function onDeptoChange(val: string) {
-  selectedDepto.value = val;
-  await refreshAll();
-}
-
-async function onTipoChange(val: string) {
-  selectedTipo.value = val;
-  await refreshAll();
-}
-
-async function resetFilters() {
-  selectedCte.value = 'Todos';
-  selectedDepto.value = 'Todos';
-  selectedTipo.value = 'Todos';
-  await refreshAll();
-}
-
-onMounted(() => {
-  refreshAll();
 });
 </script>
 
 <template>
   <div class="home-view">
-    <!-- Barra Superior de Control y Filtros Globales del Resumen -->
-    <header class="compact-control-bar card">
-      <div class="brand-zone">
-        <span class="badge badge-tag">Resumen Ejecutivo</span>
-        <span class="brand-desc">Gestión Operativa & Cumplimiento SLA (2008–2023)</span>
+    <!-- Hero Banner (Identidad de Portada) -->
+    <section class="hero-card card">
+      <div class="hero-layout">
+        <div class="hero-content">
+          <div class="badge">EcoGrid DEC · Dirección de Operaciones</div>
+          <h1 class="hero-title">
+            Dashboard de Gestión Operativa y Cumplimiento de la Atención
+          </h1>
+          <p class="hero-description">
+            Herramienta táctico-operacional para evaluar el cumplimiento de plazos por prioridad, localizar retrasos en el territorio (2008–2023) y optimizar la asignación de cuadrillas sobre la red de transmisión eléctrica.
+          </p>
+          <div class="hero-actions">
+            <router-link to="/operaciones" class="btn">
+              <Activity :size="16" />
+              <span>01 · Iniciar en Operaciones</span>
+            </router-link>
+            <router-link to="/diseno" class="btn btn-secondary">
+              <Palette :size="16" />
+              <span>Gobernanza de Color</span>
+            </router-link>
+          </div>
+        </div>
+
+        <div class="hero-logo-box">
+          <img
+            :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"
+            alt="EcoGrid Colombia"
+            class="hero-brand-logo"
+          />
+          <span class="hero-brand-label">EcoGrid DEC · Colombia</span>
+          <span class="hero-brand-sublabel">Control de Red & Sostenibilidad</span>
+        </div>
       </div>
+    </section>
 
-      <div class="minimal-filters">
-        <select
-          :value="selectedCte"
-          class="form-select-sm"
-          @change="onCteChange(($event.target as HTMLSelectElement).value)"
-        >
-          <option v-for="c in filterOptions.ctes" :key="c" :value="c">
-            {{ c === 'Todos' ? 'Todas las CTEs' : `CTE ${c}` }}
-          </option>
-        </select>
-
-        <select
-          :value="selectedDepto"
-          class="form-select-sm"
-          @change="onDeptoChange(($event.target as HTMLSelectElement).value)"
-        >
-          <option v-for="d in filterOptions.departamentos" :key="d" :value="d">
-            {{ d === 'Todos' ? 'Todos Deptos' : d }}
-          </option>
-        </select>
-
-        <select
-          :value="selectedTipo"
-          class="form-select-sm"
-          @change="onTipoChange(($event.target as HTMLSelectElement).value)"
-        >
-          <option v-for="t in filterOptions.tipos" :key="t" :value="t">
-            {{ t === 'Todos' ? 'Todas las Tipologías' : t }}
-          </option>
-        </select>
-
-        <button
-          v-if="selectedCte !== 'Todos' || selectedDepto !== 'Todos' || selectedTipo !== 'Todos'"
-          class="btn-reset-icon"
-          title="Restablecer filtros"
-          @click="resetFilters"
-        >
-          <RefreshCw :size="13" />
-        </button>
-      </div>
-
-      <router-link to="/operaciones" class="btn-quick-go">
-        <span>Ir a Análisis Detallado</span>
-        <ArrowRight :size="14" />
-      </router-link>
-    </header>
-
-    <!-- KPIs Ejecutivos Dinámicos -->
+    <!-- KPIs Nacionales -->
     <section v-if="kpis" class="kpi-section">
       <div class="grid-4">
         <KpiCard
@@ -177,14 +156,14 @@ onMounted(() => {
           title="Cumplimiento SLA"
           :value="`${kpis.pct_cumplimiento}%`"
           badge="Global"
-          subtitle="Atención dentro del plazo normativo"
+          subtitle="Avisos atendidos dentro del plazo"
           color="success"
         />
         <KpiCard
-          title="Abiertos Vencidos"
-          :value="kpis.abiertos_vencidos ?? 0"
-          badge="Crítico"
-          :subtitle="`De ${(kpis.avisos_abiertos ?? 0).toLocaleString()} avisos aún abiertos`"
+          title="Avisos Abiertos"
+          :value="kpis.avisos_abiertos ?? 0"
+          badge="Pendientes"
+          :subtitle="`${(kpis.abiertos_vencidos ?? 0).toLocaleString()} ya superaron el plazo SLA`"
           color="danger"
         />
         <KpiCard
@@ -197,14 +176,14 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- Escenario Principal de Datos Prioritarios (Ocupa todo el alto restante) -->
+    <!-- Inteligencia Accionable con Filtros Contextuales dentro de las Tarjetas -->
     <section v-if="kpis && insights" class="executive-pulse-grid">
       <div class="pulse-card card">
         <div class="pulse-header">
           <div>
             <h3 class="pulse-title">Envejecimiento del Backlog y Pareto por Línea</h3>
             <p class="pulse-sub">
-              Antigüedad de los {{ insights.total_vencidos.toLocaleString() }} abiertos vencidos y líneas que concentran la mora
+              Haz clic en un rango de antigüedad para filtrar la cola derecha
             </p>
           </div>
           <span class="badge">
@@ -212,32 +191,36 @@ onMounted(() => {
           </span>
         </div>
 
-        <div class="stacked-portfolio-bar" v-if="insights.total_vencidos > 0">
+        <div class="stacked-portfolio-bar">
           <div
             v-for="seg in insights.aging_buckets"
             :key="seg.label"
-            class="port-seg"
-            :class="seg.cls"
+            class="port-seg clickable"
+            :class="[seg.cls, { dimmed: selectedAging !== 'Todos' && selectedAging !== seg.label }]"
             :style="{ width: `${seg.pct}%` }"
-            :title="`${seg.label}: ${seg.count.toLocaleString()} (${seg.pct}%)`"
+            :title="`Filtrar ${seg.label}: ${seg.count.toLocaleString()} (${seg.pct}%)`"
+            @click="toggleAging(seg.label)"
           ></div>
         </div>
 
         <div class="portfolio-legend">
-          <div v-for="seg in insights.aging_buckets" :key="seg.label" class="port-leg-item">
+          <button
+            v-for="seg in insights.aging_buckets"
+            :key="seg.label"
+            class="port-leg-btn"
+            :class="{ active: selectedAging === seg.label }"
+            @click="toggleAging(seg.label)"
+          >
             <span class="leg-dot" :class="seg.cls"></span>
             <span class="leg-txt">{{ seg.label }}: <b>{{ seg.count.toLocaleString() }}</b> ({{ seg.pct }}%)</span>
-          </div>
+          </button>
         </div>
 
-        <p v-if="insights.total_vencidos > 0" class="insight-callout">
-          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b> de atraso; intervenir las <b>{{ overOneYearStats.lineCount }} líneas principales</b> resuelve el <b>{{ overOneYearStats.topCum }}%</b> del rezago.
+        <p class="insight-callout">
+          El <b>{{ overOneYearStats.pct }}%</b> de la mora ({{ overOneYearStats.count.toLocaleString() }} avisos) supera <b>1 año</b>; intervenir las <b>5 líneas principales</b> resuelve el <b>{{ overOneYearStats.top5Cum }}%</b> del rezago.
         </p>
 
-        <div class="typology-bars scroll-inner">
-          <div v-if="topParetoLineas.length === 0" class="empty-msg">
-            No se registran avisos abiertos vencidos con los filtros actuales.
-          </div>
+        <div class="typology-bars">
           <div v-for="l in topParetoLineas" :key="l.linea" class="typo-row">
             <span class="typo-name" :title="`${l.linea} (${l.cte})`">{{ l.linea }}</span>
             <div class="typo-track">
@@ -253,17 +236,49 @@ onMounted(() => {
           <div>
             <h3 class="pulse-title">Cola de Atención Inmediata y Reincidencia</h3>
             <p class="pulse-sub">
-              Top {{ topCriticalList.length }} avisos abiertos ordenados por exceso sobre su plazo SLA
+              Filtra dentro de la cola por ciudad o naturaleza operativa
             </p>
           </div>
-          <router-link to="/territorio?tab=audit" class="pulse-link">Auditar todos →</router-link>
+          <div class="card-inline-filters">
+            <select v-model="selectedCity" class="mini-select" title="Filtrar por ciudad">
+              <option v-for="c in cityOptions" :key="c" :value="c">
+                {{ c === 'Todas' ? 'Todas las ciudades' : c }}
+              </option>
+            </select>
+            <div class="mini-pills">
+              <button
+                class="mini-pill"
+                :class="{ active: selectedQueueScope === 'all' }"
+                @click="selectedQueueScope = 'all'"
+              >
+                Todos
+              </button>
+              <button
+                class="mini-pill"
+                :class="{ active: selectedQueueScope === 'campo' }"
+                @click="selectedQueueScope = 'campo'"
+              >
+                Campo
+              </button>
+              <button
+                class="mini-pill"
+                :class="{ active: selectedQueueScope === 'predial' }"
+                @click="selectedQueueScope = 'predial'"
+              >
+                Predial
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="critical-list scroll-inner">
-          <div v-if="topCriticalList.length === 0" class="empty-msg">
-            No hay avisos abiertos en mora bajo los filtros seleccionados.
+        <div class="critical-list">
+          <div v-if="filteredCriticalList.length === 0" class="empty-msg">
+            Sin avisos en el Top crítico para este filtro.
+            <button class="btn-link" @click="selectedAging = 'Todos'; selectedQueueScope = 'all'; selectedCity = 'Todas';">
+              Limpiar filtros
+            </button>
           </div>
-          <div v-for="item in topCriticalList" :key="item.aviso" class="critical-row">
+          <div v-for="item in filteredCriticalList" :key="item.aviso" class="critical-row">
             <div class="crit-main">
               <span class="crit-id">#{{ item.aviso }}</span>
               <span class="crit-loc">{{ item.municipio }} · {{ item.linea }} · Torre {{ item.equipo }}</span>
@@ -286,9 +301,42 @@ onMounted(() => {
             <b>{{ insights.recurrent_towers_count.toLocaleString() }}</b> torres reincidentes (≥2 avisos) explican el
             <b>{{ recurrencePct }}%</b> del historial (<b>{{ insights.recurrent_notices_count.toLocaleString() }}</b> registros)
           </span>
-          <router-link to="/territorio" class="pulse-link">Ver mapa →</router-link>
+          <router-link to="/territorio?tab=audit" class="pulse-link">Auditar todos →</router-link>
         </div>
       </div>
+    </section>
+
+    <!-- Acceso Rápido Compacto a las 3 Vistas -->
+    <section class="features-section grid-3">
+      <router-link to="/operaciones" class="feature-card-compact card">
+        <div class="fc-head">
+          <span class="step-num">VISTA 01</span>
+          <Activity :size="18" class="feat-icon brand" />
+        </div>
+        <h4 class="feature-title">Seguimiento & SLA</h4>
+        <p class="feature-text">Evolución 2008–2023, distribución violín y composición por tipología.</p>
+        <div class="feature-link">Explorar <ChevronRight :size="13" /></div>
+      </router-link>
+
+      <router-link to="/territorio" class="feature-card-compact card">
+        <div class="fc-head">
+          <span class="step-num">VISTA 02</span>
+          <Map :size="18" class="feat-icon info" />
+        </div>
+        <h4 class="feature-title">Territorio & Mapa</h4>
+        <p class="feature-text">Mapa de 44 corredores, Top 5 ciudades en mora y Pareto 80/20.</p>
+        <div class="feature-link">Explorar <ChevronRight :size="13" /></div>
+      </router-link>
+
+      <router-link to="/capacidad" class="feature-card-compact card">
+        <div class="fc-head">
+          <span class="step-num">VISTA 03</span>
+          <Sliders :size="18" class="feat-icon warning" />
+        </div>
+        <h4 class="feature-title">Capacidad & Coordinador</h4>
+        <p class="feature-text">Simulador de cuadrillas, radar preventivo y rutas por corredor.</p>
+        <div class="feature-link">Explorar <ChevronRight :size="13" /></div>
+      </router-link>
     </section>
   </div>
 </template>
@@ -304,87 +352,76 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.compact-control-bar {
+.hero-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 14px 24px;
+  flex-shrink: 0;
+}
+
+.hero-layout {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
+  gap: 24px;
 }
 
-.brand-zone {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.brand-desc {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.minimal-filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.hero-content {
   flex: 1;
-  max-width: 660px;
 }
 
-.form-select-sm {
-  height: 32px;
-  padding: 0 10px;
-  font-size: 0.82rem;
-  background: var(--bg-subtle);
+.hero-title {
+  font-size: 1.38rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 6px 0 6px;
   color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  outline: none;
-  cursor: pointer;
+  letter-spacing: -0.02em;
 }
 
-.btn-reset-icon {
-  width: 32px;
-  height: 32px;
+.hero-description {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-bottom: 10px;
+  max-width: 760px;
+}
+
+.hero-actions {
   display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-logo-box {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+  padding: 10px 20px;
+  border-radius: var(--radius-lg);
   background: var(--bg-subtle);
-  color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.btn-reset-icon:hover {
-  color: var(--color-brand);
-  border-color: var(--color-brand);
-}
-
-.btn-quick-go {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--color-brand);
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.btn-quick-go:hover {
-  opacity: 0.92;
+.hero-brand-logo {
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+}
+
+.hero-brand-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.hero-brand-sublabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .kpi-section {
@@ -394,23 +431,22 @@ onMounted(() => {
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 12px;
 }
 
 .executive-pulse-grid {
   display: grid;
-  grid-template-columns: 1fr 1.15fr;
+  grid-template-columns: 1fr 1.12fr;
   gap: 12px;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
 }
 
 .pulse-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px 18px;
+  gap: 8px;
+  padding: 12px 16px;
   min-height: 0;
   height: 100%;
   overflow: hidden;
@@ -420,25 +456,25 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 .pulse-title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
 }
 
 .pulse-sub {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   margin: 2px 0 0;
 }
 
 .pulse-link {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--color-brand);
   text-decoration: none;
@@ -447,6 +483,51 @@ onMounted(() => {
 
 .pulse-link:hover {
   text-decoration: underline;
+}
+
+.card-inline-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mini-select {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 0.72rem;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+.mini-pills {
+  display: inline-flex;
+  background: var(--bg-subtle);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.mini-pill {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mini-pill.active {
+  background: var(--bg-card);
+  color: var(--color-brand);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
 }
 
 .stacked-portfolio-bar {
@@ -462,7 +543,15 @@ onMounted(() => {
 
 .port-seg {
   height: 100%;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, opacity 0.15s ease;
+}
+
+.port-seg.clickable {
+  cursor: pointer;
+}
+
+.port-seg.dimmed {
+  opacity: 0.28;
 }
 
 .seg-success { background: var(--sla-success, #10B981); }
@@ -475,19 +564,31 @@ onMounted(() => {
 .portfolio-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 14px;
+  gap: 6px 10px;
   flex-shrink: 0;
 }
 
-.port-leg-item {
-  display: flex;
+.port-leg-btn {
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.74rem;
+  font-size: 0.71rem;
   color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 1px 6px;
+  cursor: pointer;
 }
 
-.port-leg-item b {
+.port-leg-btn:hover,
+.port-leg-btn.active {
+  background: var(--bg-subtle);
+  border-color: var(--color-brand);
+  color: var(--text-primary);
+}
+
+.port-leg-btn b {
   color: var(--text-primary);
 }
 
@@ -501,9 +602,9 @@ onMounted(() => {
 
 .insight-callout {
   margin: 0;
-  padding: 7px 12px;
-  font-size: 0.77rem;
-  line-height: 1.4;
+  padding: 6px 10px;
+  font-size: 0.73rem;
+  line-height: 1.35;
   color: var(--text-primary);
   background: var(--bg-subtle);
   border-left: 3px solid var(--color-brand, #0f766e);
@@ -511,25 +612,20 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.scroll-inner {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
 .typology-bars {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
 }
 
 .typo-row {
   display: grid;
-  grid-template-columns: 155px 1fr 122px;
+  grid-template-columns: 150px 1fr 122px;
   align-items: center;
   gap: 10px;
-  font-size: 0.77rem;
+  font-size: 0.74rem;
 }
 
 .typo-name {
@@ -541,7 +637,7 @@ onMounted(() => {
 }
 
 .typo-track {
-  height: 9px;
+  height: 8px;
   background: var(--bg-subtle);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -568,7 +664,10 @@ onMounted(() => {
 .critical-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
+  flex: 1;
+  justify-content: center;
+  min-height: 0;
 }
 
 .critical-row {
@@ -576,11 +675,11 @@ onMounted(() => {
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 8px;
-  padding: 7px 11px;
+  padding: 5px 10px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
 }
 
 .crit-main {
@@ -605,7 +704,7 @@ onMounted(() => {
 }
 
 .crit-rec {
-  font-size: 0.69rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--color-brand, #0f766e);
   background: var(--color-brand-soft, rgba(15, 118, 110, 0.1));
@@ -615,7 +714,7 @@ onMounted(() => {
 }
 
 .crit-tipo {
-  font-size: 0.7rem;
+  font-size: 0.69rem;
   font-weight: 600;
   color: var(--text-secondary);
   background: var(--bg-card);
@@ -626,7 +725,7 @@ onMounted(() => {
 }
 
 .crit-excess {
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: var(--sla-danger, #E11D48);
   font-variant-numeric: tabular-nums;
@@ -638,9 +737,9 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-subtle);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   flex-shrink: 0;
 }
@@ -650,38 +749,97 @@ onMounted(() => {
 }
 
 .empty-msg {
-  padding: 24px;
+  padding: 16px;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+}
+
+.btn-link {
+  border: none;
+  background: transparent;
+  color: var(--color-brand);
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 6px;
+  text-decoration: underline;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.feature-card-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.feature-card-compact:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-brand);
+}
+
+.fc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.step-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-brand);
+  letter-spacing: 0.05em;
+}
+
+.feat-icon.brand { color: var(--color-brand); }
+.feat-icon.info { color: var(--sla-info, #0284c7); }
+.feat-icon.warning { color: var(--sla-warning, #d97706); }
+
+.feature-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.feature-text {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.feature-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--color-brand);
+  margin-top: 2px;
 }
 
 @media (max-width: 1024px) {
-  .home-view,
-  .executive-pulse-grid {
+  .home-view {
     height: auto;
     overflow: visible;
   }
-  .compact-control-bar {
+  .hero-layout {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
-  .brand-desc {
-    display: none;
-  }
-  .grid-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .grid-4,
+  .grid-3,
   .executive-pulse-grid {
-    grid-template-columns: 1fr;
-  }
-  .scroll-inner {
-    max-height: 340px;
-  }
-}
-
-@media (max-width: 600px) {
-  .grid-4 {
     grid-template-columns: 1fr;
   }
 }
