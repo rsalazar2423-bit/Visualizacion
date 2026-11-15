@@ -59,7 +59,7 @@ const filteredCriticalList = computed(() => {
     list = list.filter((item) => item.municipio === selectedCity.value);
   }
 
-  return list.slice(0, 7);
+  return list.slice(0, 10);
 });
 
 const overOneYearStats = computed(() => {
@@ -164,7 +164,7 @@ onMounted(async () => {
           :value="kpis.avisos_abiertos ?? 0"
           badge="Pendientes"
           :subtitle="`${(kpis.abiertos_vencidos ?? 0).toLocaleString()} ya superaron el plazo SLA`"
-          color="brand"
+          color="danger"
         />
         <KpiCard
           title="Tiempo Típico"
@@ -522,11 +522,11 @@ onMounted(async () => {
 }
 
 .seg-success { background: #14b8a6; }
-.seg-sla-ok { background: #cbd5e1; }
-.seg-warning { background: #94a3b8; }
-.seg-warning-alt { background: #475569; }
-.seg-info { background: #64748b; }
-.seg-danger { background: #0f766e; }
+.seg-sla-ok { background: #94a3b8; }
+.seg-warning { background: #64748b; }
+.seg-warning-alt { background: #d97706; }
+.seg-info { background: #0f766e; }
+.seg-danger { background: #E11D48; }
 
 .portfolio-legend {
   display: flex;
@@ -673,9 +673,8 @@ onMounted(async () => {
 .crit-rec {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--text-primary);
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  color: var(--color-brand, #0f766e);
+  background: var(--color-brand-soft, rgba(15, 118, 110, 0.1));
   padding: 2px 6px;
   border-radius: var(--radius-full);
   white-space: nowrap;
@@ -694,8 +693,8 @@ onMounted(async () => {
 
 .crit-excess {
   font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-weight: 800;
+  color: var(--sla-danger, #E11D48);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
