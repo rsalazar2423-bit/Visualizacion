@@ -12,6 +12,27 @@ const territoryStore = useTerritoryStore();
 const themeStore = useThemeStore();
 const mode = ref<'sla' | 'plazos'>('sla');
 
+// Paleta diferenciada para el núcleo interior (evita colisión verde-sobre-verde con Cumple SLA)
+function getSunburstInnerColor(tipo: string, isDark: boolean): string {
+  const lightPalette: Record<string, string> = {
+    'Vegetación': '#0284C7',
+    'Construcciones': '#4338CA',
+    'Obras': '#D97706',
+    'Permiso Ingreso': '#475569',
+    'Invasión/Explanación': '#7C3AED',
+    'Invasión / Explanación': '#7C3AED',
+  };
+  const darkPalette: Record<string, string> = {
+    'Vegetación': '#38BDF8',
+    'Construcciones': '#818CF8',
+    'Obras': '#FBBF24',
+    'Permiso Ingreso': '#94A3B8',
+    'Invasión/Explanación': '#A78BFA',
+    'Invasión / Explanación': '#A78BFA',
+  };
+  return (isDark ? darkPalette[tipo] : lightPalette[tipo]) || getTipoColor(tipo, isDark);
+}
+
 function setMode(m: 'sla' | 'plazos') {
   mode.value = m;
   render();
@@ -36,7 +57,7 @@ const sunburstCategories = computed(() => {
       name: cat.name,
       value: catTotal,
       pct,
-      color: getTipoColor(cat.name, themeStore.isDark),
+      color: getSunburstInnerColor(cat.name, themeStore.isDark),
       children: (cat.children || []).map((ch: any) => {
         const isCumple = String(ch.name).startsWith('Cumple');
         const isExcede = String(ch.name).startsWith('Excede');
@@ -60,7 +81,7 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
     : (territoryStore.data.sunburst_plazos || territoryStore.data.sunburst);
 
   const sunburstData = rawData.map((cat) => {
-    const parentColor = getTipoColor(cat.name, isDark);
+    const parentColor = getSunburstInnerColor(cat.name, isDark);
     return {
       ...cat,
       itemStyle: { color: parentColor },
@@ -131,10 +152,12 @@ function renderSunburst(chartInstance: echarts.ECharts, isDark: boolean) {
             },
             label: {
               show: true,
-              minAngle: 25,
+              minAngle: 18,
+              rotate: 'tangential',
               color: '#FFFFFF',
               fontWeight: 600,
-              fontSize: 11,
+              fontSize: 10,
+              overflow: 'truncate',
               formatter: '{b}',
             },
           },

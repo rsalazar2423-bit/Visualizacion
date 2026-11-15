@@ -294,7 +294,10 @@ onMounted(() => {
 .stage-pane.dual-charts {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
   gap: 12px;
+  min-height: 0;
+  height: 100%;
 }
 
 .simulator-pane {

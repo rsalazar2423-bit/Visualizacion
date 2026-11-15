@@ -47,8 +47,8 @@ a {
   flex-direction: column;
 }
 
-/* Modo Responsivo solo para Móviles y Tablets reales: Habilita scroll vertical y apilamiento */
-@media (max-width: 1024px) {
+/* Modo Responsivo para Móviles, Tablets y Pantallas de Baja Altura: Habilita scroll vertical */
+@media (max-width: 1024px), (max-height: 720px) {
   .app-layout {
     height: auto;
     min-height: 100vh;

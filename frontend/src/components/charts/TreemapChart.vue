@@ -197,6 +197,9 @@ watch(() => territoryStore.data, () => render(), { deep: true });
 <style scoped>
 .treemap-wrapper {
   width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -205,7 +208,7 @@ watch(() => territoryStore.data, () => render(), { deep: true });
 .treemap-canvas {
   width: 100%;
   flex: 1;
-  min-height: 0;
+  min-height: 220px;
   position: relative;
 }
 

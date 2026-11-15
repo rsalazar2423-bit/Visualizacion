@@ -48,7 +48,8 @@ export const TIPO_COLORS: Record<string, string> = {
   'Construcciones': '#1D4ED8',         // Azul Cobalto (Ingeniería y Estructuras)
   'Obras': '#0284C7',                  // Azul Cielo / Acero Técnico
   'Permiso Ingreso': '#475569',        // Pizarra Oscuro (Predial / Administrativo)
-  'Invasión / Explanación': '#64748B', // Pizarra Medio (Servidumbres / Terrenos)
+  'Invasión/Explanación': '#64748B',   // Pizarra Medio (Servidumbres / Terrenos)
+  'Invasión / Explanación': '#64748B', // Alias con espacios
   'Otros': '#94A3B8',                  // Pizarra Claro (Recesivo)
 };
 
@@ -59,6 +60,7 @@ export function getTipoColor(tipo: string, isDark = false): string {
       'Construcciones': '#60A5FA',
       'Obras': '#38BDF8',
       'Permiso Ingreso': '#94A3B8',
+      'Invasión/Explanación': '#64748B',
       'Invasión / Explanación': '#64748B',
       'Otros': '#475569',
     };
