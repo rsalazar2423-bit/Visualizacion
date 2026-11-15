@@ -283,6 +283,36 @@ export async function computeOperationsData(params: {
   const violinPrioridad = buildViolinGroups(filteredBase, (a) => a.Prioridad || 'No asignada', PRIO_ORDER);
   const violinTipologia = buildViolinGroups(donutDf, (a) => a['Tipo de aviso'] || 'Otros');
 
+  // Flujo Sankey: Tipo de Aviso → Prioridad SLA → Cumplimiento
+  const sankeyNodesMap = new Map<string, 'tipo' | 'prio' | 'estado'>();
+  const tipoToPrio = new Map<string, number>();
+  const prioToEstado = new Map<string, number>();
+
+  for (const a of donutDf) {
+    const t = a['Tipo de aviso'] || 'Otros';
+    const p = a.Prioridad || 'No asignada';
+    const e = a.Cumplimiento_Estado === 'Cumple Plazo' ? 'Cumple Plazo' : 'Excede Plazo';
+    sankeyNodesMap.set(t, 'tipo');
+    sankeyNodesMap.set(p, 'prio');
+    sankeyNodesMap.set(e, 'estado');
+    tipoToPrio.set(`${t}__${p}`, (tipoToPrio.get(`${t}__${p}`) || 0) + 1);
+    prioToEstado.set(`${p}__${e}`, (prioToEstado.get(`${p}__${e}`) || 0) + 1);
+  }
+
+  const sankeyFlow = {
+    nodes: Array.from(sankeyNodesMap.entries()).map(([name, category]) => ({ name, category })),
+    links: [
+      ...Array.from(tipoToPrio.entries()).map(([k, value]) => {
+        const [source, target] = k.split('__');
+        return { source, target, value };
+      }),
+      ...Array.from(prioToEstado.entries()).map(([k, value]) => {
+        const [source, target] = k.split('__');
+        return { source, target, value };
+      }),
+    ],
+  };
+
   return {
     kpis,
     donut: buildDonutDistribution(donutDf),
@@ -292,6 +322,7 @@ export async function computeOperationsData(params: {
     typology_performance: typologyPerformance,
     violin_prioridad: violinPrioridad,
     violin_tipologia: violinTipologia,
+    sankey_flow: sankeyFlow,
   };
 }
 

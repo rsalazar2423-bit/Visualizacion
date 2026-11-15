@@ -4,7 +4,7 @@ import { TrendingUp, Target, RefreshCw, CheckCircle2, Clock, AlertTriangle, Aler
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../components/charts/StackedBarChart.vue';
-import DonutChart from '../components/charts/DonutChart.vue';
+import SankeyFlowChart from '../components/charts/SankeyFlowChart.vue';
 import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
@@ -164,10 +164,10 @@ onMounted(async () => {
       <!-- HOJA 2: Composición Técnica y Efectividad (2 Gráficas al 50% / 50%) -->
       <section v-show="activeSubView === 'sla'" class="stage-pane dual-charts">
         <ExpandableChartCard
-          title="Composición por Tipología Técnica"
-          subtitle="Distribución proporcional de las 5 causas de mantenimiento sobre la infraestructura de 5.409 torres"
+          title="Flujo Operativo: Tipo → Prioridad SLA → Resultado"
+          subtitle="Trazabilidad desde la causa del aviso hasta su cumplimiento o vencimiento de plazo"
         >
-          <DonutChart />
+          <SankeyFlowChart />
         </ExpandableChartCard>
 
         <ExpandableChartCard

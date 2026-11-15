@@ -198,6 +198,11 @@ export interface OpenBacklogCell {
   vencidos: number;
 }
 
+export interface SankeyFlowData {
+  nodes: Array<{ name: string; category: 'tipo' | 'prio' | 'estado' }>;
+  links: Array<{ source: string; target: string; value: number }>;
+}
+
 export interface OperationsDataResponse {
   kpis: OperationsKpis;
   stacked_bar: StackedBarItem[];
@@ -208,6 +213,7 @@ export interface OperationsDataResponse {
   typology_performance?: TypologyPerformanceItem[];
   violin_prioridad?: ViolinGroupData[];
   violin_tipologia?: ViolinGroupData[];
+  sankey_flow?: SankeyFlowData;
 }
 
 export interface TerritorialKpis {
