@@ -1,21 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { BarChart3, Sliders, ClipboardList, RefreshCw, RadioTower, AlertCircle, Gauge, CheckCircle2 } from 'lucide-vue-next';
+import { Sliders, ClipboardList, RefreshCw, RadioTower, AlertCircle, Gauge, CheckCircle2 } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
-import RegionalLoadChart from '../components/charts/RegionalLoadChart.vue';
-import ComplianceScatterChart from '../components/charts/ComplianceScatterChart.vue';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
-import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
 const store = useCapacityStore();
-const activeSubView = ref<'diagnosis' | 'simulator' | 'coordinator'>('diagnosis');
-
-function onSelectRegion(region: string) {
-  if (store.filterOptions.ctes.includes(region)) {
-    store.setCte(region);
-  }
-}
+const activeSubView = ref<'simulator' | 'coordinator'>('simulator');
 
 onMounted(() => {
   store.loadAll();
@@ -53,24 +44,15 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (Máximo 2 gráficas por hoja) -->
+      <!-- Pestañas de Hojas (2 sub-vistas accionables) -->
       <nav class="subview-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'diagnosis' }"
-          @click="activeSubView = 'diagnosis'"
-        >
-          <BarChart3 :size="14" />
-          <span>1. Diagnóstico Regional & Dispersión (2 Gráficas)</span>
-        </button>
-
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'simulator' }"
           @click="activeSubView = 'simulator'"
         >
           <Sliders :size="14" />
-          <span>2. Simulador de Cuadrillas (Hoja Táctica)</span>
+          <span>1. Simulador de Cuadrillas</span>
         </button>
 
         <button
@@ -79,7 +61,7 @@ onMounted(() => {
           @click="activeSubView = 'coordinator'"
         >
           <ClipboardList :size="14" />
-          <span>3. Centro del Coordinador</span>
+          <span>2. Centro del Coordinador</span>
         </button>
       </nav>
     </header>
@@ -130,32 +112,12 @@ onMounted(() => {
 
     <!-- ÁREA DE CONTENIDO (VIEWPORT-FIT / CERO SCROLL) -->
     <main class="chart-viewport-stage">
-      <!-- HOJA 1: Exactamente 2 Gráficas en Paralelo (Ambas con botón para Ampliar) -->
-      <section v-show="activeSubView === 'diagnosis'" class="stage-pane dual-charts">
-        <ExpandableChartCard
-          title="Carga Regional: Backlog Activo y Densidad de Torres"
-          subtitle="Volumen de avisos pendientes (vencidos vs. en plazo) y presión operativa relativa por 100 torres"
-        >
-          <RegionalLoadChart
-            :regions="store.capacityData?.regions || []"
-            @select-region="onSelectRegion"
-          />
-        </ExpandableChartCard>
-
-        <ExpandableChartCard
-          title="Matriz de Dispersión: Carga de Trabajo vs. % Cumplimiento"
-          subtitle="Correlación municipal entre volumen atendido y efectividad SLA. El tamaño indica mora acumulada."
-        >
-          <ComplianceScatterChart :items="store.capacityData?.municipios_scatter || []" />
-        </ExpandableChartCard>
-      </section>
-
-      <!-- HOJA 2: Simulador Táctico de Cuadrillas (Hoja Dedicada) -->
+      <!-- HOJA 1: Simulador Táctico de Cuadrillas (Hoja Dedicada) -->
       <section v-show="activeSubView === 'simulator'" class="stage-pane simulator-pane">
         <CapacitySimulatorPanel />
       </section>
 
-      <!-- HOJA 3: Centro del Coordinador (Operación Diaria) -->
+      <!-- HOJA 2: Centro del Coordinador (Operación Diaria) -->
       <section v-show="activeSubView === 'coordinator'" class="stage-pane simulator-pane">
         <CoordinatorWorkspacePanel
           :cte="store.selectedCte"

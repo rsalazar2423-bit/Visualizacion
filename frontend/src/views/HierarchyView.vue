@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { Compass, BarChart3, FileText, RefreshCw, RadioTower, MapPin, CheckCircle2, AlertCircle } from 'lucide-vue-next';
+import { Compass, FileText, RefreshCw, RadioTower, MapPin, CheckCircle2, AlertCircle } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
-import LineParetoChart from '../components/charts/LineParetoChart.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
 
 const route = useRoute();
 const territoryStore = useTerritoryStore();
-const validTabs = ['map', 'pareto', 'audit'] as const;
+const validTabs = ['map', 'audit'] as const;
 type SubTab = (typeof validTabs)[number];
 const rawTab = route.query.tab as string | undefined;
-const initialTab: SubTab = validTabs.includes(rawTab as SubTab)
-  ? (rawTab as SubTab)
-  : rawTab === 'bottlenecks' || rawTab === 'hierarchy'
-    ? 'pareto'
-    : 'map';
+const initialTab: SubTab = validTabs.includes(rawTab as SubTab) ? (rawTab as SubTab) : 'map';
 const activeSubView = ref<SubTab>(initialTab);
 
 watch(
@@ -24,8 +19,6 @@ watch(
   (tab) => {
     if (validTabs.includes(tab as SubTab)) {
       activeSubView.value = tab as SubTab;
-    } else if (tab === 'bottlenecks' || tab === 'hierarchy') {
-      activeSubView.value = 'pareto';
     }
   }
 );
@@ -94,7 +87,7 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (3 sub-vistas sin duplicación) -->
+      <!-- Pestañas de Hojas (2 sub-vistas esenciales: Mapa + Auditoría) -->
       <nav class="subview-toggle">
         <button
           class="toggle-btn"
@@ -108,22 +101,12 @@ onMounted(async () => {
 
         <button
           class="toggle-btn"
-          :class="{ active: activeSubView === 'pareto' }"
-          title="Pareto 80/20 de Líneas con Mayor Mora"
-          @click="activeSubView = 'pareto'"
-        >
-          <BarChart3 :size="13" />
-          <span>2. Diagnóstico & Pareto</span>
-        </button>
-
-        <button
-          class="toggle-btn"
           :class="{ active: activeSubView === 'audit' }"
           title="Tabla de Detalle y Auditoría"
           @click="activeSubView = 'audit'"
         >
           <FileText :size="13" />
-          <span>3. Auditoría</span>
+          <span>2. Auditoría</span>
         </button>
       </nav>
     </header>
@@ -179,12 +162,7 @@ onMounted(async () => {
         <HistoricalMapChart />
       </section>
 
-      <!-- HOJA 2: Pareto 80/20 de Líneas -->
-      <section v-show="activeSubView === 'pareto'" class="stage-pane single-pane">
-        <LineParetoChart />
-      </section>
-
-      <!-- HOJA 3: Tabla de Auditoría (Dedicada y con scroll propio interno) -->
+      <!-- HOJA 2: Tabla de Auditoría (Dedicada y con scroll propio interno) -->
       <section v-show="activeSubView === 'audit'" class="stage-pane audit-pane card">
         <TicketsTable
           v-if="territoryStore.data"
