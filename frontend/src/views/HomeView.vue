@@ -523,9 +523,9 @@ onMounted(async () => {
 
 .seg-success { background: #14b8a6; }
 .seg-sla-ok { background: #94a3b8; }
-.seg-warning { background: #64748b; }
-.seg-warning-alt { background: #d97706; }
 .seg-info { background: #0f766e; }
+.seg-warning { background: #f59e0b; }
+.seg-orange { background: #ea580c; }
 .seg-danger { background: #E11D48; }
 
 .portfolio-legend {
