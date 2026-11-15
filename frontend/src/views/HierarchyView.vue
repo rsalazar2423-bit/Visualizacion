@@ -5,8 +5,8 @@ import { Compass, BarChart3, Layers, FileText, RefreshCw } from 'lucide-vue-next
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TerritoryDiagnosticsRow from '../components/territory/TerritoryDiagnosticsRow.vue';
-import TreemapPanel from '../components/territory/TreemapPanel.vue';
-import SunburstPanel from '../components/territory/SunburstPanel.vue';
+import RiskMatrixHeatmapChart from '../components/charts/RiskMatrixHeatmapChart.vue';
+import LineParetoChart from '../components/charts/LineParetoChart.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
 
 const route = useRoute();
@@ -115,11 +115,11 @@ onMounted(async () => {
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'hierarchy' }"
-          title="Composición y Jerarquía Técnica"
+          title="Matriz de Riesgo Territorial y Pareto 80/20 de Líneas"
           @click="activeSubView = 'hierarchy'"
         >
           <Layers :size="13" />
-          <span>3. Jerarquía</span>
+          <span>3. Riesgo & Pareto</span>
         </button>
 
         <button
@@ -166,10 +166,10 @@ onMounted(async () => {
         <TerritoryDiagnosticsRow />
       </section>
 
-      <!-- HOJA 3: Exactamente 2 Gráficas Jerárquicas (Treemap + Sunburst) -->
+      <!-- HOJA 3: Matriz de Riesgo (Depto x Tipología) + Pareto 80/20 de Líneas -->
       <section v-show="activeSubView === 'hierarchy'" class="stage-pane dual-charts">
-        <TreemapPanel />
-        <SunburstPanel />
+        <RiskMatrixHeatmapChart />
+        <LineParetoChart />
       </section>
 
       <!-- HOJA 4: Tabla de Auditoría (Dedicada y con scroll propio interno) -->

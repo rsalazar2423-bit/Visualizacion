@@ -13,6 +13,10 @@ import type {
   MapLineTrace,
   SectorDelayItem,
   TypologyDurationItem,
+  RiskMatrixCell,
+  RiskMatrixData,
+  TerritoryParetoLineItem,
+  TerritoryParetoData,
 } from '../../types/models';
 import {
   TIPO_COLORS,
@@ -360,6 +364,140 @@ export async function computeTerritorialData(params: {
     };
   }
 
+  // 9. Matriz de Riesgo (Territorio x Tipología)
+  const matrixLevel: 'departamento' | 'municipio' =
+    params.depto && params.depto !== 'Todos' ? 'municipio' : 'departamento';
+  const rowTotals = new Map<string, { total: number; vencidos: number }>();
+  const colTotals = new Map<string, number>();
+  const cellMap = new Map<string, { total: number; vencidos: number; excede: number }>();
+
+  for (const a of fAvisos) {
+    const rowKey =
+      matrixLevel === 'municipio'
+        ? a.Municipio || 'No Identificado'
+        : a.Departamento || 'No Identificado';
+    const colKey = a['Tipo de aviso'] || 'Otros';
+    const isOverdue = a['Estado aviso'] === 'Abierto' && a.Cumplimiento_Estado === 'Excede Plazo';
+    const isExcede = a.Cumplimiento_Estado === 'Excede Plazo';
+
+    const rt = rowTotals.get(rowKey) || { total: 0, vencidos: 0 };
+    rt.total += 1;
+    if (isOverdue) rt.vencidos += 1;
+    rowTotals.set(rowKey, rt);
+
+    colTotals.set(colKey, (colTotals.get(colKey) || 0) + (isOverdue ? 1 : 0));
+
+    const ck = `${rowKey}|||${colKey}`;
+    const cell = cellMap.get(ck) || { total: 0, vencidos: 0, excede: 0 };
+    cell.total += 1;
+    if (isOverdue) cell.vencidos += 1;
+    if (isExcede) cell.excede += 1;
+    cellMap.set(ck, cell);
+  }
+
+  const matrixRows = Array.from(rowTotals.entries())
+    .sort((a, b) => b[1].vencidos - a[1].vencidos || b[1].total - a[1].total)
+    .slice(0, 12)
+    .map(([k]) => k);
+
+  const matrixCols = Array.from(colTotals.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([k]) => k);
+
+  const matrixCells: RiskMatrixCell[] = [];
+  for (const row of matrixRows) {
+    for (const col of matrixCols) {
+      const stats = cellMap.get(`${row}|||${col}`) || { total: 0, vencidos: 0, excede: 0 };
+      matrixCells.push({
+        row,
+        col,
+        total: stats.total,
+        vencidos: stats.vencidos,
+        excede_total: stats.excede,
+        excede_pct: stats.total > 0 ? Number(((stats.excede / stats.total) * 100).toFixed(1)) : 0,
+      });
+    }
+  }
+
+  const riskMatrix: RiskMatrixData = {
+    level: matrixLevel,
+    rows: matrixRows,
+    cols: matrixCols,
+    cells: matrixCells,
+  };
+
+  // 10. Pareto 80/20 de Líneas de Transmisión en Mora + Torres Reincidentes
+  const lineStats = new Map<
+    string,
+    { abiertos: number; vencidos: number; total: number; towers: Map<number, number> }
+  >();
+  const globalTowerCounts = new Map<number, number>();
+  let paretoAbiertosTotal = 0;
+
+  for (const a of fAvisos) {
+    const linea = a.Linea && a.Linea !== 'Sin Línea' ? a.Linea : 'Sin Línea Asignada';
+    const isOpen = a['Estado aviso'] === 'Abierto';
+    const isOverdue = isOpen && a.Cumplimiento_Estado === 'Excede Plazo';
+    if (isOpen) paretoAbiertosTotal += 1;
+
+    globalTowerCounts.set(a.Equipo, (globalTowerCounts.get(a.Equipo) || 0) + 1);
+
+    let entry = lineStats.get(linea);
+    if (!entry) {
+      entry = { abiertos: 0, vencidos: 0, total: 0, towers: new Map() };
+      lineStats.set(linea, entry);
+    }
+    entry.total += 1;
+    if (isOpen) entry.abiertos += 1;
+    if (isOverdue) entry.vencidos += 1;
+    entry.towers.set(a.Equipo, (entry.towers.get(a.Equipo) || 0) + 1);
+  }
+
+  const recurrentTowersCount = Array.from(globalTowerCounts.values()).filter((c) => c >= 3).length;
+
+  const sortedLines = Array.from(lineStats.entries())
+    .filter(([, s]) => (vencidosTotal > 0 ? s.vencidos > 0 : s.abiertos > 0))
+    .sort((a, b) => b[1].vencidos - a[1].vencidos || b[1].abiertos - a[1].abiertos);
+
+  const denomPareto = vencidosTotal > 0 ? vencidosTotal : paretoAbiertosTotal;
+  let running = 0;
+  let linesFor80 = 0;
+  const paretoItems: TerritoryParetoLineItem[] = [];
+
+  sortedLines.forEach(([linea, s], idx) => {
+    const val = vencidosTotal > 0 ? s.vencidos : s.abiertos;
+    running += val;
+    const cumPct = denomPareto > 0 ? Number(((running / denomPareto) * 100).toFixed(1)) : 0;
+    if (linesFor80 === 0 && cumPct >= 80) {
+      linesFor80 = idx + 1;
+    }
+    if (idx < 12) {
+      const torresReincidentes = Array.from(s.towers.values()).filter((c) => c >= 3).length;
+      paretoItems.push({
+        linea,
+        abiertos: s.abiertos,
+        vencidos: s.vencidos,
+        total: s.total,
+        pct_of_overdue: denomPareto > 0 ? Number(((val / denomPareto) * 100).toFixed(1)) : 0,
+        cum_pct: cumPct,
+        torres_reincidentes: torresReincidentes,
+      });
+    }
+  });
+
+  if (linesFor80 === 0 && sortedLines.length > 0) {
+    linesFor80 = sortedLines.length;
+  }
+
+  const linePareto: TerritoryParetoData = {
+    total_vencidos: vencidosTotal,
+    total_abiertos: paretoAbiertosTotal,
+    lines_for_80_pct: linesFor80,
+    total_lines_with_overdue: sortedLines.length,
+    recurrent_towers_count: recurrentTowersCount,
+    items: paretoItems,
+  };
+
   return {
     kpis: territorialKpis,
     treemap: {
@@ -377,6 +515,8 @@ export async function computeTerritorialData(params: {
     years_catalog: Array.from(yearsSet).sort((a, b) => a - b),
     sector_ranking: sectorRanking,
     typology_durations: typologyDurations,
+    risk_matrix: riskMatrix,
+    line_pareto: linePareto,
   };
 }
 

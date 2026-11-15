@@ -292,6 +292,41 @@ export interface TypologyDurationItem {
   promedio_dias: number;
 }
 
+export interface RiskMatrixCell {
+  row: string;
+  col: string;
+  total: number;
+  vencidos: number;
+  excede_total: number;
+  excede_pct: number;
+}
+
+export interface RiskMatrixData {
+  level: 'departamento' | 'municipio';
+  rows: string[];
+  cols: string[];
+  cells: RiskMatrixCell[];
+}
+
+export interface TerritoryParetoLineItem {
+  linea: string;
+  abiertos: number;
+  vencidos: number;
+  total: number;
+  pct_of_overdue: number;
+  cum_pct: number;
+  torres_reincidentes: number;
+}
+
+export interface TerritoryParetoData {
+  total_vencidos: number;
+  total_abiertos: number;
+  lines_for_80_pct: number;
+  total_lines_with_overdue: number;
+  recurrent_towers_count: number;
+  items: TerritoryParetoLineItem[];
+}
+
 export interface TerritorialDataResponse {
   kpis: TerritorialKpis;
   treemap: TreemapNode;
@@ -305,6 +340,8 @@ export interface TerritorialDataResponse {
   years_catalog?: number[];
   sector_ranking?: SectorDelayItem[];
   typology_durations?: TypologyDurationItem[];
+  risk_matrix?: RiskMatrixData;
+  line_pareto?: TerritoryParetoData;
 }
 
 export interface CapacityRegionItem {
