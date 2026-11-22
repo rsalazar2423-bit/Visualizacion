@@ -1,19 +1,19 @@
-"""build_nlp_graph.py — Extracción semántica y datos para Treemaps comparativos VS.
+"""build_nlp_graph.py — Extracción semántica NLP para Treemaps comparativos VS.
 
-Genera un JSON con estructura de árbol jerárquica (Clúster → Departamento)
-para renderizar Treemaps duales (Abiertos VS Cerrados) con métricas de mora.
+Genera JSON con vista nacional (Clúster → Departamento) y desglose por cada
+Departamento (Clúster → Municipio) para filtrado reactivo y pivote en UI.
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 import pandas as pd
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_PATH = ROOT_DIR / "frontend" / "public" / "data" / "nlp_graph_data.json"
 
-import sys
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 VENV_SITE = ROOT_DIR / ".venv" / "lib" / "python3.14" / "site-packages"
@@ -56,69 +56,53 @@ CLUSTERS = [
 ]
 
 
-def _build_treemap(df: pd.DataFrame, mode: str) -> dict:
-    """Construye árbol jerárquico: Clúster → Departamento, con métricas."""
-    sub = df[df["Estado aviso"] == mode].copy()
+def _build_mode(df: pd.DataFrame, mode: str, geo_col: str) -> dict:
+    """Construye árbol jerárquico Clúster → geo_col (Departamento o Municipio)."""
+    sub = df[df["Estado aviso"] == mode]
     total = len(sub)
-    clusters_out = []
-    treemap_children = []
+    clusters_out, treemap_children = [], []
+    desc_low = sub["Descripción"].str.lower()
 
     for c in CLUSTERS:
         pat = "|".join(rf"\b{t}\b" for t in c["terms"])
-        matched = sub[sub["Descripción"].str.lower().str.contains(pat, na=False, regex=True)]
+        matched = sub[desc_low.str.contains(pat, na=False, regex=True)]
         count = len(matched)
         dias_med = round(float(matched["Días abierto"].median()), 1) if count > 0 else 0
 
-        # Top terms con sus frecuencias para etiquetas enriquecidas
-        term_freq = {}
-        for t in c["terms"]:
-            tf = int(matched["Descripción"].str.lower().str.contains(rf"\b{t}\b", na=False).sum())
-            if tf > 0:
-                term_freq[t] = tf
-        top_terms = sorted(term_freq.items(), key=lambda x: x[1], reverse=True)[:5]
+        m_low = matched["Descripción"].str.lower()
+        term_freq = {
+            t: int(m_low.str.contains(rf"\b{t}\b", na=False, regex=True).sum())
+            for t in c["terms"]
+        }
+        top_terms = sorted(((t, f) for t, f in term_freq.items() if f > 0), key=lambda x: x[1], reverse=True)[:5]
 
-        # Departamentos como hijos del treemap
-        depto_children = []
-        deptos_list = []
-        if count > 0 and "Departamento" in matched.columns:
-            for depto, grp in matched.groupby("Departamento"):
-                if depto == "No Identificado":
+        geo_children, geo_list = [], []
+        if count > 0 and geo_col in matched.columns:
+            for gname, grp in matched.groupby(geo_col):
+                g_str = str(gname).strip()
+                if not g_str or g_str in ("No Identificado", "nan", "None"):
                     continue
-                d_count = len(grp)
-                d_dias = round(float(grp["Días abierto"].median()), 1)
-                deptos_list.append({"depto": str(depto), "count": d_count, "mora": d_dias})
-                depto_children.append({
-                    "name": str(depto),
-                    "value": d_count,
-                    "mora": d_dias,
-                })
+                g_count = len(grp)
+                g_dias = round(float(grp["Días abierto"].median()), 1)
+                geo_list.append({"depto": g_str, "count": g_count, "mora": g_dias})
+                geo_children.append({"name": g_str, "value": g_count, "mora": g_dias})
 
-        deptos_list.sort(key=lambda x: x["count"], reverse=True)
-
-        # Citas textuales
-        quotes = []
-        if count > 0:
-            quotes = [q.strip() for q in matched["Descripción"].dropna().drop_duplicates().head(4).tolist()]
+        geo_list.sort(key=lambda x: x["count"], reverse=True)
+        quotes = (
+            [q.strip() for q in matched["Descripción"].dropna().drop_duplicates().head(3).tolist()]
+            if count > 0 else []
+        )
 
         clusters_out.append({
-            "id": c["id"],
-            "name": c["name"],
-            "color": c["color"],
-            "count": count,
-            "pct": round((count / total) * 100, 1) if total > 0 else 0,
-            "mediana_dias": dias_med,
-            "desc": c["desc"],
+            "id": c["id"], "name": c["name"], "color": c["color"],
+            "count": count, "pct": round((count / total) * 100, 1) if total > 0 else 0,
+            "mediana_dias": dias_med, "desc": c["desc"],
             "top_terms": [{"term": t.capitalize(), "freq": f} for t, f in top_terms],
-            "deptos": deptos_list[:6],
-            "quotes": quotes,
+            "deptos": geo_list[:6], "quotes": quotes,
         })
-
         treemap_children.append({
-            "name": c["name"],
-            "value": count,
-            "mora": dias_med,
-            "color": c["color"],
-            "children": sorted(depto_children, key=lambda x: x["value"], reverse=True)[:8],
+            "name": c["name"], "value": count, "mora": dias_med, "color": c["color"],
+            "children": sorted(geo_children, key=lambda x: x["value"], reverse=True)[:8],
         })
 
     return {
@@ -128,40 +112,51 @@ def _build_treemap(df: pd.DataFrame, mode: str) -> dict:
     }
 
 
-def main() -> None:
-    from backend.src.data.data_loader import load_data
-    print("⏳ Cargando datos con merge equipos + avisos (Departamento incluido)...")
-    _, _, df = load_data(force_reload=True)
-    ab = _build_treemap(df, "Abierto")
-    ce = _build_treemap(df, "Cerrado")
-
+def _build_scope(df: pd.DataFrame, geo_col: str) -> dict:
+    """Construye un bloque completo (abiertos, cerrados, comparativa_vs)."""
+    ab = _build_mode(df, "Abierto", geo_col)
+    ce = _build_mode(df, "Cerrado", geo_col)
     comparativa = []
     for a in ab["clusters"]:
         c = next(x for x in ce["clusters"] if x["id"] == a["id"])
         tot = a["count"] + c["count"]
-        tasa = round((c["count"] / tot) * 100, 1) if tot > 0 else 0
-        brecha = round(a["mediana_dias"] - c["mediana_dias"], 1)
         comparativa.append({
             "id": a["id"], "name": a["name"], "color": a["color"],
-            "abiertos_count": a["count"], "abiertos_pct": a["pct"],
-            "abiertos_mora": a["mediana_dias"],
-            "cerrados_count": c["count"], "cerrados_pct": c["pct"],
-            "cerrados_atencion": c["mediana_dias"],
-            "tasa_cierre": tasa, "brecha_mora_dias": brecha,
+            "abiertos_count": a["count"], "abiertos_pct": a["pct"], "abiertos_mora": a["mediana_dias"],
+            "cerrados_count": c["count"], "cerrados_pct": c["pct"], "cerrados_atencion": c["mediana_dias"],
+            "tasa_cierre": round((c["count"] / tot) * 100, 1) if tot > 0 else 0,
+            "brecha_mora_dias": round(a["mediana_dias"] - c["mediana_dias"], 1),
             "desc": a["desc"],
             "abiertos_terms": a["top_terms"], "cerrados_terms": c["top_terms"],
             "abiertos_deptos": a["deptos"], "cerrados_deptos": c["deptos"],
             "abiertos_quotes": a["quotes"], "cerrados_quotes": c["quotes"],
         })
+    return {"abiertos": ab, "cerrados": ce, "comparativa_vs": comparativa}
+
+
+def main() -> None:
+    from backend.src.data.data_loader import load_data
+    print("⏳ Cargando datos con merge equipos + avisos (Departamento + Municipio)...")
+    _, _, df = load_data(force_reload=True)
+
+    national = _build_scope(df, "Departamento")
+    deptos = sorted(
+        d for d in df["Departamento"].dropna().unique().tolist()
+        if str(d).strip() not in ("", "No Identificado")
+    )
+    by_depto = {d: _build_scope(df[df["Departamento"] == d], "Municipio") for d in deptos}
 
     out = {
         "metadata": {"title": "Análisis Comparativo VS (NLP)", "total": len(df)},
-        "abiertos": ab, "cerrados": ce, "comparativa_vs": comparativa,
+        **national,
+        "departamentos": deptos,
+        "by_depto": by_depto,
     }
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=2)
-    print(f"✅ JSON generado: {OUTPUT_PATH}")
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    size_kb = OUTPUT_PATH.stat().st_size / 1024
+    print(f"✅ JSON generado ({len(deptos)} deptos, {size_kb:.1f} KB): {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

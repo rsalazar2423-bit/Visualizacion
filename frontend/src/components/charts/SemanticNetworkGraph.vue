@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import { useThemeStore } from '../../stores/themeStore';
-import { getEChartsThemeTokens } from '../../constants/themeTokens';
+import { useTerritoryStore } from '../../stores/territoryStore';
 import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
-import type { NlpGraphPayload, NlpClusterComparison, NlpModeData } from '../../types/nlpGraph';
+import { buildNlpTreemapOption } from '../../services/analytics/nlpTreemapBuilder';
+import type { NlpGraphPayload, NlpClusterComparison, NlpGroupMode, NlpScopeData } from '../../types/nlpGraph';
 import NlpComparisonBar from '../territory/NlpComparisonBar.vue';
 import NlpDetailPanel from '../territory/NlpDetailPanel.vue';
 
 const themeStore = useThemeStore();
+const territoryStore = useTerritoryStore();
 const nlpData = ref<NlpGraphPayload | null>(null);
-const selectedComparison = ref<NlpClusterComparison | null>(null);
+const groupMode = ref<NlpGroupMode>('cluster');
+const selectedClusterId = ref<string | null>(null);
 
 const leftRef = ref<HTMLDivElement | null>(null);
 const rightRef = ref<HTMLDivElement | null>(null);
@@ -18,123 +21,68 @@ let leftChart: echarts.ECharts | null = null;
 let rightChart: echarts.ECharts | null = null;
 let ro: ResizeObserver | null = null;
 
-function buildTreemapOption(modeData: NlpModeData, title: string, isDark: boolean): echarts.EChartsOption {
-  const tokens = getEChartsThemeTokens(isDark);
-  const borderBg = isDark ? '#0f172a' : '#f8fafc';
-  const data = modeData.treemap.children
-    .filter((c) => c.value > 0)
-    .map((c) => ({
-      name: c.name,
-      value: c.value,
-      mora: c.mora,
-      clusterName: c.name,
-      itemStyle: { color: c.color },
-      children: c.children.map((ch) => ({
-        name: ch.name,
-        value: ch.value,
-        mora: ch.mora,
-        clusterName: c.name,
-      })),
-    }));
+const activeDepto = computed(() => {
+  const dep = territoryStore.selectedDepto;
+  if (dep && dep !== 'Todos' && nlpData.value?.by_depto?.[dep]) return dep;
+  return null;
+});
 
-  return {
-    backgroundColor: 'transparent',
-    title: {
-      text: title,
-      left: 8,
-      top: 6,
-      textStyle: { fontSize: 11.5, fontWeight: 700, color: tokens.textColor },
-    },
-    tooltip: {
-      backgroundColor: tokens.tooltipBg,
-      borderColor: tokens.tooltipBorder,
-      textStyle: { color: tokens.textColor, fontSize: 11 },
-      formatter: (p: any) => {
-        const d = p.data || {};
-        if (!d.value) return '';
-        const pct = modeData.total_avisos > 0 ? ((d.value / modeData.total_avisos) * 100).toFixed(1) : '0';
-        const sub = d.clusterName && d.clusterName !== d.name
-          ? `<div style="font-size:10px;color:${tokens.textSecondary};">Clúster: ${d.clusterName}</div>`
-          : `<div style="font-size:10px;color:${tokens.textSecondary};">Clúster NLP (Clic para detalle)</div>`;
-        return `<div style="font-weight:700;">${d.name}</div>${sub}<div>Avisos: <b>${Number(d.value).toLocaleString()}</b> (${pct}%)</div><div>Mediana: <b>${d.mora} días</b></div>`;
-      },
-    },
-    series: [
-      {
-        type: 'treemap',
-        top: 30,
-        left: 6,
-        right: 6,
-        bottom: 6,
-        roam: false,
-        nodeClick: false,
-        breadcrumb: { show: false },
-        data: data as any,
-        levels: [
-          { itemStyle: { borderColor: borderBg, borderWidth: 2, gapWidth: 2 } },
-          {
-            itemStyle: { borderColor: borderBg, borderWidth: 2, gapWidth: 2 },
-            upperLabel: {
-              show: true,
-              height: 20,
-              color: '#ffffff',
-              fontSize: 10,
-              fontWeight: 700,
-              padding: [1, 5],
-              formatter: (p: any) => `${p.name} · ${p.value} (${p.data?.mora ?? 0}d)`,
-            },
-          },
-          {
-            colorSaturation: [0.42, 0.78],
-            itemStyle: { borderColor: 'rgba(255,255,255,0.28)', borderWidth: 1, gapWidth: 1 },
-            label: {
-              show: true,
-              fontSize: 9.5,
-              fontWeight: 600,
-              color: '#ffffff',
-              overflow: 'truncate',
-              formatter: (p: any) => `${p.name}\n${p.value}`,
-            },
-          },
-        ],
-      },
-    ],
-  };
-}
+const activeScope = computed<NlpScopeData | null>(() => {
+  if (!nlpData.value) return null;
+  return activeDepto.value ? nlpData.value.by_depto[activeDepto.value] : nlpData.value;
+});
+
+const geoLabel = computed(() => (activeDepto.value ? 'Municipio' : 'Departamento'));
+
+const selectedComparison = computed<NlpClusterComparison | null>(() => {
+  const list = activeScope.value?.comparativa_vs ?? [];
+  if (!list.length) return null;
+  return list.find((c) => c.id === selectedClusterId.value) ?? list[0];
+});
 
 function renderCharts() {
-  if (!nlpData.value) return;
+  const scope = activeScope.value;
+  if (!scope) return;
   const isDark = themeStore.isDark;
-  const abTot = nlpData.value.abiertos.total_avisos.toLocaleString();
-  const ceTot = nlpData.value.cerrados.total_avisos.toLocaleString();
+  const scopeTag = activeDepto.value ? ` · ${activeDepto.value}` : '';
+  const abTot = scope.abiertos.total_avisos.toLocaleString();
+  const ceTot = scope.cerrados.total_avisos.toLocaleString();
+
   if (leftRef.value) {
     if (!leftChart) {
       leftChart = echarts.init(leftRef.value);
       leftChart.on('click', handleNodeClick);
     }
-    leftChart.setOption(buildTreemapOption(nlpData.value.abiertos, `Abiertos · Fricción (${abTot} avisos)`, isDark), true);
+    leftChart.setOption(
+      buildNlpTreemapOption(scope.abiertos, `Abiertos${scopeTag} (${abTot} avisos)`, groupMode.value, geoLabel.value, isDark),
+      true,
+    );
   }
   if (rightRef.value) {
     if (!rightChart) {
       rightChart = echarts.init(rightRef.value);
       rightChart.on('click', handleNodeClick);
     }
-    rightChart.setOption(buildTreemapOption(nlpData.value.cerrados, `Cerrados · Resueltos (${ceTot} avisos)`, isDark), true);
+    rightChart.setOption(
+      buildNlpTreemapOption(scope.cerrados, `Cerrados${scopeTag} (${ceTot} avisos)`, groupMode.value, geoLabel.value, isDark),
+      true,
+    );
   }
 }
 
 function handleNodeClick(p: any) {
-  if (!nlpData.value) return;
+  const scope = activeScope.value;
+  if (!scope) return;
   const targetName = p.data?.clusterName || p.name;
-  const comp = nlpData.value.comparativa_vs.find((c) => c.name === targetName);
-  if (comp) selectedComparison.value = comp;
+  const comp = scope.comparativa_vs.find((c) => c.name === targetName);
+  if (comp) selectedClusterId.value = comp.id;
 }
 
 onMounted(async () => {
   try {
     nlpData.value = await fetchNlpGraphData();
     if (nlpData.value.comparativa_vs.length > 0) {
-      selectedComparison.value = nlpData.value.comparativa_vs[0];
+      selectedClusterId.value = nlpData.value.comparativa_vs[0].id;
     }
     renderCharts();
     ro = new ResizeObserver(() => {
@@ -154,21 +102,40 @@ onUnmounted(() => {
   rightChart?.dispose();
 });
 
-watch(() => themeStore.isDark, () => renderCharts());
+watch([() => themeStore.isDark, activeDepto, groupMode], () => renderCharts());
 </script>
 
 <template>
   <div class="semantic-vs-card">
     <div class="vs-header-cluster">
       <div class="header-titles">
-        <span class="main-title">Análisis Comparativo Semántico VS (NLP · Clúster → Departamento)</span>
-        <span class="sub-title">Área proporcional al volumen de avisos · Haz clic en un clúster o departamento para contrastar evidencia</span>
+        <div class="title-left">
+          <span class="main-title">Análisis Semántico VS (NLP)</span>
+          <span class="scope-pill">{{ activeDepto ? `Depto: ${activeDepto}` : 'Nacional (Todos Deptos)' }}</span>
+        </div>
+        <div class="group-toggle" role="group" aria-label="Agrupación jerárquica">
+          <button
+            class="toggle-chip"
+            :class="{ active: groupMode === 'cluster' }"
+            @click="groupMode = 'cluster'"
+          >
+            Clúster → {{ geoLabel }}
+          </button>
+          <button
+            class="toggle-chip"
+            :class="{ active: groupMode === 'depto' }"
+            @click="groupMode = 'depto'"
+          >
+            {{ geoLabel }} → Clúster
+          </button>
+        </div>
       </div>
+
       <NlpComparisonBar
-        v-if="nlpData"
-        :comparisons="nlpData.comparativa_vs"
+        v-if="activeScope"
+        :comparisons="activeScope.comparativa_vs"
         :selected-id="selectedComparison?.id || null"
-        @select="(c) => (selectedComparison = c)"
+        @select="(c) => (selectedClusterId = c.id)"
       />
     </div>
 
@@ -184,9 +151,24 @@ watch(() => themeStore.isDark, () => renderCharts());
 <style scoped>
 .semantic-vs-card { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
 .vs-header-cluster { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-.header-titles { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+.header-titles { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+.title-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .main-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
-.sub-title { font-size: 0.71rem; color: var(--text-secondary); }
+.scope-pill {
+  font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--color-brand, #0F766E);
+}
+.group-toggle {
+  display: inline-flex; gap: 3px; padding: 2px;
+  background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+}
+.toggle-chip {
+  border: none; background: transparent; color: var(--text-secondary);
+  font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 4px; cursor: pointer;
+}
+.toggle-chip.active {
+  background: var(--bg-card); color: var(--color-brand, #0F766E); font-weight: 700; box-shadow: var(--shadow-sm);
+}
 .vs-dual-canvases { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .canvas-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
 .left-border { border-top: 3px solid var(--color-danger, #BE123C); }

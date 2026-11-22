@@ -2,6 +2,8 @@
  * nlpGraph.ts — Tipos para Treemaps comparativos VS de causas operativas (NLP).
  */
 
+export type NlpGroupMode = 'cluster' | 'depto';
+
 export interface NlpTermFreq {
   term: string;
   freq: number;
@@ -72,12 +74,17 @@ export interface NlpClusterComparison {
   cerrados_quotes: string[];
 }
 
-export interface NlpGraphPayload {
+export interface NlpScopeData {
+  abiertos: NlpModeData;
+  cerrados: NlpModeData;
+  comparativa_vs: NlpClusterComparison[];
+}
+
+export interface NlpGraphPayload extends NlpScopeData {
   metadata: {
     title: string;
     total: number;
   };
-  abiertos: NlpModeData;
-  cerrados: NlpModeData;
-  comparativa_vs: NlpClusterComparison[];
+  departamentos: string[];
+  by_depto: Record<string, NlpScopeData>;
 }
