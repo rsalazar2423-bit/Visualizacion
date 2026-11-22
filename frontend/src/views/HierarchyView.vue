@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { Compass, FileText, RefreshCw, RadioTower, MapPin, CheckCircle2, AlertCircle } from 'lucide-vue-next';
+import { Compass, FileText, Network, RefreshCw, RadioTower, MapPin, CheckCircle2, AlertCircle } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
+import SemanticNetworkGraph from '../components/charts/SemanticNetworkGraph.vue';
 
 const route = useRoute();
 const territoryStore = useTerritoryStore();
-const validTabs = ['map', 'audit'] as const;
+const validTabs = ['map', 'audit', 'nlp'] as const;
 type SubTab = (typeof validTabs)[number];
 const rawTab = route.query.tab as string | undefined;
 const initialTab: SubTab = validTabs.includes(rawTab as SubTab) ? (rawTab as SubTab) : 'map';
@@ -108,6 +109,16 @@ onMounted(async () => {
           <FileText :size="13" />
           <span>2. Auditoría</span>
         </button>
+
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'nlp' }"
+          title="Red Semántica de Causas Operativas (NLP)"
+          @click="activeSubView = 'nlp'"
+        >
+          <Network :size="13" />
+          <span>3. Semántica NLP</span>
+        </button>
       </nav>
     </header>
 
@@ -169,6 +180,11 @@ onMounted(async () => {
           :tickets="territoryStore.data.tickets"
           :total-matches="territoryStore.data.total_tickets_matching"
         />
+      </section>
+
+      <!-- HOJA 3: Red Semántica NLP (Causas Raíz y Fricción Operativa) -->
+      <section v-show="activeSubView === 'nlp'" class="stage-pane single-pane">
+        <SemanticNetworkGraph />
       </section>
     </main>
   </div>

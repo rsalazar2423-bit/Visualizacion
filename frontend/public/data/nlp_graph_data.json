@@ -1,0 +1,1101 @@
+{
+  "metadata": {
+    "title": "Red Semántica de Causas Operativas (NLP)",
+    "fuente": "Descripciones de campo 2008–2023",
+    "total_registros": 3118
+  },
+  "abiertos": {
+    "total_avisos": 743,
+    "clusters": [
+      {
+        "id": "c_invasion",
+        "name": "Invasión & Servidumbre",
+        "color": "#BE123C",
+        "count": 450,
+        "pct": 60.6,
+        "mediana_dias": 1841.0,
+        "desc": "Construcciones ilegales y ocupaciones físicas bajo la franja de servidumbre de alta tensión.",
+        "quotes": [
+          "Retirar vivienda3 pisci term slc vbl sng",
+          "Retirar marranera term slc vbl sng 27",
+          "Retirar establo term slc sng vbl"
+        ],
+        "deptos": []
+      },
+      {
+        "id": "c_ambiental",
+        "name": "Restricción Ambiental & CAR",
+        "color": "#D97706",
+        "count": 94,
+        "pct": 12.7,
+        "mediana_dias": 324.0,
+        "desc": "Trámites, salvoconductos y permisos demorados ante Corporaciones Autónomas Regionales.",
+        "quotes": [
+          "Reubicar construcción t120",
+          "Reubicar vivienda rubén m8 185141 t143",
+          "Reubicar construcción d.f.s. t69"
+        ],
+        "deptos": []
+      },
+      {
+        "id": "c_predial",
+        "name": "Acceso Predial & Permisos",
+        "color": "#0284C7",
+        "count": 66,
+        "pct": 8.9,
+        "mediana_dias": 753.0,
+        "desc": "Negativas de paso de propietarios prediales para ingresar a realizar mantenimiento a torres.",
+        "quotes": [
+          "Negociar galpones gilbertom8.178910 t120",
+          "Negociar corrales maria m8.139523 44",
+          "Negociar vivienda colina m8.178887 249"
+        ],
+        "deptos": []
+      },
+      {
+        "id": "c_forestal",
+        "name": "Intervención Forestal",
+        "color": "#0F766E",
+        "count": 92,
+        "pct": 12.4,
+        "mediana_dias": 412.5,
+        "desc": "Riesgo de rozamiento con cables; podas mecánicas y talas forestales en faja de seguridad.",
+        "quotes": [
+          "Gestion árboles williat125-8m revisad* r",
+          "Gestionar  eucaliptos  ff 10- 10m r",
+          "F23-geam-gstionar tala vgetación dfs t95"
+        ],
+        "deptos": []
+      }
+    ],
+    "nodes": [
+      {
+        "id": "c_invasion",
+        "name": "Invasión & Servidumbre",
+        "symbolSize": 61,
+        "category": 0,
+        "value": 450,
+        "mediana_dias": 1841.0,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#BE123C"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_invasion_retirar",
+        "name": "Retirar",
+        "symbolSize": 28,
+        "category": 0,
+        "value": 402,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_invasion_vivienda",
+        "name": "Vivienda",
+        "symbolSize": 16,
+        "category": 0,
+        "value": 31,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_invasion_construcción",
+        "name": "Construcción",
+        "symbolSize": 16,
+        "category": 0,
+        "value": 31,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_invasion_bodega",
+        "name": "Bodega",
+        "symbolSize": 16,
+        "category": 0,
+        "value": 20,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_ambiental",
+        "name": "Restricción Ambiental & CAR",
+        "symbolSize": 38,
+        "category": 1,
+        "value": 94,
+        "mediana_dias": 324.0,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#D97706"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_ambiental_crpochivor",
+        "name": "Crpochivor",
+        "symbolSize": 24,
+        "category": 1,
+        "value": 61,
+        "cluster_name": "Restricción Ambiental & CAR",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#D97706",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_ambiental_tramite",
+        "name": "Tramite",
+        "symbolSize": 24,
+        "category": 1,
+        "value": 61,
+        "cluster_name": "Restricción Ambiental & CAR",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#D97706",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial",
+        "name": "Acceso Predial & Permisos",
+        "symbolSize": 38,
+        "category": 2,
+        "value": 66,
+        "mediana_dias": 753.0,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#0284C7"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_predial_geam",
+        "name": "Geam",
+        "symbolSize": 23,
+        "category": 2,
+        "value": 39,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial_negociar",
+        "name": "Negociar",
+        "symbolSize": 17,
+        "category": 2,
+        "value": 15,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial_ingreso",
+        "name": "Ingreso",
+        "symbolSize": 16,
+        "category": 2,
+        "value": 11,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial_permiso",
+        "name": "Permiso",
+        "symbolSize": 16,
+        "category": 2,
+        "value": 9,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal",
+        "name": "Intervención Forestal",
+        "symbolSize": 38,
+        "category": 3,
+        "value": 92,
+        "mediana_dias": 412.5,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#0F766E"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_forestal_vegetación",
+        "name": "Vegetación",
+        "symbolSize": 24,
+        "category": 3,
+        "value": 61,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal_tala",
+        "name": "Tala",
+        "symbolSize": 19,
+        "category": 3,
+        "value": 30,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal_árboles",
+        "name": "Árboles",
+        "symbolSize": 16,
+        "category": 3,
+        "value": 6,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal_poda",
+        "name": "Poda",
+        "symbolSize": 16,
+        "category": 3,
+        "value": 6,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      }
+    ],
+    "links": [
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_retirar",
+        "value": 402,
+        "lineStyle": {
+          "width": 4.5,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_vivienda",
+        "value": 31,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_construcción",
+        "value": 31,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_bodega",
+        "value": 20,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_ambiental",
+        "target": "c_ambiental_crpochivor",
+        "value": 61,
+        "lineStyle": {
+          "width": 1.7428571428571429,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_ambiental",
+        "target": "c_ambiental_tramite",
+        "value": 61,
+        "lineStyle": {
+          "width": 1.7428571428571429,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_geam",
+        "value": 39,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_negociar",
+        "value": 15,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_ingreso",
+        "value": 11,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_permiso",
+        "value": 9,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_vegetación",
+        "value": 61,
+        "lineStyle": {
+          "width": 1.7428571428571429,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_tala",
+        "value": 30,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_árboles",
+        "value": 6,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_poda",
+        "value": 6,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_ambiental",
+        "value": 18,
+        "lineStyle": {
+          "width": 1,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_predial",
+        "value": 11,
+        "lineStyle": {
+          "width": 1,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_forestal",
+        "value": 23,
+        "lineStyle": {
+          "width": 1.15,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      }
+    ],
+    "categories": [
+      {
+        "name": "Invasión & Servidumbre"
+      },
+      {
+        "name": "Restricción Ambiental & CAR"
+      },
+      {
+        "name": "Acceso Predial & Permisos"
+      },
+      {
+        "name": "Intervención Forestal"
+      }
+    ]
+  },
+  "cerrados": {
+    "total_avisos": 2375,
+    "clusters": [
+      {
+        "id": "c_invasion",
+        "name": "Invasión & Servidumbre",
+        "color": "#BE123C",
+        "count": 568,
+        "pct": 23.9,
+        "mediana_dias": 665.5,
+        "desc": "Construcciones ilegales y ocupaciones físicas bajo la franja de servidumbre de alta tensión.",
+        "quotes": [
+          "Caseta en construcción t-348",
+          "Construcción cancha de futbol - yotoco",
+          "Negociar 12 vivienda -aviso m8: 105963."
+        ],
+        "deptos": []
+      },
+      {
+        "id": "c_ambiental",
+        "name": "Restricción Ambiental & CAR",
+        "color": "#D97706",
+        "count": 113,
+        "pct": 4.8,
+        "mediana_dias": 638.0,
+        "desc": "Trámites, salvoconductos y permisos demorados ante Corporaciones Autónomas Regionales.",
+        "quotes": [
+          "Carton colombia  corte arb 4",
+          "Cortar arboles carton colombia 19",
+          "Carton colombia  corte arb  t - 20"
+        ],
+        "deptos": []
+      },
+      {
+        "id": "c_predial",
+        "name": "Acceso Predial & Permisos",
+        "color": "#0284C7",
+        "count": 750,
+        "pct": 31.6,
+        "mediana_dias": 421.0,
+        "desc": "Negativas de paso de propietarios prediales para ingresar a realizar mantenimiento a torres.",
+        "quotes": [
+          "M8 195471 solicitud permiso cam  t 95",
+          "Negociar 12 vivienda -aviso m8: 105963.",
+          "Negociar vivi. hugo posso.avisom8.105766"
+        ],
+        "deptos": []
+      },
+      {
+        "id": "c_forestal",
+        "name": "Intervención Forestal",
+        "color": "#0F766E",
+        "count": 1011,
+        "pct": 42.6,
+        "mediana_dias": 339.0,
+        "desc": "Riesgo de rozamiento con cables; podas mecánicas y talas forestales en faja de seguridad.",
+        "quotes": [
+          "Corte de pinos  t161 zona urbana jam-r",
+          "Despeje de vegetación en torre 291",
+          "Mp servidumbre : talar árboles t 321"
+        ],
+        "deptos": []
+      }
+    ],
+    "nodes": [
+      {
+        "id": "c_invasion",
+        "name": "Invasión & Servidumbre",
+        "symbolSize": 39,
+        "category": 0,
+        "value": 568,
+        "mediana_dias": 665.5,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#BE123C"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_invasion_retirar",
+        "name": "Retirar",
+        "symbolSize": 25,
+        "category": 0,
+        "value": 424,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_invasion_vivienda",
+        "name": "Vivienda",
+        "symbolSize": 17,
+        "category": 0,
+        "value": 139,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_invasion_construcción",
+        "name": "Construcción",
+        "symbolSize": 16,
+        "category": 0,
+        "value": 34,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_invasion_gallinero",
+        "name": "Gallinero",
+        "symbolSize": 16,
+        "category": 0,
+        "value": 16,
+        "cluster_name": "Invasión & Servidumbre",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#BE123C",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_ambiental",
+        "name": "Restricción Ambiental & CAR",
+        "symbolSize": 38,
+        "category": 1,
+        "value": 113,
+        "mediana_dias": 638.0,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#D97706"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_ambiental_car",
+        "name": "Car",
+        "symbolSize": 16,
+        "category": 1,
+        "value": 2,
+        "cluster_name": "Restricción Ambiental & CAR",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#D97706",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial",
+        "name": "Acceso Predial & Permisos",
+        "symbolSize": 43,
+        "category": 2,
+        "value": 750,
+        "mediana_dias": 421.0,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#0284C7"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_predial_geam",
+        "name": "Geam",
+        "symbolSize": 22,
+        "category": 2,
+        "value": 401,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial_negociar",
+        "name": "Negociar",
+        "symbolSize": 19,
+        "category": 2,
+        "value": 271,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial_permiso",
+        "name": "Permiso",
+        "symbolSize": 16,
+        "category": 2,
+        "value": 70,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_predial_ingreso",
+        "name": "Ingreso",
+        "symbolSize": 16,
+        "category": 2,
+        "value": 26,
+        "cluster_name": "Acceso Predial & Permisos",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0284C7",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal",
+        "name": "Intervención Forestal",
+        "symbolSize": 50,
+        "category": 3,
+        "value": 1011,
+        "mediana_dias": 339.0,
+        "is_hub": true,
+        "itemStyle": {
+          "color": "#0F766E"
+        },
+        "label": {
+          "show": true,
+          "fontWeight": 700,
+          "fontSize": 11.5
+        }
+      },
+      {
+        "id": "c_forestal_tala",
+        "name": "Tala",
+        "symbolSize": 23,
+        "category": 3,
+        "value": 625,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal_vegetación",
+        "name": "Vegetación",
+        "symbolSize": 21,
+        "category": 3,
+        "value": 456,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal_talar",
+        "name": "Talar",
+        "symbolSize": 16,
+        "category": 3,
+        "value": 98,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      },
+      {
+        "id": "c_forestal_árboles",
+        "name": "Árboles",
+        "symbolSize": 16,
+        "category": 3,
+        "value": 92,
+        "cluster_name": "Intervención Forestal",
+        "is_hub": false,
+        "itemStyle": {
+          "color": "#0F766E",
+          "opacity": 0.85
+        },
+        "label": {
+          "show": true,
+          "fontSize": 10
+        }
+      }
+    ],
+    "links": [
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_retirar",
+        "value": 424,
+        "lineStyle": {
+          "width": 4.5,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_vivienda",
+        "value": 139,
+        "lineStyle": {
+          "width": 3.9714285714285715,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_construcción",
+        "value": 34,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_invasion_gallinero",
+        "value": 16,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_ambiental",
+        "target": "c_ambiental_car",
+        "value": 2,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_geam",
+        "value": 401,
+        "lineStyle": {
+          "width": 4.5,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_negociar",
+        "value": 271,
+        "lineStyle": {
+          "width": 4.5,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_permiso",
+        "value": 70,
+        "lineStyle": {
+          "width": 2.0,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_predial_ingreso",
+        "value": 26,
+        "lineStyle": {
+          "width": 1.2,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_tala",
+        "value": 625,
+        "lineStyle": {
+          "width": 4.5,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_vegetación",
+        "value": 456,
+        "lineStyle": {
+          "width": 4.5,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_talar",
+        "value": 98,
+        "lineStyle": {
+          "width": 2.8,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_forestal",
+        "target": "c_forestal_árboles",
+        "value": 92,
+        "lineStyle": {
+          "width": 2.6285714285714286,
+          "opacity": 0.6
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_ambiental",
+        "value": 23,
+        "lineStyle": {
+          "width": 1.15,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_predial",
+        "value": 93,
+        "lineStyle": {
+          "width": 3.5,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_invasion",
+        "target": "c_forestal",
+        "value": 7,
+        "lineStyle": {
+          "width": 1,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_ambiental",
+        "target": "c_predial",
+        "value": 11,
+        "lineStyle": {
+          "width": 1,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_ambiental",
+        "target": "c_forestal",
+        "value": 37,
+        "lineStyle": {
+          "width": 1.85,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      },
+      {
+        "source": "c_predial",
+        "target": "c_forestal",
+        "value": 427,
+        "lineStyle": {
+          "width": 3.5,
+          "type": "dashed",
+          "opacity": 0.35
+        }
+      }
+    ],
+    "categories": [
+      {
+        "name": "Invasión & Servidumbre"
+      },
+      {
+        "name": "Restricción Ambiental & CAR"
+      },
+      {
+        "name": "Acceso Predial & Permisos"
+      },
+      {
+        "name": "Intervención Forestal"
+      }
+    ]
+  }
+}
