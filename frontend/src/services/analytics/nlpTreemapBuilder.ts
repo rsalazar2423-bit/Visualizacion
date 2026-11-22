@@ -13,12 +13,14 @@ function buildClusterHierarchy(modeData: NlpModeData) {
       name: c.name,
       value: c.value,
       mora: c.mora,
+      vencidos_pct: c.vencidos_pct,
       clusterName: c.name,
       itemStyle: { color: c.color },
       children: c.children.map((ch) => ({
         name: ch.name,
         value: ch.value,
         mora: ch.mora,
+        vencidos_pct: ch.vencidos_pct,
         clusterName: c.name,
       })),
     }));
@@ -27,7 +29,17 @@ function buildClusterHierarchy(modeData: NlpModeData) {
 function buildTerritoryHierarchy(modeData: NlpModeData, isDark: boolean) {
   const geoMap = new Map<
     string,
-    { total: number; children: Array<{ name: string; value: number; mora: number; clusterName: string; itemStyle: { color: string } }> }
+    {
+      total: number;
+      children: Array<{
+        name: string;
+        value: number;
+        mora: number;
+        vencidos_pct: number;
+        clusterName: string;
+        itemStyle: { color: string };
+      }>;
+    }
   >();
 
   for (const c of modeData.treemap.children) {
@@ -43,6 +55,7 @@ function buildTerritoryHierarchy(modeData: NlpModeData, isDark: boolean) {
         name: c.name,
         value: ch.value,
         mora: ch.mora,
+        vencidos_pct: ch.vencidos_pct,
         clusterName: c.name,
         itemStyle: { color: c.color },
       });
@@ -53,14 +66,18 @@ function buildTerritoryHierarchy(modeData: NlpModeData, isDark: boolean) {
   return Array.from(geoMap.entries())
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 10)
-    .map(([geoName, info]) => ({
-      name: geoName,
-      value: info.total,
-      mora: info.children[0]?.mora ?? 0,
-      clusterName: info.children.sort((a, b) => b.value - a.value)[0]?.clusterName ?? '',
-      itemStyle: { color: parentBg },
-      children: info.children,
-    }));
+    .map(([geoName, info]) => {
+      info.children.sort((a, b) => b.value - a.value);
+      return {
+        name: geoName,
+        value: info.total,
+        mora: info.children[0]?.mora ?? 0,
+        vencidos_pct: info.children[0]?.vencidos_pct ?? 0,
+        clusterName: info.children[0]?.clusterName ?? '',
+        itemStyle: { color: parentBg },
+        children: info.children,
+      };
+    });
 }
 
 export function buildNlpTreemapOption(
@@ -81,9 +98,11 @@ export function buildNlpTreemapOption(
     backgroundColor: 'transparent',
     title: {
       text: title,
+      subtext: data.length === 0 ? 'Sin avisos clasificados en este filtro' : '',
       left: 8,
       top: 6,
       textStyle: { fontSize: 11.5, fontWeight: 700, color: tokens.textColor },
+      subtextStyle: { fontSize: 10.5, color: tokens.textSecondary },
     },
     tooltip: {
       backgroundColor: tokens.tooltipBg,
@@ -100,8 +119,11 @@ export function buildNlpTreemapOption(
           : d.children
             ? `${geoLabel} · ${d.children.length} causas`
             : `Causa en ${p.treePathInfo?.[1]?.name ?? geoLabel}`;
-        const moraHtml = d.children && !isClusterFirst ? '' : `<div>Mediana: <b>${d.mora} días</b></div>`;
-        return `<div style="font-weight:700;">${d.name}</div><div style="font-size:10px;color:${tokens.textSecondary};">${context}</div><div>Avisos: <b>${Number(d.value).toLocaleString()}</b> (${pct}%)</div>${moraHtml}`;
+        const extra =
+          d.children && !isClusterFirst
+            ? ''
+            : `<div>Mediana: <b>${d.mora} días</b> · Vencidos: <b>${d.vencidos_pct ?? 0}%</b></div>`;
+        return `<div style="font-weight:700;">${d.name}</div><div style="font-size:10px;color:${tokens.textSecondary};">${context}</div><div>Avisos: <b>${Number(d.value).toLocaleString()}</b> (${pct}%)</div>${extra}`;
       },
     },
     series: [

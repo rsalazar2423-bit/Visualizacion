@@ -3,6 +3,7 @@
  */
 
 export type NlpGroupMode = 'cluster' | 'depto';
+export type NlpSlaFilter = 'todos' | 'vencidos' | 'a_tiempo';
 
 export interface NlpTermFreq {
   term: string;
@@ -19,12 +20,14 @@ export interface NlpTreemapChild {
   name: string;
   value: number;
   mora: number;
+  vencidos_pct: number;
 }
 
 export interface NlpTreemapNode {
   name: string;
   value: number;
   mora: number;
+  vencidos_pct: number;
   color: string;
   children: NlpTreemapChild[];
 }
@@ -41,6 +44,7 @@ export interface NlpClusterSummary {
   count: number;
   pct: number;
   mediana_dias: number;
+  vencidos_pct: number;
   desc: string;
   top_terms: NlpTermFreq[];
   deptos: NlpDeptoCount[];
@@ -80,11 +84,18 @@ export interface NlpScopeData {
   comparativa_vs: NlpClusterComparison[];
 }
 
-export interface NlpGraphPayload extends NlpScopeData {
+export interface NlpSlaScopes {
+  todos: NlpScopeData;
+  vencidos: NlpScopeData;
+  a_tiempo: NlpScopeData;
+}
+
+export interface NlpGraphPayload {
   metadata: {
     title: string;
     total: number;
   };
   departamentos: string[];
-  by_depto: Record<string, NlpScopeData>;
+  nacional: NlpSlaScopes;
+  by_depto: Record<string, NlpSlaScopes>;
 }

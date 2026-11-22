@@ -5,7 +5,7 @@ import { useThemeStore } from '../../stores/themeStore';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
 import { buildNlpTreemapOption } from '../../services/analytics/nlpTreemapBuilder';
-import type { NlpGraphPayload, NlpClusterComparison, NlpGroupMode, NlpScopeData } from '../../types/nlpGraph';
+import type { NlpGraphPayload, NlpClusterComparison, NlpGroupMode, NlpSlaFilter, NlpScopeData } from '../../types/nlpGraph';
 import NlpComparisonBar from '../territory/NlpComparisonBar.vue';
 import NlpDetailPanel from '../territory/NlpDetailPanel.vue';
 
@@ -13,6 +13,7 @@ const themeStore = useThemeStore();
 const territoryStore = useTerritoryStore();
 const nlpData = ref<NlpGraphPayload | null>(null);
 const groupMode = ref<NlpGroupMode>('cluster');
+const slaFilter = ref<NlpSlaFilter>('todos');
 const selectedClusterId = ref<string | null>(null);
 
 const leftRef = ref<HTMLDivElement | null>(null);
@@ -29,10 +30,15 @@ const activeDepto = computed(() => {
 
 const activeScope = computed<NlpScopeData | null>(() => {
   if (!nlpData.value) return null;
-  return activeDepto.value ? nlpData.value.by_depto[activeDepto.value] : nlpData.value;
+  const slaScopes = activeDepto.value ? nlpData.value.by_depto[activeDepto.value] : nlpData.value.nacional;
+  return slaScopes?.[slaFilter.value] ?? null;
 });
 
 const geoLabel = computed(() => (activeDepto.value ? 'Municipio' : 'Departamento'));
+
+const slaLabel = computed(() =>
+  slaFilter.value === 'vencidos' ? ' · Vencidos' : slaFilter.value === 'a_tiempo' ? ' · A Tiempo' : '',
+);
 
 const selectedComparison = computed<NlpClusterComparison | null>(() => {
   const list = activeScope.value?.comparativa_vs ?? [];
@@ -44,7 +50,7 @@ function renderCharts() {
   const scope = activeScope.value;
   if (!scope) return;
   const isDark = themeStore.isDark;
-  const scopeTag = activeDepto.value ? ` · ${activeDepto.value}` : '';
+  const scopeTag = `${activeDepto.value ? ` · ${activeDepto.value}` : ''}${slaLabel.value}`;
   const abTot = scope.abiertos.total_avisos.toLocaleString();
   const ceTot = scope.cerrados.total_avisos.toLocaleString();
 
@@ -54,7 +60,7 @@ function renderCharts() {
       leftChart.on('click', handleNodeClick);
     }
     leftChart.setOption(
-      buildNlpTreemapOption(scope.abiertos, `Abiertos${scopeTag} (${abTot} avisos)`, groupMode.value, geoLabel.value, isDark),
+      buildNlpTreemapOption(scope.abiertos, `Abiertos${scopeTag} (${abTot})`, groupMode.value, geoLabel.value, isDark),
       true,
     );
   }
@@ -64,7 +70,7 @@ function renderCharts() {
       rightChart.on('click', handleNodeClick);
     }
     rightChart.setOption(
-      buildNlpTreemapOption(scope.cerrados, `Cerrados${scopeTag} (${ceTot} avisos)`, groupMode.value, geoLabel.value, isDark),
+      buildNlpTreemapOption(scope.cerrados, `Cerrados${scopeTag} (${ceTot})`, groupMode.value, geoLabel.value, isDark),
       true,
     );
   }
@@ -81,9 +87,8 @@ function handleNodeClick(p: any) {
 onMounted(async () => {
   try {
     nlpData.value = await fetchNlpGraphData();
-    if (nlpData.value.comparativa_vs.length > 0) {
-      selectedClusterId.value = nlpData.value.comparativa_vs[0].id;
-    }
+    const first = nlpData.value.nacional.todos.comparativa_vs[0];
+    if (first) selectedClusterId.value = first.id;
     renderCharts();
     ro = new ResizeObserver(() => {
       leftChart?.resize();
@@ -102,7 +107,7 @@ onUnmounted(() => {
   rightChart?.dispose();
 });
 
-watch([() => themeStore.isDark, activeDepto, groupMode], () => renderCharts());
+watch([() => themeStore.isDark, activeDepto, groupMode, slaFilter], () => renderCharts());
 </script>
 
 <template>
@@ -111,23 +116,30 @@ watch([() => themeStore.isDark, activeDepto, groupMode], () => renderCharts());
       <div class="header-titles">
         <div class="title-left">
           <span class="main-title">Análisis Semántico VS (NLP)</span>
-          <span class="scope-pill">{{ activeDepto ? `Depto: ${activeDepto}` : 'Nacional (Todos Deptos)' }}</span>
+          <span class="scope-pill">{{ activeDepto ? `Depto: ${activeDepto}` : 'Nacional' }}</span>
         </div>
-        <div class="group-toggle" role="group" aria-label="Agrupación jerárquica">
-          <button
-            class="toggle-chip"
-            :class="{ active: groupMode === 'cluster' }"
-            @click="groupMode = 'cluster'"
-          >
-            Clúster → {{ geoLabel }}
-          </button>
-          <button
-            class="toggle-chip"
-            :class="{ active: groupMode === 'depto' }"
-            @click="groupMode = 'depto'"
-          >
-            {{ geoLabel }} → Clúster
-          </button>
+
+        <div class="controls-right">
+          <div class="group-toggle" role="group" aria-label="Filtro de plazo SLA">
+            <button class="toggle-chip" :class="{ active: slaFilter === 'todos' }" @click="slaFilter = 'todos'">
+              Todos
+            </button>
+            <button class="toggle-chip danger-chip" :class="{ active: slaFilter === 'vencidos' }" @click="slaFilter = 'vencidos'">
+              Solo Vencidos
+            </button>
+            <button class="toggle-chip" :class="{ active: slaFilter === 'a_tiempo' }" @click="slaFilter = 'a_tiempo'">
+              A Tiempo
+            </button>
+          </div>
+
+          <div class="group-toggle" role="group" aria-label="Agrupación jerárquica">
+            <button class="toggle-chip" :class="{ active: groupMode === 'cluster' }" @click="groupMode = 'cluster'">
+              Clúster → {{ geoLabel }}
+            </button>
+            <button class="toggle-chip" :class="{ active: groupMode === 'depto' }" @click="groupMode = 'depto'">
+              {{ geoLabel }} → Clúster
+            </button>
+          </div>
         </div>
       </div>
 
@@ -152,7 +164,7 @@ watch([() => themeStore.isDark, activeDepto, groupMode], () => renderCharts());
 .semantic-vs-card { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
 .vs-header-cluster { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
 .header-titles { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
-.title-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.title-left, .controls-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .main-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
 .scope-pill {
   font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
@@ -164,11 +176,12 @@ watch([() => themeStore.isDark, activeDepto, groupMode], () => renderCharts());
 }
 .toggle-chip {
   border: none; background: transparent; color: var(--text-secondary);
-  font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 4px; cursor: pointer;
+  font-size: 0.71rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; cursor: pointer;
 }
 .toggle-chip.active {
   background: var(--bg-card); color: var(--color-brand, #0F766E); font-weight: 700; box-shadow: var(--shadow-sm);
 }
+.toggle-chip.danger-chip.active { color: var(--color-danger, #BE123C); }
 .vs-dual-canvases { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .canvas-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
 .left-border { border-top: 3px solid var(--color-danger, #BE123C); }
