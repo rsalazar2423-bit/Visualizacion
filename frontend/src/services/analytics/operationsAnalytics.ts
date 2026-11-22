@@ -37,6 +37,7 @@ export async function computePortadaKpis(params?: {
   const abiertos = avisos.filter((a) => a['Estado aviso'] === 'Abierto');
   const abiertosVencidos = abiertos.filter((a) => a.Cumplimiento_Estado === 'Excede Plazo');
   const cerradosCumple = cerrados.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo');
+  const cerradosMora = cerrados.filter((a) => a.Cumplimiento_Estado === 'Excede Plazo');
 
   const uniqueDeptos = new Set(fEquipos.map((e) => e.Departamento).filter((d) => d && d !== 'No Identificado'));
   const uniqueMpios = new Set(fEquipos.map((e) => e.Municipio).filter((m) => m && m !== 'No Identificado'));
@@ -55,6 +56,9 @@ export async function computePortadaKpis(params?: {
     avisos_abiertos: abiertos.length,
     abiertos_vencidos: abiertosVencidos.length,
     tiempo_tipico_mediana: medianaCerrados,
+    avisos_cerrados: cerrados.length,
+    cerrados_a_tiempo: cerradosCumple.length,
+    cerrados_fuera_plazo: cerradosMora.length,
   };
 }
 
@@ -135,6 +139,7 @@ export async function computeOperationsData(params: {
   const abiertos = donutDf.filter((a) => a['Estado aviso'] === 'Abierto');
   const abiertosVencidos = abiertos.filter((a) => a.Cumplimiento_Estado === 'Excede Plazo');
   const cerradosCumple = cerrados.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo');
+  const cerradosMora = cerrados.filter((a) => a.Cumplimiento_Estado === 'Excede Plazo');
 
   const sourceMediana = cerrados.length > 0 ? cerrados : donutDf;
   const totalDiasCerrados = sourceMediana.reduce((sum, a) => sum + (a['Días abierto'] || 0), 0);
@@ -158,6 +163,8 @@ export async function computeOperationsData(params: {
     abiertos_vencidos: abiertosVencidos.length,
     tiempo_tipico_mediana: medianaCerrados,
     avisos_cerrados: cerrados.length,
+    cerrados_a_tiempo: cerradosCumple.length,
+    cerrados_fuera_plazo: cerradosMora.length,
   };
 
   const matrix: Record<string, { cumple: number; excede: number }> = {};

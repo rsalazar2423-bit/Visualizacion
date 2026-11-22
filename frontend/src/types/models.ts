@@ -9,6 +9,9 @@ export interface PortadaKpis {
   avisos_abiertos?: number;
   abiertos_vencidos?: number;
   tiempo_tipico_mediana?: number;
+  avisos_cerrados?: number;
+  cerrados_a_tiempo?: number;
+  cerrados_fuera_plazo?: number;
 }
 
 export interface FilterOption {
@@ -33,6 +36,8 @@ export interface OperationsKpis {
   abiertos_vencidos?: number;
   tiempo_tipico_mediana?: number | null;
   avisos_cerrados?: number;
+  cerrados_a_tiempo?: number;
+  cerrados_fuera_plazo?: number;
 }
 
 export interface StackedBarItem {
@@ -57,6 +62,8 @@ export interface TimeSeriesPoint {
   year: number;
   ingresados: number;
   cerrados: number;
+  cerrados_a_tiempo: number;
+  cerrados_fuera_plazo: number;
   abiertos_vencidos: number;
   cumple_oportuno_pct: number | null;
   mediana_dias: number | null;

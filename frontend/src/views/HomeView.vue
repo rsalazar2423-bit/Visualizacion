@@ -75,7 +75,7 @@ onMounted(async () => {
           title="Cumplimiento SLA"
           :value="`${kpis.cumplimiento_oportuno_pct ?? kpis.pct_cumplimiento}%`"
           badge="Cerrados"
-          subtitle="Cerrados en plazo (corte 2023-05-06)"
+          :subtitle="kpis.cerrados_a_tiempo != null && kpis.cerrados_fuera_plazo != null ? `${kpis.cerrados_a_tiempo.toLocaleString()} a tiempo · ${kpis.cerrados_fuera_plazo.toLocaleString()} fuera de plazo` : 'Cerrados en plazo (corte 2023-05-06)'"
           color="brand"
         />
         <KpiCard

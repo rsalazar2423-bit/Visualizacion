@@ -372,7 +372,7 @@ function renderTipoBars(chartInstance: echarts.ECharts, isDark: boolean) {
             fontWeight: 700,
             formatter: (p: any) => {
               const d = p.data;
-              return `${d.val} (${d.pct}%)`;
+              return `${Number(d.value).toLocaleString()} (${d.pct}%)`;
             },
           },
         },

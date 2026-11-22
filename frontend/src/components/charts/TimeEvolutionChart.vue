@@ -19,20 +19,33 @@ const seriesPoints = computed(() => {
 
 const summaryStats = computed(() => {
   const pts = seriesPoints.value;
-  if (!pts.length) return { totalIngresos: 0, totalCierres: 0, peakYear: '-', peakIngresos: 0 };
+  if (!pts.length) {
+    return {
+      totalIngresos: 0,
+      totalCierres: 0,
+      cerradosATiempo: 0,
+      cerradosFueraPlazo: 0,
+      peakYear: '-',
+      peakIngresos: 0,
+    };
+  }
   let totalIngresos = 0;
   let totalCierres = 0;
+  let cerradosATiempo = 0;
+  let cerradosFueraPlazo = 0;
   let peakYear = '-';
   let peakIngresos = 0;
   for (const p of pts) {
     totalIngresos += p.ingresados;
     totalCierres += p.cerrados;
+    cerradosATiempo += (p.cerrados_a_tiempo ?? 0);
+    cerradosFueraPlazo += (p.cerrados_fuera_plazo ?? 0);
     if (p.ingresados > peakIngresos) {
       peakIngresos = p.ingresados;
       peakYear = p.periodo;
     }
   }
-  return { totalIngresos, totalCierres, peakYear, peakIngresos };
+  return { totalIngresos, totalCierres, cerradosATiempo, cerradosFueraPlazo, peakYear, peakIngresos };
 });
 
 const chartContainer = ref<HTMLDivElement | null>(null);
@@ -96,6 +109,8 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
   const periods = pts.map((p) => p.periodo);
   const ingresados = pts.map((p) => p.ingresados);
   const cerrados = pts.map((p) => p.cerrados);
+  const cerradosATiempo = pts.map((p) => p.cerrados_a_tiempo ?? 0);
+  const cerradosFueraPlazo = pts.map((p) => p.cerrados_fuera_plazo ?? 0);
   const vencidos = pts.map((p) => p.abiertos_vencidos);
   const overlayData = pts.map((p) =>
     metricOverlay.value === 'cumplimiento' ? p.cumple_oportuno_pct : p.mediana_dias
@@ -114,6 +129,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       formatter: (params: any) => {
         if (!Array.isArray(params) || params.length === 0) return '';
         const yr = params[0].axisValue;
+        const pt = pts.find((p) => String(p.periodo) === String(yr));
         let html = `<div style="font-weight:800;margin-bottom:6px;color:${tokens.textColor};">Año ${yr}</div>`;
         for (const s of params) {
           const val = s.value;
@@ -122,14 +138,22 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
             formattedVal = `<span style="color:${tokens.textSecondary};font-style:italic;">Sin actividad</span>`;
           } else if (s.seriesName.includes('%')) {
             formattedVal = `<b>${val}%</b>`;
-          } else if (s.seriesName.includes('Mediana')) {
+          } else if (s.seriesName.includes('Mediana') || s.seriesName.includes('Tiempo Típico')) {
             formattedVal = `<b>${val} días</b>`;
           } else {
-            formattedVal = `<b>${val}</b>`;
+            formattedVal = `<b>${Number(val).toLocaleString()}</b>`;
           }
           html += `<div style="display:flex;justify-content:space-between;gap:14px;margin:3px 0;">
             <span>${s.marker} ${s.seriesName}:</span>
             <span>${formattedVal}</span>
+          </div>`;
+        }
+        if (pt && pt.cerrados > 0) {
+          const aTiempo = pt.cerrados_a_tiempo ?? 0;
+          const fPlazo = pt.cerrados_fuera_plazo ?? 0;
+          const pct = Math.round((aTiempo / pt.cerrados) * 100);
+          html += `<div style="margin-top:6px;padding-top:4px;border-top:1px dashed ${tokens.gridColor};font-size:10.5px;color:${tokens.textSecondary};">
+            Efectividad cierres: <b style="color:${tokens.textColor};">${pct}% en plazo</b> (${aTiempo.toLocaleString()} a tiempo / ${fPlazo.toLocaleString()} fuera de plazo)
           </div>`;
         }
         return html;
@@ -138,8 +162,11 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     legend: {
       top: 0,
       left: 'center',
-      itemGap: 16,
+      itemGap: 14,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
+      selected: {
+        'Avisos Cerrados (Total)': false,
+      },
     },
     // Mantiene el controlador nativo de selección de área (dataZoomSelect) activo en ECharts,
     // mientras los botones visibles viven limpiamente en el toolbar HTML superior sin colisiones.
@@ -220,7 +247,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         smooth: 0.25,
         symbol: 'circle',
         symbolSize: 4,
-        lineStyle: { width: 1.5, color: isDark ? '#64748B' : '#94A3B8' }, // Gris Pizarra Tenue (Contexto Pasivo)
+        lineStyle: { width: 1.5, color: isDark ? '#64748B' : '#94A3B8' }, // Gris Pizarra Tenue (Demanda de fondo)
         itemStyle: { color: isDark ? '#64748B' : '#94A3B8' },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -231,12 +258,31 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         data: ingresados,
       },
       {
-        name: 'Avisos Cerrados',
+        name: 'Cerrados a Tiempo',
         type: 'line',
         smooth: 0.25,
         symbol: 'circle',
         symbolSize: 5,
-        lineStyle: { width: 1.8, color: isDark ? '#38BDF8' : '#0284C7' }, // Azul Acero Técnico (Capacidad)
+        lineStyle: { width: 2, color: tokens.sla.cumple }, // Teal Profundo / Esmeralda
+        itemStyle: { color: tokens.sla.cumple },
+        data: cerradosATiempo,
+      },
+      {
+        name: 'Cerrados Fuera de Plazo',
+        type: 'line',
+        smooth: 0.25,
+        symbol: 'triangle',
+        symbolSize: 6,
+        lineStyle: { width: 2, color: tokens.sla.warning }, // Ámbar / Cobre Mate
+        itemStyle: { color: tokens.sla.warning },
+        data: cerradosFueraPlazo,
+      },
+      {
+        name: 'Avisos Cerrados (Total)',
+        type: 'line',
+        smooth: 0.25,
+        symbol: 'none',
+        lineStyle: { width: 1.5, type: 'dotted', color: isDark ? '#38BDF8' : '#0284C7' }, // Azul Acero Técnico (referencia total)
         itemStyle: { color: isDark ? '#38BDF8' : '#0284C7' },
         data: cerrados,
       },
@@ -262,9 +308,15 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         lineStyle: {
           width: 2.2,
           type: 'dashed', // Punteada: Diferenciación inmediata de escala porcentual
-          color: isDark ? '#FBBF24' : '#D97706', // Ámbar refinado para la tasa de efectividad
+          color: isCumpleMode
+            ? (isDark ? '#60A5FA' : '#2563EB') // Azul Real / Zafiro Ejecutivo
+            : (isDark ? '#C084FC' : '#7E22CE'), // Púrpura Técnico
         },
-        itemStyle: { color: isDark ? '#FBBF24' : '#D97706' },
+        itemStyle: {
+          color: isCumpleMode
+            ? (isDark ? '#60A5FA' : '#2563EB')
+            : (isDark ? '#C084FC' : '#7E22CE'),
+        },
         data: overlayData,
       },
     ],
@@ -284,7 +336,8 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
           Pico de demanda: <b>{{ summaryStats.peakYear }} ({{ summaryStats.peakIngresos }} avisos)</b>
         </span>
         <span class="evo-stat">
-          Balance histórico: <b>{{ summaryStats.totalCierres.toLocaleString() }} cerrados</b> de
+          Balance histórico: <b>{{ summaryStats.totalCierres.toLocaleString() }} cerrados</b>
+          ({{ summaryStats.cerradosATiempo.toLocaleString() }} a tiempo · {{ summaryStats.cerradosFueraPlazo.toLocaleString() }} fuera de plazo) de
           <b>{{ summaryStats.totalIngresos.toLocaleString() }} ingresados</b>
         </span>
       </div>

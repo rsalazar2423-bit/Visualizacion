@@ -111,6 +111,7 @@ export function buildTimeSeries(data: AvisoRecord[]): TimeSeriesPoint[] {
     );
 
     const cerradosEnPlazo = cerradosRows.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
+    const cerradosFueraPlazo = cerradosRows.filter((a) => a.Cumplimiento_Estado === 'Excede Plazo').length;
     const baseEval = cerradosRows.length > 0 ? cerradosRows : ingresadosRows;
     const cumpleEval = baseEval.filter((a) => a.Cumplimiento_Estado === 'Cumple Plazo').length;
 
@@ -128,6 +129,8 @@ export function buildTimeSeries(data: AvisoRecord[]): TimeSeriesPoint[] {
       year: yr,
       ingresados: ingresadosRows.length,
       cerrados: cerradosRows.length,
+      cerrados_a_tiempo: cerradosEnPlazo,
+      cerrados_fuera_plazo: cerradosFueraPlazo,
       abiertos_vencidos: vencidosRows.length,
       cumple_oportuno_pct: cumplePct,
       mediana_dias: diasList.length > 0 ? calcMedian(diasList) : null,

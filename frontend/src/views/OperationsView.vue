@@ -108,7 +108,12 @@ onMounted(async () => {
         <div class="kpi-main">
           <span class="chip-label">Cumplimiento SLA</span>
           <b class="chip-val success-text">{{ opsStore.data.kpis.cumplimiento_oportuno_pct ?? opsStore.data.kpis.cumple_pct }}%</b>
-          <span class="chip-sub">Cerrados atendidos en plazo</span>
+          <span class="chip-sub">
+            <template v-if="opsStore.data.kpis.cerrados_a_tiempo != null && opsStore.data.kpis.cerrados_fuera_plazo != null">
+              {{ opsStore.data.kpis.cerrados_a_tiempo.toLocaleString() }} a tiempo · {{ opsStore.data.kpis.cerrados_fuera_plazo.toLocaleString() }} fuera de plazo
+            </template>
+            <template v-else>Cerrados atendidos en plazo</template>
+          </span>
         </div>
         <div class="kpi-icon-box">
           <CheckCircle2 :size="18" />
