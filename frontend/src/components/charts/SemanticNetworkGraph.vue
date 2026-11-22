@@ -1,136 +1,196 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import * as echarts from 'echarts';
-import { useChart } from '../../composables/useChart';
+import { useThemeStore } from '../../stores/themeStore';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
 import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
-import type { NlpGraphPayload, NlpClusterSummary } from '../../types/nlpGraph';
+import type { NlpGraphPayload, NlpClusterComparison, NlpModeData } from '../../types/nlpGraph';
+import NlpComparisonBar from '../territory/NlpComparisonBar.vue';
 import NlpDetailPanel from '../territory/NlpDetailPanel.vue';
 
+const themeStore = useThemeStore();
 const nlpData = ref<NlpGraphPayload | null>(null);
-const activeMode = ref<'abiertos' | 'cerrados'>('abiertos');
-const selectedCluster = ref<NlpClusterSummary | null>(null);
-const chartContainer = ref<HTMLDivElement | null>(null);
+const selectedComparison = ref<NlpClusterComparison | null>(null);
 
-function handleChartClick(params: any) {
-  if (!nlpData.value || params.dataType !== 'node') return;
-  const currentModeData = nlpData.value[activeMode.value];
-  const node = currentModeData.nodes.find((n) => n.id === params.data?.id);
-  if (!node) return;
-  const cluster = currentModeData.clusters.find((c) => c.name === (node.cluster_name || node.name));
-  selectedCluster.value = cluster || null;
-}
+const leftRef = ref<HTMLDivElement | null>(null);
+const rightRef = ref<HTMLDivElement | null>(null);
+let leftChart: echarts.ECharts | null = null;
+let rightChart: echarts.ECharts | null = null;
+let ro: ResizeObserver | null = null;
 
-function renderGraph(inst: echarts.ECharts, isDark: boolean) {
-  if (!nlpData.value) { inst.clear(); return; }
-  const modeData = nlpData.value[activeMode.value];
+function buildTreemapOption(modeData: NlpModeData, title: string, isDark: boolean): echarts.EChartsOption {
   const tokens = getEChartsThemeTokens(isDark);
+  const borderBg = isDark ? '#0f172a' : '#f8fafc';
+  const data = modeData.treemap.children
+    .filter((c) => c.value > 0)
+    .map((c) => ({
+      name: c.name,
+      value: c.value,
+      mora: c.mora,
+      clusterName: c.name,
+      itemStyle: { color: c.color },
+      children: c.children.map((ch) => ({
+        name: ch.name,
+        value: ch.value,
+        mora: ch.mora,
+        clusterName: c.name,
+      })),
+    }));
 
-  const option: echarts.EChartsOption = {
+  return {
     backgroundColor: 'transparent',
+    title: {
+      text: title,
+      left: 8,
+      top: 6,
+      textStyle: { fontSize: 11.5, fontWeight: 700, color: tokens.textColor },
+    },
     tooltip: {
-      trigger: 'item',
       backgroundColor: tokens.tooltipBg,
       borderColor: tokens.tooltipBorder,
-      textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11 },
+      textStyle: { color: tokens.textColor, fontSize: 11 },
       formatter: (p: any) => {
-        if (p.dataType === 'node') {
-          const d = p.data;
-          const label = d.is_hub ? 'Clúster Causa Raíz' : `Término de ${d.cluster_name}`;
-          const mora = d.mediana_dias ? `<div>Mediana mora: <b>${d.mediana_dias} días</b></div>` : '';
-          return `<div style="font-weight:700;">${d.name}</div><div style="font-size:10px;color:${tokens.textSecondary};">${label}</div><div>Avisos: <b>${Number(d.value).toLocaleString()}</b></div>${mora}`;
-        }
-        return `Co-ocurrencia: <b>${p.data.value} avisos</b>`;
+        const d = p.data || {};
+        if (!d.value) return '';
+        const pct = modeData.total_avisos > 0 ? ((d.value / modeData.total_avisos) * 100).toFixed(1) : '0';
+        const sub = d.clusterName && d.clusterName !== d.name
+          ? `<div style="font-size:10px;color:${tokens.textSecondary};">Clúster: ${d.clusterName}</div>`
+          : `<div style="font-size:10px;color:${tokens.textSecondary};">Clúster NLP (Clic para detalle)</div>`;
+        return `<div style="font-weight:700;">${d.name}</div>${sub}<div>Avisos: <b>${Number(d.value).toLocaleString()}</b> (${pct}%)</div><div>Mediana: <b>${d.mora} días</b></div>`;
       },
     },
-    legend: { top: 4, left: 10, textStyle: { color: tokens.textColor, fontSize: 10.5 }, data: modeData.categories.map((c) => c.name) },
     series: [
       {
-        type: 'graph',
-        layout: 'force',
-        data: modeData.nodes as any,
-        links: modeData.links as any,
-        categories: modeData.categories,
-        roam: true,
-        draggable: true,
-        emphasis: { focus: 'adjacency', lineStyle: { width: 3 } },
-        force: { repulsion: 190, edgeLength: [40, 110], gravity: 0.12, friction: 0.85 },
+        type: 'treemap',
+        top: 30,
+        left: 6,
+        right: 6,
+        bottom: 6,
+        roam: false,
+        nodeClick: false,
+        breadcrumb: { show: false },
+        data: data as any,
+        levels: [
+          { itemStyle: { borderColor: borderBg, borderWidth: 2, gapWidth: 2 } },
+          {
+            itemStyle: { borderColor: borderBg, borderWidth: 2, gapWidth: 2 },
+            upperLabel: {
+              show: true,
+              height: 20,
+              color: '#ffffff',
+              fontSize: 10,
+              fontWeight: 700,
+              padding: [1, 5],
+              formatter: (p: any) => `${p.name} · ${p.value} (${p.data?.mora ?? 0}d)`,
+            },
+          },
+          {
+            colorSaturation: [0.42, 0.78],
+            itemStyle: { borderColor: 'rgba(255,255,255,0.28)', borderWidth: 1, gapWidth: 1 },
+            label: {
+              show: true,
+              fontSize: 9.5,
+              fontWeight: 600,
+              color: '#ffffff',
+              overflow: 'truncate',
+              formatter: (p: any) => `${p.name}\n${p.value}`,
+            },
+          },
+        ],
       },
     ],
   };
-  inst.setOption(option, true);
 }
 
-const { render } = useChart(chartContainer, renderGraph, handleChartClick);
+function renderCharts() {
+  if (!nlpData.value) return;
+  const isDark = themeStore.isDark;
+  const abTot = nlpData.value.abiertos.total_avisos.toLocaleString();
+  const ceTot = nlpData.value.cerrados.total_avisos.toLocaleString();
+  if (leftRef.value) {
+    if (!leftChart) {
+      leftChart = echarts.init(leftRef.value);
+      leftChart.on('click', handleNodeClick);
+    }
+    leftChart.setOption(buildTreemapOption(nlpData.value.abiertos, `Abiertos · Fricción (${abTot} avisos)`, isDark), true);
+  }
+  if (rightRef.value) {
+    if (!rightChart) {
+      rightChart = echarts.init(rightRef.value);
+      rightChart.on('click', handleNodeClick);
+    }
+    rightChart.setOption(buildTreemapOption(nlpData.value.cerrados, `Cerrados · Resueltos (${ceTot} avisos)`, isDark), true);
+  }
+}
+
+function handleNodeClick(p: any) {
+  if (!nlpData.value) return;
+  const targetName = p.data?.clusterName || p.name;
+  const comp = nlpData.value.comparativa_vs.find((c) => c.name === targetName);
+  if (comp) selectedComparison.value = comp;
+}
 
 onMounted(async () => {
   try {
     nlpData.value = await fetchNlpGraphData();
-    if (nlpData.value.abiertos.clusters.length > 0) {
-      selectedCluster.value = nlpData.value.abiertos.clusters[0];
+    if (nlpData.value.comparativa_vs.length > 0) {
+      selectedComparison.value = nlpData.value.comparativa_vs[0];
     }
-    render();
+    renderCharts();
+    ro = new ResizeObserver(() => {
+      leftChart?.resize();
+      rightChart?.resize();
+    });
+    if (leftRef.value) ro.observe(leftRef.value);
+    if (rightRef.value) ro.observe(rightRef.value);
   } catch (err) {
-    console.error('Error al inicializar red semántica NLP:', err);
+    console.error('Error al inicializar treemaps comparativos NLP:', err);
   }
 });
 
-watch([activeMode, nlpData], () => {
-  if (nlpData.value) {
-    selectedCluster.value = nlpData.value[activeMode.value].clusters[0] || null;
-  }
-  render();
+onUnmounted(() => {
+  ro?.disconnect();
+  leftChart?.dispose();
+  rightChart?.dispose();
 });
+
+watch(() => themeStore.isDark, () => renderCharts());
 </script>
 
 <template>
-  <div class="semantic-network-card">
-    <div class="network-toolbar">
-      <div class="toolbar-left">
-        <span class="toolbar-title">Red Semántica de Causas Operativas (NLP)</span>
-        <span class="toolbar-subtitle">Minería de 3.118 descripciones · Co-ocurrencia y mora</span>
+  <div class="semantic-vs-card">
+    <div class="vs-header-cluster">
+      <div class="header-titles">
+        <span class="main-title">Análisis Comparativo Semántico VS (NLP · Clúster → Departamento)</span>
+        <span class="sub-title">Área proporcional al volumen de avisos · Haz clic en un clúster o departamento para contrastar evidencia</span>
       </div>
-      <div class="mode-toggles">
-        <button class="btn-mode danger-mode" :class="{ active: activeMode === 'abiertos' }" @click="activeMode = 'abiertos'">
-          🔴 Fricción & Mora (743 Abiertos)
-        </button>
-        <button class="btn-mode success-mode" :class="{ active: activeMode === 'cerrados' }" @click="activeMode = 'cerrados'">
-          🟢 Capacidad & Éxito (2.375 Cerrados)
-        </button>
-      </div>
+      <NlpComparisonBar
+        v-if="nlpData"
+        :comparisons="nlpData.comparativa_vs"
+        :selected-id="selectedComparison?.id || null"
+        @select="(c) => (selectedComparison = c)"
+      />
     </div>
-    <div class="network-body">
-      <div ref="chartContainer" class="graph-canvas-container"></div>
-      <NlpDetailPanel :cluster="selectedCluster" :active-mode="activeMode" />
+
+    <div class="vs-dual-canvases">
+      <div class="canvas-card left-border"><div ref="leftRef" class="graph-canvas"></div></div>
+      <div class="canvas-card right-border"><div ref="rightRef" class="graph-canvas"></div></div>
     </div>
+
+    <NlpDetailPanel :comparison="selectedComparison" />
   </div>
 </template>
 
 <style scoped>
-.semantic-network-card {
-  width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 8px;
-  background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px;
-}
-.network-toolbar {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-  border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px; flex-shrink: 0;
-}
-.toolbar-left { display: flex; flex-direction: column; gap: 1px; }
-.toolbar-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
-.toolbar-subtitle { font-size: 0.72rem; color: var(--text-secondary); }
-.mode-toggles { display: flex; gap: 6px; }
-.btn-mode {
-  background: var(--bg-subtle); border: 1px solid var(--border-subtle); font-size: 0.73rem;
-  font-weight: 600; padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);
-}
-.btn-mode.active.danger-mode {
-  background: var(--color-danger-soft, rgba(190, 18, 60, 0.12)); border-color: var(--color-danger, #BE123C);
-  color: var(--color-danger, #BE123C); font-weight: 700;
-}
-.btn-mode.active.success-mode {
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12)); border-color: var(--color-brand, #0F766E);
-  color: var(--color-brand, #0F766E); font-weight: 700;
-}
-.network-body { flex: 1; min-height: 0; display: flex; gap: 10px; }
-.graph-canvas-container { flex: 1; min-height: 0; height: 100%; }
+.semantic-vs-card { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.vs-header-cluster { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.header-titles { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+.main-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+.sub-title { font-size: 0.71rem; color: var(--text-secondary); }
+.vs-dual-canvases { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.canvas-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
+.left-border { border-top: 3px solid var(--color-danger, #BE123C); }
+.right-border { border-top: 3px solid var(--color-brand, #0F766E); }
+.graph-canvas { width: 100%; height: 100%; min-height: 240px; }
+@media (max-width: 900px) { .vs-dual-canvases { grid-template-columns: 1fr; } }
 </style>

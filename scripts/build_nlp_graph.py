@@ -1,177 +1,167 @@
-"""build_nlp_graph.py — Extracción semántica y construcción de grafo NLP por capas.
+"""build_nlp_graph.py — Extracción semántica y datos para Treemaps comparativos VS.
 
-Procesa las descripciones textuales de avisos (histórico 2008–2023) y genera
-la estructura de nodos y enlaces para ECharts Force Graph (Abiertos vs. Cerrados).
+Genera un JSON con estructura de árbol jerárquica (Clúster → Departamento)
+para renderizar Treemaps duales (Abiertos VS Cerrados) con métricas de mora.
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-import re
 import pandas as pd
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-EXCEL_PATH = ROOT_DIR / "backend" / "src" / "data" / "histórico_filtrado_proc.xlsx"
 OUTPUT_PATH = ROOT_DIR / "frontend" / "public" / "data" / "nlp_graph_data.json"
+
+import sys
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+VENV_SITE = ROOT_DIR / ".venv" / "lib" / "python3.14" / "site-packages"
+if VENV_SITE.exists() and str(VENV_SITE) not in sys.path:
+    sys.path.append(str(VENV_SITE))
 
 CLUSTERS = [
     {
         "id": "c_invasion",
         "name": "Invasión & Servidumbre",
         "color": "#BE123C",
-        "terms": ["vivienda", "retirar", "establo", "gallinero", "construcción", "bodega", "invasión", "letrina", "casa"],
-        "desc": "Construcciones ilegales y ocupaciones físicas bajo la franja de servidumbre de alta tensión.",
+        "terms": ["vivienda", "retirar", "establo", "gallinero", "construcción",
+                  "bodega", "invasión", "letrina", "casa"],
+        "desc": "Construcciones ilegales y ocupaciones bajo la franja de servidumbre.",
     },
     {
         "id": "c_ambiental",
         "name": "Restricción Ambiental & CAR",
         "color": "#D97706",
-        "terms": ["crpochivor", "car", "corporación", "tramite", "trámite", "salvoconducto", "ambiental", "licencia"],
-        "desc": "Trámites, salvoconductos y permisos demorados ante Corporaciones Autónomas Regionales.",
+        "terms": ["crpochivor", "car", "corporación", "tramite", "trámite",
+                  "salvoconducto", "ambiental", "licencia"],
+        "desc": "Trámites y permisos demorados ante Corporaciones Autónomas Regionales.",
     },
     {
         "id": "c_predial",
         "name": "Acceso Predial & Permisos",
         "color": "#0284C7",
-        "terms": ["ingreso", "geam", "permiso", "propietario", "acceso", "mspat", "negociar"],
-        "desc": "Negativas de paso de propietarios prediales para ingresar a realizar mantenimiento a torres.",
+        "terms": ["ingreso", "geam", "permiso", "propietario", "acceso",
+                  "mspat", "negociar"],
+        "desc": "Negativas de paso de propietarios para mantenimiento de torres.",
     },
     {
         "id": "c_forestal",
         "name": "Intervención Forestal",
         "color": "#0F766E",
-        "terms": ["tala", "talar", "árboles", "arboles", "pino", "eucalipto", "platano", "plátano", "vegetación", "poda"],
-        "desc": "Riesgo de rozamiento con cables; podas mecánicas y talas forestales en faja de seguridad.",
+        "terms": ["tala", "talar", "árboles", "arboles", "pino", "eucalipto",
+                  "platano", "plátano", "vegetación", "poda"],
+        "desc": "Podas mecánicas y talas forestales en faja de seguridad.",
     },
 ]
 
 
-def _build_mode_data(df: pd.DataFrame, mode: str) -> dict:
+def _build_treemap(df: pd.DataFrame, mode: str) -> dict:
+    """Construye árbol jerárquico: Clúster → Departamento, con métricas."""
     sub = df[df["Estado aviso"] == mode].copy()
-    total_avisos = len(sub)
-    categories = [{"name": c["name"]} for c in CLUSTERS]
+    total = len(sub)
+    clusters_out = []
+    treemap_children = []
 
-    nodes = []
-    links = []
-    clusters_summary = []
-
-    # 1. Crear nodos centrales de clúster (Hubs)
-    for idx, c in enumerate(CLUSTERS):
-        pat = "|".join(c["terms"])
-        matched = sub[sub["Descripción"].str.lower().str.contains(pat, na=False)]
+    for c in CLUSTERS:
+        pat = "|".join(rf"\b{t}\b" for t in c["terms"])
+        matched = sub[sub["Descripción"].str.lower().str.contains(pat, na=False, regex=True)]
         count = len(matched)
         dias_med = round(float(matched["Días abierto"].median()), 1) if count > 0 else 0
 
-        # Citas textuales reales anonimizadas
+        # Top terms con sus frecuencias para etiquetas enriquecidas
+        term_freq = {}
+        for t in c["terms"]:
+            tf = int(matched["Descripción"].str.lower().str.contains(rf"\b{t}\b", na=False).sum())
+            if tf > 0:
+                term_freq[t] = tf
+        top_terms = sorted(term_freq.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        # Departamentos como hijos del treemap
+        depto_children = []
+        deptos_list = []
+        if count > 0 and "Departamento" in matched.columns:
+            for depto, grp in matched.groupby("Departamento"):
+                if depto == "No Identificado":
+                    continue
+                d_count = len(grp)
+                d_dias = round(float(grp["Días abierto"].median()), 1)
+                deptos_list.append({"depto": str(depto), "count": d_count, "mora": d_dias})
+                depto_children.append({
+                    "name": str(depto),
+                    "value": d_count,
+                    "mora": d_dias,
+                })
+
+        deptos_list.sort(key=lambda x: x["count"], reverse=True)
+
+        # Citas textuales
         quotes = []
         if count > 0:
-            sample_series = matched["Descripción"].dropna().drop_duplicates()
-            quotes = [q.strip() for q in sample_series.head(3).tolist()]
+            quotes = [q.strip() for q in matched["Descripción"].dropna().drop_duplicates().head(4).tolist()]
 
-        # Top departamentos impactados
-        deptos_list = []
-        if "Departamento" in matched.columns and count > 0:
-            top_d = matched["Departamento"].value_counts().head(3)
-            deptos_list = [{"depto": d, "count": int(v)} for d, v in top_d.items()]
-
-        clusters_summary.append({
+        clusters_out.append({
             "id": c["id"],
             "name": c["name"],
             "color": c["color"],
             "count": count,
-            "pct": round((count / total_avisos) * 100, 1) if total_avisos > 0 else 0,
+            "pct": round((count / total) * 100, 1) if total > 0 else 0,
             "mediana_dias": dias_med,
             "desc": c["desc"],
+            "top_terms": [{"term": t.capitalize(), "freq": f} for t, f in top_terms],
+            "deptos": deptos_list[:6],
             "quotes": quotes,
-            "deptos": deptos_list,
         })
 
-        # Nodo central Hub
-        node_size = max(38, min(65, int(25 + (count / total_avisos) * 60))) if total_avisos > 0 else 35
-        nodes.append({
-            "id": c["id"],
+        treemap_children.append({
             "name": c["name"],
-            "symbolSize": node_size,
-            "category": idx,
             "value": count,
-            "mediana_dias": dias_med,
-            "is_hub": True,
-            "itemStyle": {"color": c["color"]},
-            "label": {"show": True, "fontWeight": 700, "fontSize": 11.5},
+            "mora": dias_med,
+            "color": c["color"],
+            "children": sorted(depto_children, key=lambda x: x["value"], reverse=True)[:8],
         })
-
-        # 2. Satélites semánticos más frecuentes para este clúster
-        term_counts = {}
-        for term in c["terms"]:
-            c_term = sub["Descripción"].str.lower().str.count(rf"\b{term}\b").sum()
-            if c_term > 0:
-                term_counts[term] = int(c_term)
-
-        top_terms = sorted(term_counts.items(), key=lambda x: x[1], reverse=True)[:4]
-        for term, t_count in top_terms:
-            satellite_id = f"{c['id']}_{term}"
-            sat_size = max(16, min(28, int(14 + (t_count / (count or 1)) * 16)))
-            nodes.append({
-                "id": satellite_id,
-                "name": term.capitalize(),
-                "symbolSize": sat_size,
-                "category": idx,
-                "value": t_count,
-                "cluster_name": c["name"],
-                "is_hub": False,
-                "itemStyle": {"color": c["color"], "opacity": 0.85},
-                "label": {"show": True, "fontSize": 10},
-            })
-            links.append({
-                "source": c["id"],
-                "target": satellite_id,
-                "value": t_count,
-                "lineStyle": {"width": max(1.2, min(4.5, t_count / 35)), "opacity": 0.6},
-            })
-
-    # Interconexión sutil entre clústeres si hay avisos que comparten problemas
-    for i in range(len(CLUSTERS)):
-        for j in range(i + 1, len(CLUSTERS)):
-            pat_i = "|".join(CLUSTERS[i]["terms"])
-            pat_j = "|".join(CLUSTERS[j]["terms"])
-            overlap = len(sub[
-                sub["Descripción"].str.lower().str.contains(pat_i, na=False) &
-                sub["Descripción"].str.lower().str.contains(pat_j, na=False)
-            ])
-            if overlap >= 5:
-                links.append({
-                    "source": CLUSTERS[i]["id"],
-                    "target": CLUSTERS[j]["id"],
-                    "value": overlap,
-                    "lineStyle": {"width": max(1, min(3.5, overlap / 20)), "type": "dashed", "opacity": 0.35},
-                })
 
     return {
-        "total_avisos": total_avisos,
-        "clusters": clusters_summary,
-        "nodes": nodes,
-        "links": links,
-        "categories": categories,
+        "total_avisos": total,
+        "clusters": clusters_out,
+        "treemap": {"name": mode.capitalize(), "children": treemap_children},
     }
 
 
 def main() -> None:
-    print(f"⏳ Leyendo datos de {EXCEL_PATH}...")
-    df = pd.read_excel(EXCEL_PATH)
-    out_data = {
-        "metadata": {
-            "title": "Red Semántica de Causas Operativas (NLP)",
-            "fuente": "Descripciones de campo 2008–2023",
-            "total_registros": len(df),
-        },
-        "abiertos": _build_mode_data(df, "Abierto"),
-        "cerrados": _build_mode_data(df, "Cerrado"),
+    from backend.src.data.data_loader import load_data
+    print("⏳ Cargando datos con merge equipos + avisos (Departamento incluido)...")
+    _, _, df = load_data(force_reload=True)
+    ab = _build_treemap(df, "Abierto")
+    ce = _build_treemap(df, "Cerrado")
+
+    comparativa = []
+    for a in ab["clusters"]:
+        c = next(x for x in ce["clusters"] if x["id"] == a["id"])
+        tot = a["count"] + c["count"]
+        tasa = round((c["count"] / tot) * 100, 1) if tot > 0 else 0
+        brecha = round(a["mediana_dias"] - c["mediana_dias"], 1)
+        comparativa.append({
+            "id": a["id"], "name": a["name"], "color": a["color"],
+            "abiertos_count": a["count"], "abiertos_pct": a["pct"],
+            "abiertos_mora": a["mediana_dias"],
+            "cerrados_count": c["count"], "cerrados_pct": c["pct"],
+            "cerrados_atencion": c["mediana_dias"],
+            "tasa_cierre": tasa, "brecha_mora_dias": brecha,
+            "desc": a["desc"],
+            "abiertos_terms": a["top_terms"], "cerrados_terms": c["top_terms"],
+            "abiertos_deptos": a["deptos"], "cerrados_deptos": c["deptos"],
+            "abiertos_quotes": a["quotes"], "cerrados_quotes": c["quotes"],
+        })
+
+    out = {
+        "metadata": {"title": "Análisis Comparativo VS (NLP)", "total": len(df)},
+        "abiertos": ab, "cerrados": ce, "comparativa_vs": comparativa,
     }
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(out_data, f, ensure_ascii=False, indent=2)
-    print(f"✅ Archivo generado exitosamente en {OUTPUT_PATH} ({len(out_data['abiertos']['nodes'])} nodos en abiertos)")
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    print(f"✅ JSON generado: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

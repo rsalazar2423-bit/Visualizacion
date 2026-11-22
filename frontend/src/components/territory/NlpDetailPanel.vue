@@ -1,102 +1,165 @@
 <script setup lang="ts">
-import { AlertCircle, CheckCircle2, Quote, MapPin } from 'lucide-vue-next';
-import type { NlpClusterSummary } from '../../types/nlpGraph';
+import { AlertCircle, Quote, TrendingDown, Clock, MapPin } from 'lucide-vue-next';
+import type { NlpClusterComparison } from '../../types/nlpGraph';
 
 defineProps<{
-  cluster: NlpClusterSummary | null;
-  activeMode: 'abiertos' | 'cerrados';
+  comparison: NlpClusterComparison | null;
 }>();
 </script>
 
 <template>
-  <aside class="nlp-detail-panel">
-    <div v-if="cluster" class="panel-content">
-      <div class="panel-header">
-        <span class="cluster-badge" :style="{ borderColor: cluster.color, color: cluster.color }">
-          <span class="badge-dot" :style="{ backgroundColor: cluster.color }"></span>
-          {{ cluster.name }}
-        </span>
-        <span class="cluster-pct">{{ cluster.pct }}% del total</span>
-      </div>
-
-      <div class="kpi-micro-grid">
-        <div class="kpi-mini-box">
-          <span class="kpi-mini-lbl">Volumen</span>
-          <b class="kpi-mini-val">{{ cluster.count.toLocaleString() }} avisos</b>
+  <aside class="vs-detail-drawer">
+    <div v-if="comparison" class="vs-detail-grid">
+      <!-- Columna 1: Resumen, Brecha y Términos Clave -->
+      <div class="vs-col-summary">
+        <div class="cluster-tag" :style="{ borderColor: comparison.color, color: comparison.color }">
+          <span class="tag-dot" :style="{ backgroundColor: comparison.color }"></span>
+          {{ comparison.name }}
         </div>
-        <div class="kpi-mini-box">
-          <span class="kpi-mini-lbl">Mediana de Mora</span>
-          <b class="kpi-mini-val" :class="activeMode === 'abiertos' ? 'danger-val' : 'success-val'">
-            {{ cluster.mediana_dias.toLocaleString() }} días
-          </b>
+        <p class="cluster-desc">{{ comparison.desc }}</p>
+        <div class="gap-badge">
+          <Clock :size="12" />
+          <span v-if="comparison.brecha_mora_dias >= 0">
+            Brecha: <b>+{{ comparison.brecha_mora_dias.toLocaleString() }} días</b> más en abiertos
+          </span>
+          <span v-else>
+            Mora abiertos: <b>{{ comparison.abiertos_mora.toLocaleString() }} d</b> vs cerrados {{ comparison.cerrados_atencion.toLocaleString() }} d
+          </span>
         </div>
-      </div>
-
-      <p class="cluster-desc">{{ cluster.desc }}</p>
-
-      <div v-if="cluster.deptos?.length" class="deptos-zone">
-        <span class="zone-title"><MapPin :size="12" /> Territorios Críticos:</span>
-        <div class="depto-chips">
-          <span v-for="d in cluster.deptos" :key="d.depto" class="depto-chip">
-            {{ d.depto }}: <b>{{ d.count }}</b>
+        <div v-if="comparison.abiertos_terms?.length" class="terms-row">
+          <span class="terms-lbl">Términos NLP:</span>
+          <span v-for="t in comparison.abiertos_terms.slice(0, 4)" :key="t.term" class="term-chip">
+            {{ t.term }} ({{ t.freq }})
           </span>
         </div>
       </div>
 
-      <div v-if="cluster.quotes?.length" class="quotes-zone">
-        <span class="zone-title"><Quote :size="12" /> Citas Textuales de Campo:</span>
+      <!-- Columna 2: Evidencia Abiertos (Deptos + Citas) -->
+      <div class="vs-col-quotes red-border">
+        <span class="quote-header text-danger">
+          <AlertCircle :size="12" /> Abiertos ({{ comparison.abiertos_count }} avisos · ~{{ comparison.abiertos_mora }} d)
+        </span>
+        <div v-if="comparison.abiertos_deptos?.length" class="depto-pills">
+          <MapPin :size="10" class="text-danger" />
+          <span v-for="d in comparison.abiertos_deptos.slice(0, 3)" :key="d.depto" class="depto-pill">
+            {{ d.depto }}: <b>{{ d.count }}</b> ({{ d.mora }}d)
+          </span>
+        </div>
         <ul class="quote-list">
-          <li v-for="(q, idx) in cluster.quotes" :key="idx" class="quote-item">
-            "{{ q }}"
+          <li v-for="(q, idx) in comparison.abiertos_quotes.slice(0, 3)" :key="idx" class="quote-item">
+            <Quote :size="10" /> "{{ q }}"
+          </li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Evidencia Cerrados (Deptos + Citas) -->
+      <div class="vs-col-quotes green-border">
+        <span class="quote-header text-success">
+          <TrendingDown :size="12" /> Cerrados ({{ comparison.cerrados_count }} avisos · ~{{ comparison.cerrados_atencion }} d)
+        </span>
+        <div v-if="comparison.cerrados_deptos?.length" class="depto-pills">
+          <MapPin :size="10" class="text-success" />
+          <span v-for="d in comparison.cerrados_deptos.slice(0, 3)" :key="d.depto" class="depto-pill">
+            {{ d.depto }}: <b>{{ d.count }}</b> ({{ d.mora }}d)
+          </span>
+        </div>
+        <ul class="quote-list">
+          <li v-for="(q, idx) in comparison.cerrados_quotes.slice(0, 3)" :key="idx" class="quote-item">
+            <Quote :size="10" /> "{{ q }}"
           </li>
         </ul>
       </div>
     </div>
 
-    <div v-else class="empty-selection">
-      <AlertCircle v-if="activeMode === 'abiertos'" :size="24" class="text-danger" />
-      <CheckCircle2 v-else :size="24" class="text-success" />
-      <span class="empty-title">Auditoría Semántica de Causa Raíz</span>
-      <p class="empty-desc">
-        Haz clic en cualquier nodo central o satélite del grafo para auditar su impacto cuantitativo, territorios críticos y citas textuales de campo.
-      </p>
+    <div v-else class="empty-state">
+      <span class="empty-text">Haz clic en un clúster o departamento de cualquier treemap para ver el contraste de citas y métricas.</span>
     </div>
   </aside>
 </template>
 
 <style scoped>
-.nlp-detail-panel {
-  width: 280px;
-  flex-shrink: 0;
+.vs-detail-drawer {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 12px;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+.vs-detail-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.45fr 1.45fr;
+  gap: 10px;
+  align-items: start;
+}
+.vs-col-summary { display: flex; flex-direction: column; gap: 5px; }
+.cluster-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 1px 8px;
+  width: fit-content;
+}
+.tag-dot { width: 6px; height: 6px; border-radius: 50%; }
+.cluster-desc { font-size: 0.69rem; color: var(--text-secondary); line-height: 1.3; margin: 0; }
+.gap-badge {
+  font-size: 0.68rem;
+  color: var(--color-danger, #BE123C);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+.terms-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.terms-lbl { font-size: 0.64rem; font-weight: 700; color: var(--text-secondary); }
+.term-chip {
+  font-size: 0.63rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+.vs-col-quotes {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  gap: 4px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  border-left: 3px solid;
 }
-.panel-content { display: flex; flex-direction: column; gap: 10px; }
-.panel-header { display: flex; align-items: center; justify-content: space-between; }
-.cluster-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; border: 1px solid; border-radius: 999px; padding: 2px 10px; }
-.badge-dot { width: 7px; height: 7px; border-radius: 50%; }
-.cluster-pct { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
-.kpi-micro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.kpi-mini-box { background: var(--bg-subtle); border: 1px solid var(--border-subtle); padding: 5px 8px; border-radius: var(--radius-sm); display: flex; flex-direction: column; }
-.kpi-mini-lbl { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
-.kpi-mini-val { font-size: 0.92rem; color: var(--text-primary); }
-.danger-val { color: var(--color-danger, #BE123C); }
-.success-val { color: var(--color-brand, #0F766E); }
-.cluster-desc { font-size: 0.75rem; line-height: 1.35; color: var(--text-secondary); margin: 0; }
-.zone-title { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
-.depto-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-.depto-chip { font-size: 0.68rem; background: var(--bg-subtle); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; color: var(--text-secondary); }
-.depto-chip b { color: var(--text-primary); }
-.quote-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
-.quote-item { font-size: 0.71rem; font-style: italic; color: var(--text-primary); background: var(--bg-subtle); border-left: 3px solid var(--color-brand); padding: 4px 7px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.3; }
-.empty-selection { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; padding: 15px 8px; gap: 6px; }
+.red-border { border-color: var(--color-danger, #BE123C); }
+.green-border { border-color: var(--color-brand, #0F766E); }
+.quote-header { font-size: 0.69rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
 .text-danger { color: var(--color-danger, #BE123C); }
 .text-success { color: var(--color-brand, #0F766E); }
-.empty-title { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); }
-.empty-desc { font-size: 0.74rem; color: var(--text-secondary); line-height: 1.35; margin: 0; }
+.depto-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.depto-pill {
+  font-size: 0.63rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.quote-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.quote-item {
+  font-size: 0.67rem;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.empty-state { text-align: center; padding: 8px; font-size: 0.72rem; color: var(--text-secondary); }
+@media (max-width: 1024px) { .vs-detail-grid { grid-template-columns: 1fr; } }
 </style>

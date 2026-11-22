@@ -1,8 +1,7 @@
 {
   "metadata": {
-    "title": "Red Semántica de Causas Operativas (NLP)",
-    "fuente": "Descripciones de campo 2008–2023",
-    "total_registros": 3118
+    "title": "Análisis Comparativo VS (NLP)",
+    "total": 3118
   },
   "abiertos": {
     "total_avisos": 743,
@@ -11,31 +10,100 @@
         "id": "c_invasion",
         "name": "Invasión & Servidumbre",
         "color": "#BE123C",
-        "count": 450,
-        "pct": 60.6,
+        "count": 447,
+        "pct": 60.2,
         "mediana_dias": 1841.0,
-        "desc": "Construcciones ilegales y ocupaciones físicas bajo la franja de servidumbre de alta tensión.",
+        "desc": "Construcciones ilegales y ocupaciones bajo la franja de servidumbre.",
+        "top_terms": [
+          {
+            "term": "Retirar",
+            "freq": 402
+          },
+          {
+            "term": "Vivienda",
+            "freq": 31
+          },
+          {
+            "term": "Construcción",
+            "freq": 31
+          },
+          {
+            "term": "Bodega",
+            "freq": 20
+          },
+          {
+            "term": "Establo",
+            "freq": 13
+          }
+        ],
+        "deptos": [
+          {
+            "depto": "Cundinamarca",
+            "count": 144,
+            "mora": 2518.0
+          },
+          {
+            "depto": "Valle Del Cauca",
+            "count": 80,
+            "mora": 1685.0
+          },
+          {
+            "depto": "Boyacá",
+            "count": 66,
+            "mora": 1772.5
+          },
+          {
+            "depto": "Cauca",
+            "count": 43,
+            "mora": 1570.0
+          },
+          {
+            "depto": "Tolima",
+            "count": 32,
+            "mora": 2147.0
+          },
+          {
+            "depto": "Caldas",
+            "count": 29,
+            "mora": 891.0
+          }
+        ],
         "quotes": [
           "Retirar vivienda3 pisci term slc vbl sng",
           "Retirar marranera term slc vbl sng 27",
-          "Retirar establo term slc sng vbl"
-        ],
-        "deptos": []
+          "Retirar establo term slc sng vbl",
+          "Retirar bodega term slc vbl sng"
+        ]
       },
       {
         "id": "c_ambiental",
         "name": "Restricción Ambiental & CAR",
         "color": "#D97706",
-        "count": 94,
-        "pct": 12.7,
-        "mediana_dias": 324.0,
-        "desc": "Trámites, salvoconductos y permisos demorados ante Corporaciones Autónomas Regionales.",
-        "quotes": [
-          "Reubicar construcción t120",
-          "Reubicar vivienda rubén m8 185141 t143",
-          "Reubicar construcción d.f.s. t69"
+        "count": 61,
+        "pct": 8.2,
+        "mediana_dias": 313.0,
+        "desc": "Trámites y permisos demorados ante Corporaciones Autónomas Regionales.",
+        "top_terms": [
+          {
+            "term": "Crpochivor",
+            "freq": 61
+          },
+          {
+            "term": "Tramite",
+            "freq": 61
+          }
         ],
-        "deptos": []
+        "deptos": [
+          {
+            "depto": "Boyacá",
+            "count": 61,
+            "mora": 313.0
+          }
+        ],
+        "quotes": [
+          "Adelantar tramite macro ante crpochivor",
+          "Iadelantar tramite macro ante crpochivor"
+        ]
       },
       {
         "id": "c_predial",
@@ -44,510 +112,295 @@
         "count": 66,
         "pct": 8.9,
         "mediana_dias": 753.0,
-        "desc": "Negativas de paso de propietarios prediales para ingresar a realizar mantenimiento a torres.",
+        "desc": "Negativas de paso de propietarios para mantenimiento de torres.",
+        "top_terms": [
+          {
+            "term": "Geam",
+            "freq": 39
+          },
+          {
+            "term": "Negociar",
+            "freq": 15
+          },
+          {
+            "term": "Ingreso",
+            "freq": 11
+          },
+          {
+            "term": "Permiso",
+            "freq": 9
+          },
+          {
+            "term": "Propietario",
+            "freq": 2
+          }
+        ],
+        "deptos": [
+          {
+            "depto": "Boyacá",
+            "count": 28,
+            "mora": 744.0
+          },
+          {
+            "depto": "Cundinamarca",
+            "count": 17,
+            "mora": 759.0
+          },
+          {
+            "depto": "Valle Del Cauca",
+            "count": 9,
+            "mora": 4253.0
+          },
+          {
+            "depto": "Caldas",
+            "count": 5,
+            "mora": 4253.0
+          },
+          {
+            "depto": "Cauca",
+            "count": 3,
+            "mora": 4253.0
+          },
+          {
+            "depto": "Risaralda",
+            "count": 2,
+            "mora": 4253.0
+          }
+        ],
         "quotes": [
           "Negociar galpones gilbertom8.178910 t120",
           "Negociar corrales maria m8.139523 44",
-          "Negociar vivienda colina m8.178887 249"
-        ],
-        "deptos": []
+          "Negociar vivienda colina m8.178887 249",
+          "Negociar vivienda wilson m8.186285 270"
+        ]
       },
       {
         "id": "c_forestal",
         "name": "Intervención Forestal",
         "color": "#0F766E",
-        "count": 92,
-        "pct": 12.4,
-        "mediana_dias": 412.5,
-        "desc": "Riesgo de rozamiento con cables; podas mecánicas y talas forestales en faja de seguridad.",
+        "count": 80,
+        "pct": 10.8,
+        "mediana_dias": 415.0,
+        "desc": "Podas mecánicas y talas forestales en faja de seguridad.",
+        "top_terms": [
+          {
+            "term": "Vegetación",
+            "freq": 61
+          },
+          {
+            "term": "Tala",
+            "freq": 30
+          },
+          {
+            "term": "Árboles",
+            "freq": 6
+          },
+          {
+            "term": "Poda",
+            "freq": 6
+          },
+          {
+            "term": "Eucalipto",
+            "freq": 5
+          }
+        ],
+        "deptos": [
+          {
+            "depto": "Boyacá",
+            "count": 34,
+            "mora": 710.5
+          },
+          {
+            "depto": "Cundinamarca",
+            "count": 24,
+            "mora": 384.5
+          },
+          {
+            "depto": "Valle Del Cauca",
+            "count": 7,
+            "mora": 211.0
+          },
+          {
+            "depto": "Cauca",
+            "count": 6,
+            "mora": 199.5
+          },
+          {
+            "depto": "Nariño",
+            "count": 4,
+            "mora": 24.0
+          },
+          {
+            "depto": "Bogotá, D.C.",
+            "count": 2,
+            "mora": 253.0
+          }
+        ],
         "quotes": [
           "Gestion árboles williat125-8m revisad* r",
-          "Gestionar  eucaliptos  ff 10- 10m r",
-          "F23-geam-gstionar tala vgetación dfs t95"
-        ],
-        "deptos": []
+          "F23-geam-gstionar tala vgetación dfs t95",
+          "Gestionar maguey y pino  t273 10,9m",
+          "F23-geam-gestiona tala de vegtción t-192"
+        ]
       }
     ],
-    "nodes": [
-      {
-        "id": "c_invasion",
-        "name": "Invasión & Servidumbre",
-        "symbolSize": 61,
-        "category": 0,
-        "value": 450,
-        "mediana_dias": 1841.0,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#BE123C"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_invasion_retirar",
-        "name": "Retirar",
-        "symbolSize": 28,
-        "category": 0,
-        "value": 402,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
+    "treemap": {
+      "name": "Abierto",
+      "children": [
+        {
+          "name": "Invasión & Servidumbre",
+          "value": 447,
+          "mora": 1841.0,
           "color": "#BE123C",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Cundinamarca",
+              "value": 144,
+              "mora": 2518.0
+            },
+            {
+              "name": "Valle Del Cauca",
+              "value": 80,
+              "mora": 1685.0
+            },
+            {
+              "name": "Boyacá",
+              "value": 66,
+              "mora": 1772.5
+            },
+            {
+              "name": "Cauca",
+              "value": 43,
+              "mora": 1570.0
+            },
+            {
+              "name": "Tolima",
+              "value": 32,
+              "mora": 2147.0
+            },
+            {
+              "name": "Caldas",
+              "value": 29,
+              "mora": 891.0
+            },
+            {
+              "name": "Nariño",
+              "value": 18,
+              "mora": 675.0
+            },
+            {
+              "name": "Bogotá, D.C.",
+              "value": 13,
+              "mora": 4253.0
+            }
+          ]
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_invasion_vivienda",
-        "name": "Vivienda",
-        "symbolSize": 16,
-        "category": 0,
-        "value": 31,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#BE123C",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_invasion_construcción",
-        "name": "Construcción",
-        "symbolSize": 16,
-        "category": 0,
-        "value": 31,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#BE123C",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_invasion_bodega",
-        "name": "Bodega",
-        "symbolSize": 16,
-        "category": 0,
-        "value": 20,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#BE123C",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_ambiental",
-        "name": "Restricción Ambiental & CAR",
-        "symbolSize": 38,
-        "category": 1,
-        "value": 94,
-        "mediana_dias": 324.0,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#D97706"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_ambiental_crpochivor",
-        "name": "Crpochivor",
-        "symbolSize": 24,
-        "category": 1,
-        "value": 61,
-        "cluster_name": "Restricción Ambiental & CAR",
-        "is_hub": false,
-        "itemStyle": {
+        {
+          "name": "Restricción Ambiental & CAR",
+          "value": 61,
+          "mora": 313.0,
           "color": "#D97706",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Boyacá",
+              "value": 61,
+              "mora": 313.0
+            }
+          ]
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_ambiental_tramite",
-        "name": "Tramite",
-        "symbolSize": 24,
-        "category": 1,
-        "value": 61,
-        "cluster_name": "Restricción Ambiental & CAR",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#D97706",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial",
-        "name": "Acceso Predial & Permisos",
-        "symbolSize": 38,
-        "category": 2,
-        "value": 66,
-        "mediana_dias": 753.0,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#0284C7"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_predial_geam",
-        "name": "Geam",
-        "symbolSize": 23,
-        "category": 2,
-        "value": 39,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
+        {
+          "name": "Acceso Predial & Permisos",
+          "value": 66,
+          "mora": 753.0,
           "color": "#0284C7",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Boyacá",
+              "value": 28,
+              "mora": 744.0
+            },
+            {
+              "name": "Cundinamarca",
+              "value": 17,
+              "mora": 759.0
+            },
+            {
+              "name": "Valle Del Cauca",
+              "value": 9,
+              "mora": 4253.0
+            },
+            {
+              "name": "Caldas",
+              "value": 5,
+              "mora": 4253.0
+            },
+            {
+              "name": "Cauca",
+              "value": 3,
+              "mora": 4253.0
+            },
+            {
+              "name": "Risaralda",
+              "value": 2,
+              "mora": 4253.0
+            },
+            {
+              "name": "Nariño",
+              "value": 1,
+              "mora": 996.0
+            }
+          ]
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial_negociar",
-        "name": "Negociar",
-        "symbolSize": 17,
-        "category": 2,
-        "value": 15,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0284C7",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial_ingreso",
-        "name": "Ingreso",
-        "symbolSize": 16,
-        "category": 2,
-        "value": 11,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0284C7",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial_permiso",
-        "name": "Permiso",
-        "symbolSize": 16,
-        "category": 2,
-        "value": 9,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0284C7",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal",
-        "name": "Intervención Forestal",
-        "symbolSize": 38,
-        "category": 3,
-        "value": 92,
-        "mediana_dias": 412.5,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#0F766E"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_forestal_vegetación",
-        "name": "Vegetación",
-        "symbolSize": 24,
-        "category": 3,
-        "value": 61,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
+        {
+          "name": "Intervención Forestal",
+          "value": 80,
+          "mora": 415.0,
           "color": "#0F766E",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
+          "children": [
+            {
+              "name": "Boyacá",
+              "value": 34,
+              "mora": 710.5
+            },
+            {
+              "name": "Cundinamarca",
+              "value": 24,
+              "mora": 384.5
+            },
+            {
+              "name": "Valle Del Cauca",
+              "value": 7,
+              "mora": 211.0
+            },
+            {
+              "name": "Cauca",
+              "value": 6,
+              "mora": 199.5
+            },
+            {
+              "name": "Nariño",
+              "value": 4,
+              "mora": 24.0
+            },
+            {
+              "name": "Bogotá, D.C.",
+              "value": 2,
+              "mora": 253.0
+            },
+            {
+              "name": "Huila",
+              "value": 1,
+              "mora": 110.0
+            },
+            {
+              "name": "Tolima",
+              "value": 1,
+              "mora": 281.0
+            }
+          ]
         }
-      },
-      {
-        "id": "c_forestal_tala",
-        "name": "Tala",
-        "symbolSize": 19,
-        "category": 3,
-        "value": 30,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0F766E",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal_árboles",
-        "name": "Árboles",
-        "symbolSize": 16,
-        "category": 3,
-        "value": 6,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0F766E",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal_poda",
-        "name": "Poda",
-        "symbolSize": 16,
-        "category": 3,
-        "value": 6,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0F766E",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      }
-    ],
-    "links": [
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_retirar",
-        "value": 402,
-        "lineStyle": {
-          "width": 4.5,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_vivienda",
-        "value": 31,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_construcción",
-        "value": 31,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_bodega",
-        "value": 20,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_ambiental",
-        "target": "c_ambiental_crpochivor",
-        "value": 61,
-        "lineStyle": {
-          "width": 1.7428571428571429,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_ambiental",
-        "target": "c_ambiental_tramite",
-        "value": 61,
-        "lineStyle": {
-          "width": 1.7428571428571429,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_geam",
-        "value": 39,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_negociar",
-        "value": 15,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_ingreso",
-        "value": 11,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_permiso",
-        "value": 9,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_vegetación",
-        "value": 61,
-        "lineStyle": {
-          "width": 1.7428571428571429,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_tala",
-        "value": 30,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_árboles",
-        "value": 6,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_poda",
-        "value": 6,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
-        }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_ambiental",
-        "value": 18,
-        "lineStyle": {
-          "width": 1,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_predial",
-        "value": 11,
-        "lineStyle": {
-          "width": 1,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_forestal",
-        "value": 23,
-        "lineStyle": {
-          "width": 1.15,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      }
-    ],
-    "categories": [
-      {
-        "name": "Invasión & Servidumbre"
-      },
-      {
-        "name": "Restricción Ambiental & CAR"
-      },
-      {
-        "name": "Acceso Predial & Permisos"
-      },
-      {
-        "name": "Intervención Forestal"
-      }
-    ]
+      ]
+    }
   },
   "cerrados": {
     "total_avisos": 2375,
@@ -556,546 +409,868 @@
         "id": "c_invasion",
         "name": "Invasión & Servidumbre",
         "color": "#BE123C",
-        "count": 568,
-        "pct": 23.9,
-        "mediana_dias": 665.5,
-        "desc": "Construcciones ilegales y ocupaciones físicas bajo la franja de servidumbre de alta tensión.",
+        "count": 561,
+        "pct": 23.6,
+        "mediana_dias": 665.0,
+        "desc": "Construcciones ilegales y ocupaciones bajo la franja de servidumbre.",
+        "top_terms": [
+          {
+            "term": "Retirar",
+            "freq": 424
+          },
+          {
+            "term": "Vivienda",
+            "freq": 139
+          },
+          {
+            "term": "Construcción",
+            "freq": 34
+          },
+          {
+            "term": "Gallinero",
+            "freq": 16
+          },
+          {
+            "term": "Bodega",
+            "freq": 14
+          }
+        ],
+        "deptos": [
+          {
+            "depto": "Cundinamarca",
+            "count": 130,
+            "mora": 867.5
+          },
+          {
+            "depto": "Valle Del Cauca",
+            "count": 117,
+            "mora": 687.0
+          },
+          {
+            "depto": "Cauca",
+            "count": 70,
+            "mora": 733.5
+          },
+          {
+            "depto": "Nariño",
+            "count": 59,
+            "mora": 424.0
+          },
+          {
+            "depto": "Boyacá",
+            "count": 50,
+            "mora": 836.0
+          },
+          {
+            "depto": "Tolima",
+            "count": 48,
+            "mora": 504.0
+          }
+        ],
         "quotes": [
           "Caseta en construcción t-348",
           "Construcción cancha de futbol - yotoco",
-          "Negociar 12 vivienda -aviso m8: 105963."
-        ],
-        "deptos": []
+          "Negociar 12 vivienda -aviso m8: 105963.",
+          "Rvivie - bodega en  servidumbre t - 239"
+        ]
       },
       {
         "id": "c_ambiental",
         "name": "Restricción Ambiental & CAR",
         "color": "#D97706",
-        "count": 113,
-        "pct": 4.8,
-        "mediana_dias": 638.0,
-        "desc": "Trámites, salvoconductos y permisos demorados ante Corporaciones Autónomas Regionales.",
-        "quotes": [
-          "Carton colombia  corte arb 4",
-          "Cortar arboles carton colombia 19",
-          "Carton colombia  corte arb  t - 20"
+        "count": 2,
+        "pct": 0.1,
+        "mediana_dias": 380.0,
+        "desc": "Trámites y permisos demorados ante Corporaciones Autónomas Regionales.",
+        "top_terms": [
+          {
+            "term": "Car",
+            "freq": 2
+          }
         ],
-        "deptos": []
+        "deptos": [
+          {
+            "depto": "Cauca",
+            "count": 1,
+            "mora": 360.0
+          },
+          {
+            "depto": "Cundinamarca",
+            "count": 1,
+            "mora": 400.0
+          }
+        ],
+        "quotes": [
+          "Gestionar tala ecaliptos-128-car col",
+          "Gestionar permiso tala con car t239"
+        ]
       },
       {
         "id": "c_predial",
         "name": "Acceso Predial & Permisos",
         "color": "#0284C7",
-        "count": 750,
-        "pct": 31.6,
+        "count": 745,
+        "pct": 31.4,
         "mediana_dias": 421.0,
-        "desc": "Negativas de paso de propietarios prediales para ingresar a realizar mantenimiento a torres.",
+        "desc": "Negativas de paso de propietarios para mantenimiento de torres.",
+        "top_terms": [
+          {
+            "term": "Geam",
+            "freq": 401
+          },
+          {
+            "term": "Negociar",
+            "freq": 271
+          },
+          {
+            "term": "Permiso",
+            "freq": 70
+          },
+          {
+            "term": "Ingreso",
+            "freq": 26
+          },
+          {
+            "term": "Propietario",
+            "freq": 7
+          }
+        ],
+        "deptos": [
+          {
+            "depto": "Cundinamarca",
+            "count": 306,
+            "mora": 433.5
+          },
+          {
+            "depto": "Boyacá",
+            "count": 167,
+            "mora": 383.0
+          },
+          {
+            "depto": "Valle Del Cauca",
+            "count": 66,
+            "mora": 679.0
+          },
+          {
+            "depto": "Caldas",
+            "count": 62,
+            "mora": 580.5
+          },
+          {
+            "depto": "Cauca",
+            "count": 42,
+            "mora": 346.0
+          },
+          {
+            "depto": "Tolima",
+            "count": 33,
+            "mora": 665.0
+          }
+        ],
         "quotes": [
           "M8 195471 solicitud permiso cam  t 95",
           "Negociar 12 vivienda -aviso m8: 105963.",
-          "Negociar vivi. hugo posso.avisom8.105766"
-        ],
-        "deptos": []
+          "Negociar vivi. hugo posso.avisom8.105766",
+          "Negociar vivienda en serv.avisom8.182747"
+        ]
       },
       {
         "id": "c_forestal",
         "name": "Intervención Forestal",
         "color": "#0F766E",
-        "count": 1011,
-        "pct": 42.6,
-        "mediana_dias": 339.0,
-        "desc": "Riesgo de rozamiento con cables; podas mecánicas y talas forestales en faja de seguridad.",
-        "quotes": [
-          "Corte de pinos  t161 zona urbana jam-r",
-          "Despeje de vegetación en torre 291",
-          "Mp servidumbre : talar árboles t 321"
+        "count": 891,
+        "pct": 37.5,
+        "mediana_dias": 330.0,
+        "desc": "Podas mecánicas y talas forestales en faja de seguridad.",
+        "top_terms": [
+          {
+            "term": "Tala",
+            "freq": 625
+          },
+          {
+            "term": "Vegetación",
+            "freq": 456
+          },
+          {
+            "term": "Talar",
+            "freq": 98
+          },
+          {
+            "term": "Árboles",
+            "freq": 92
+          },
+          {
+            "term": "Poda",
+            "freq": 57
+          }
         ],
-        "deptos": []
+        "deptos": [
+          {
+            "depto": "Cundinamarca",
+            "count": 380,
+            "mora": 349.0
+          },
+          {
+            "depto": "Boyacá",
+            "count": 160,
+            "mora": 332.5
+          },
+          {
+            "depto": "Cauca",
+            "count": 82,
+            "mora": 243.0
+          },
+          {
+            "depto": "Caldas",
+            "count": 74,
+            "mora": 410.0
+          },
+          {
+            "depto": "Valle Del Cauca",
+            "count": 59,
+            "mora": 242.0
+          },
+          {
+            "depto": "Tolima",
+            "count": 50,
+            "mora": 303.0
+          }
+        ],
+        "quotes": [
+          "Despeje de vegetación en torre 291",
+          "Mp servidumbre : talar árboles t 321",
+          "Mp servid : talar árboles t 143-144",
+          "Poda  árbol y palmas vano 4-5"
+        ]
       }
     ],
-    "nodes": [
-      {
-        "id": "c_invasion",
-        "name": "Invasión & Servidumbre",
-        "symbolSize": 39,
-        "category": 0,
-        "value": 568,
-        "mediana_dias": 665.5,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#BE123C"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_invasion_retirar",
-        "name": "Retirar",
-        "symbolSize": 25,
-        "category": 0,
-        "value": 424,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
+    "treemap": {
+      "name": "Cerrado",
+      "children": [
+        {
+          "name": "Invasión & Servidumbre",
+          "value": 561,
+          "mora": 665.0,
           "color": "#BE123C",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Cundinamarca",
+              "value": 130,
+              "mora": 867.5
+            },
+            {
+              "name": "Valle Del Cauca",
+              "value": 117,
+              "mora": 687.0
+            },
+            {
+              "name": "Cauca",
+              "value": 70,
+              "mora": 733.5
+            },
+            {
+              "name": "Nariño",
+              "value": 59,
+              "mora": 424.0
+            },
+            {
+              "name": "Boyacá",
+              "value": 50,
+              "mora": 836.0
+            },
+            {
+              "name": "Tolima",
+              "value": 48,
+              "mora": 504.0
+            },
+            {
+              "name": "Caldas",
+              "value": 44,
+              "mora": 555.0
+            },
+            {
+              "name": "Risaralda",
+              "value": 27,
+              "mora": 339.0
+            }
+          ]
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_invasion_vivienda",
-        "name": "Vivienda",
-        "symbolSize": 17,
-        "category": 0,
-        "value": 139,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#BE123C",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_invasion_construcción",
-        "name": "Construcción",
-        "symbolSize": 16,
-        "category": 0,
-        "value": 34,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#BE123C",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_invasion_gallinero",
-        "name": "Gallinero",
-        "symbolSize": 16,
-        "category": 0,
-        "value": 16,
-        "cluster_name": "Invasión & Servidumbre",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#BE123C",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_ambiental",
-        "name": "Restricción Ambiental & CAR",
-        "symbolSize": 38,
-        "category": 1,
-        "value": 113,
-        "mediana_dias": 638.0,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#D97706"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_ambiental_car",
-        "name": "Car",
-        "symbolSize": 16,
-        "category": 1,
-        "value": 2,
-        "cluster_name": "Restricción Ambiental & CAR",
-        "is_hub": false,
-        "itemStyle": {
+        {
+          "name": "Restricción Ambiental & CAR",
+          "value": 2,
+          "mora": 380.0,
           "color": "#D97706",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Cauca",
+              "value": 1,
+              "mora": 360.0
+            },
+            {
+              "name": "Cundinamarca",
+              "value": 1,
+              "mora": 400.0
+            }
+          ]
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial",
-        "name": "Acceso Predial & Permisos",
-        "symbolSize": 43,
-        "category": 2,
-        "value": 750,
-        "mediana_dias": 421.0,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#0284C7"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_predial_geam",
-        "name": "Geam",
-        "symbolSize": 22,
-        "category": 2,
-        "value": 401,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
+        {
+          "name": "Acceso Predial & Permisos",
+          "value": 745,
+          "mora": 421.0,
           "color": "#0284C7",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Cundinamarca",
+              "value": 306,
+              "mora": 433.5
+            },
+            {
+              "name": "Boyacá",
+              "value": 167,
+              "mora": 383.0
+            },
+            {
+              "name": "Valle Del Cauca",
+              "value": 66,
+              "mora": 679.0
+            },
+            {
+              "name": "Caldas",
+              "value": 62,
+              "mora": 580.5
+            },
+            {
+              "name": "Cauca",
+              "value": 42,
+              "mora": 346.0
+            },
+            {
+              "name": "Tolima",
+              "value": 33,
+              "mora": 665.0
+            },
+            {
+              "name": "Bogotá, D.C.",
+              "value": 20,
+              "mora": 342.0
+            },
+            {
+              "name": "Nariño",
+              "value": 20,
+              "mora": 481.0
+            }
+          ]
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial_negociar",
-        "name": "Negociar",
-        "symbolSize": 19,
-        "category": 2,
-        "value": 271,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0284C7",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial_permiso",
-        "name": "Permiso",
-        "symbolSize": 16,
-        "category": 2,
-        "value": 70,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0284C7",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_predial_ingreso",
-        "name": "Ingreso",
-        "symbolSize": 16,
-        "category": 2,
-        "value": 26,
-        "cluster_name": "Acceso Predial & Permisos",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0284C7",
-          "opacity": 0.85
-        },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal",
-        "name": "Intervención Forestal",
-        "symbolSize": 50,
-        "category": 3,
-        "value": 1011,
-        "mediana_dias": 339.0,
-        "is_hub": true,
-        "itemStyle": {
-          "color": "#0F766E"
-        },
-        "label": {
-          "show": true,
-          "fontWeight": 700,
-          "fontSize": 11.5
-        }
-      },
-      {
-        "id": "c_forestal_tala",
-        "name": "Tala",
-        "symbolSize": 23,
-        "category": 3,
-        "value": 625,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
+        {
+          "name": "Intervención Forestal",
+          "value": 891,
+          "mora": 330.0,
           "color": "#0F766E",
-          "opacity": 0.85
+          "children": [
+            {
+              "name": "Cundinamarca",
+              "value": 380,
+              "mora": 349.0
+            },
+            {
+              "name": "Boyacá",
+              "value": 160,
+              "mora": 332.5
+            },
+            {
+              "name": "Cauca",
+              "value": 82,
+              "mora": 243.0
+            },
+            {
+              "name": "Caldas",
+              "value": 74,
+              "mora": 410.0
+            },
+            {
+              "name": "Valle Del Cauca",
+              "value": 59,
+              "mora": 242.0
+            },
+            {
+              "name": "Tolima",
+              "value": 50,
+              "mora": 303.0
+            },
+            {
+              "name": "Nariño",
+              "value": 31,
+              "mora": 426.0
+            },
+            {
+              "name": "Risaralda",
+              "value": 27,
+              "mora": 182.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "comparativa_vs": [
+    {
+      "id": "c_invasion",
+      "name": "Invasión & Servidumbre",
+      "color": "#BE123C",
+      "abiertos_count": 447,
+      "abiertos_pct": 60.2,
+      "abiertos_mora": 1841.0,
+      "cerrados_count": 561,
+      "cerrados_pct": 23.6,
+      "cerrados_atencion": 665.0,
+      "tasa_cierre": 55.7,
+      "brecha_mora_dias": 1176.0,
+      "desc": "Construcciones ilegales y ocupaciones bajo la franja de servidumbre.",
+      "abiertos_terms": [
+        {
+          "term": "Retirar",
+          "freq": 402
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal_vegetación",
-        "name": "Vegetación",
-        "symbolSize": 21,
-        "category": 3,
-        "value": 456,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0F766E",
-          "opacity": 0.85
+        {
+          "term": "Vivienda",
+          "freq": 31
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal_talar",
-        "name": "Talar",
-        "symbolSize": 16,
-        "category": 3,
-        "value": 98,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0F766E",
-          "opacity": 0.85
+        {
+          "term": "Construcción",
+          "freq": 31
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
-        }
-      },
-      {
-        "id": "c_forestal_árboles",
-        "name": "Árboles",
-        "symbolSize": 16,
-        "category": 3,
-        "value": 92,
-        "cluster_name": "Intervención Forestal",
-        "is_hub": false,
-        "itemStyle": {
-          "color": "#0F766E",
-          "opacity": 0.85
+        {
+          "term": "Bodega",
+          "freq": 20
         },
-        "label": {
-          "show": true,
-          "fontSize": 10
+        {
+          "term": "Establo",
+          "freq": 13
         }
-      }
-    ],
-    "links": [
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_retirar",
-        "value": 424,
-        "lineStyle": {
-          "width": 4.5,
-          "opacity": 0.6
+      ],
+      "cerrados_terms": [
+        {
+          "term": "Retirar",
+          "freq": 424
+        },
+        {
+          "term": "Vivienda",
+          "freq": 139
+        },
+        {
+          "term": "Construcción",
+          "freq": 34
+        },
+        {
+          "term": "Gallinero",
+          "freq": 16
+        },
+        {
+          "term": "Bodega",
+          "freq": 14
         }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_vivienda",
-        "value": 139,
-        "lineStyle": {
-          "width": 3.9714285714285715,
-          "opacity": 0.6
+      ],
+      "abiertos_deptos": [
+        {
+          "depto": "Cundinamarca",
+          "count": 144,
+          "mora": 2518.0
+        },
+        {
+          "depto": "Valle Del Cauca",
+          "count": 80,
+          "mora": 1685.0
+        },
+        {
+          "depto": "Boyacá",
+          "count": 66,
+          "mora": 1772.5
+        },
+        {
+          "depto": "Cauca",
+          "count": 43,
+          "mora": 1570.0
+        },
+        {
+          "depto": "Tolima",
+          "count": 32,
+          "mora": 2147.0
+        },
+        {
+          "depto": "Caldas",
+          "count": 29,
+          "mora": 891.0
         }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_construcción",
-        "value": 34,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
+      ],
+      "cerrados_deptos": [
+        {
+          "depto": "Cundinamarca",
+          "count": 130,
+          "mora": 867.5
+        },
+        {
+          "depto": "Valle Del Cauca",
+          "count": 117,
+          "mora": 687.0
+        },
+        {
+          "depto": "Cauca",
+          "count": 70,
+          "mora": 733.5
+        },
+        {
+          "depto": "Nariño",
+          "count": 59,
+          "mora": 424.0
+        },
+        {
+          "depto": "Boyacá",
+          "count": 50,
+          "mora": 836.0
+        },
+        {
+          "depto": "Tolima",
+          "count": 48,
+          "mora": 504.0
         }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_invasion_gallinero",
-        "value": 16,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
+      ],
+      "abiertos_quotes": [
+        "Retirar vivienda3 pisci term slc vbl sng",
+        "Retirar marranera term slc vbl sng 27",
+        "Retirar establo term slc sng vbl",
+        "Retirar bodega term slc vbl sng"
+      ],
+      "cerrados_quotes": [
+        "Caseta en construcción t-348",
+        "Construcción cancha de futbol - yotoco",
+        "Negociar 12 vivienda -aviso m8: 105963.",
+        "Rvivie - bodega en  servidumbre t - 239"
+      ]
+    },
+    {
+      "id": "c_ambiental",
+      "name": "Restricción Ambiental & CAR",
+      "color": "#D97706",
+      "abiertos_count": 61,
+      "abiertos_pct": 8.2,
+      "abiertos_mora": 313.0,
+      "cerrados_count": 2,
+      "cerrados_pct": 0.1,
+      "cerrados_atencion": 380.0,
+      "tasa_cierre": 3.2,
+      "brecha_mora_dias": -67.0,
+      "desc": "Trámites y permisos demorados ante Corporaciones Autónomas Regionales.",
+      "abiertos_terms": [
+        {
+          "term": "Crpochivor",
+          "freq": 61
+        },
+        {
+          "term": "Tramite",
+          "freq": 61
         }
-      },
-      {
-        "source": "c_ambiental",
-        "target": "c_ambiental_car",
-        "value": 2,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
+      ],
+      "cerrados_terms": [
+        {
+          "term": "Car",
+          "freq": 2
         }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_geam",
-        "value": 401,
-        "lineStyle": {
-          "width": 4.5,
-          "opacity": 0.6
+      ],
+      "abiertos_deptos": [
+        {
+          "depto": "Boyacá",
+          "count": 61,
+          "mora": 313.0
         }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_negociar",
-        "value": 271,
-        "lineStyle": {
-          "width": 4.5,
-          "opacity": 0.6
+      ],
+      "cerrados_deptos": [
+        {
+          "depto": "Cauca",
+          "count": 1,
+          "mora": 360.0
+        },
+        {
+          "depto": "Cundinamarca",
+          "count": 1,
+          "mora": 400.0
         }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_permiso",
-        "value": 70,
-        "lineStyle": {
-          "width": 2.0,
-          "opacity": 0.6
+      ],
+      "abiertos_quotes": [
+        "Adelantar tramite macro ante crpochivor",
+        "Iadelantar tramite macro ante crpochivor"
+      ],
+      "cerrados_quotes": [
+        "Gestionar tala ecaliptos-128-car col",
+        "Gestionar permiso tala con car t239"
+      ]
+    },
+    {
+      "id": "c_predial",
+      "name": "Acceso Predial & Permisos",
+      "color": "#0284C7",
+      "abiertos_count": 66,
+      "abiertos_pct": 8.9,
+      "abiertos_mora": 753.0,
+      "cerrados_count": 745,
+      "cerrados_pct": 31.4,
+      "cerrados_atencion": 421.0,
+      "tasa_cierre": 91.9,
+      "brecha_mora_dias": 332.0,
+      "desc": "Negativas de paso de propietarios para mantenimiento de torres.",
+      "abiertos_terms": [
+        {
+          "term": "Geam",
+          "freq": 39
+        },
+        {
+          "term": "Negociar",
+          "freq": 15
+        },
+        {
+          "term": "Ingreso",
+          "freq": 11
+        },
+        {
+          "term": "Permiso",
+          "freq": 9
+        },
+        {
+          "term": "Propietario",
+          "freq": 2
         }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_predial_ingreso",
-        "value": 26,
-        "lineStyle": {
-          "width": 1.2,
-          "opacity": 0.6
+      ],
+      "cerrados_terms": [
+        {
+          "term": "Geam",
+          "freq": 401
+        },
+        {
+          "term": "Negociar",
+          "freq": 271
+        },
+        {
+          "term": "Permiso",
+          "freq": 70
+        },
+        {
+          "term": "Ingreso",
+          "freq": 26
+        },
+        {
+          "term": "Propietario",
+          "freq": 7
         }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_tala",
-        "value": 625,
-        "lineStyle": {
-          "width": 4.5,
-          "opacity": 0.6
+      ],
+      "abiertos_deptos": [
+        {
+          "depto": "Boyacá",
+          "count": 28,
+          "mora": 744.0
+        },
+        {
+          "depto": "Cundinamarca",
+          "count": 17,
+          "mora": 759.0
+        },
+        {
+          "depto": "Valle Del Cauca",
+          "count": 9,
+          "mora": 4253.0
+        },
+        {
+          "depto": "Caldas",
+          "count": 5,
+          "mora": 4253.0
+        },
+        {
+          "depto": "Cauca",
+          "count": 3,
+          "mora": 4253.0
+        },
+        {
+          "depto": "Risaralda",
+          "count": 2,
+          "mora": 4253.0
         }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_vegetación",
-        "value": 456,
-        "lineStyle": {
-          "width": 4.5,
-          "opacity": 0.6
+      ],
+      "cerrados_deptos": [
+        {
+          "depto": "Cundinamarca",
+          "count": 306,
+          "mora": 433.5
+        },
+        {
+          "depto": "Boyacá",
+          "count": 167,
+          "mora": 383.0
+        },
+        {
+          "depto": "Valle Del Cauca",
+          "count": 66,
+          "mora": 679.0
+        },
+        {
+          "depto": "Caldas",
+          "count": 62,
+          "mora": 580.5
+        },
+        {
+          "depto": "Cauca",
+          "count": 42,
+          "mora": 346.0
+        },
+        {
+          "depto": "Tolima",
+          "count": 33,
+          "mora": 665.0
         }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_talar",
-        "value": 98,
-        "lineStyle": {
-          "width": 2.8,
-          "opacity": 0.6
+      ],
+      "abiertos_quotes": [
+        "Negociar galpones gilbertom8.178910 t120",
+        "Negociar corrales maria m8.139523 44",
+        "Negociar vivienda colina m8.178887 249",
+        "Negociar vivienda wilson m8.186285 270"
+      ],
+      "cerrados_quotes": [
+        "M8 195471 solicitud permiso cam  t 95",
+        "Negociar 12 vivienda -aviso m8: 105963.",
+        "Negociar vivi. hugo posso.avisom8.105766",
+        "Negociar vivienda en serv.avisom8.182747"
+      ]
+    },
+    {
+      "id": "c_forestal",
+      "name": "Intervención Forestal",
+      "color": "#0F766E",
+      "abiertos_count": 80,
+      "abiertos_pct": 10.8,
+      "abiertos_mora": 415.0,
+      "cerrados_count": 891,
+      "cerrados_pct": 37.5,
+      "cerrados_atencion": 330.0,
+      "tasa_cierre": 91.8,
+      "brecha_mora_dias": 85.0,
+      "desc": "Podas mecánicas y talas forestales en faja de seguridad.",
+      "abiertos_terms": [
+        {
+          "term": "Vegetación",
+          "freq": 61
+        },
+        {
+          "term": "Tala",
+          "freq": 30
+        },
+        {
+          "term": "Árboles",
+          "freq": 6
+        },
+        {
+          "term": "Poda",
+          "freq": 6
+        },
+        {
+          "term": "Eucalipto",
+          "freq": 5
         }
-      },
-      {
-        "source": "c_forestal",
-        "target": "c_forestal_árboles",
-        "value": 92,
-        "lineStyle": {
-          "width": 2.6285714285714286,
-          "opacity": 0.6
+      ],
+      "cerrados_terms": [
+        {
+          "term": "Tala",
+          "freq": 625
+        },
+        {
+          "term": "Vegetación",
+          "freq": 456
+        },
+        {
+          "term": "Talar",
+          "freq": 98
+        },
+        {
+          "term": "Árboles",
+          "freq": 92
+        },
+        {
+          "term": "Poda",
+          "freq": 57
         }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_ambiental",
-        "value": 23,
-        "lineStyle": {
-          "width": 1.15,
-          "type": "dashed",
-          "opacity": 0.35
+      ],
+      "abiertos_deptos": [
+        {
+          "depto": "Boyacá",
+          "count": 34,
+          "mora": 710.5
+        },
+        {
+          "depto": "Cundinamarca",
+          "count": 24,
+          "mora": 384.5
+        },
+        {
+          "depto": "Valle Del Cauca",
+          "count": 7,
+          "mora": 211.0
+        },
+        {
+          "depto": "Cauca",
+          "count": 6,
+          "mora": 199.5
+        },
+        {
+          "depto": "Nariño",
+          "count": 4,
+          "mora": 24.0
+        },
+        {
+          "depto": "Bogotá, D.C.",
+          "count": 2,
+          "mora": 253.0
         }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_predial",
-        "value": 93,
-        "lineStyle": {
-          "width": 3.5,
-          "type": "dashed",
-          "opacity": 0.35
+      ],
+      "cerrados_deptos": [
+        {
+          "depto": "Cundinamarca",
+          "count": 380,
+          "mora": 349.0
+        },
+        {
+          "depto": "Boyacá",
+          "count": 160,
+          "mora": 332.5
+        },
+        {
+          "depto": "Cauca",
+          "count": 82,
+          "mora": 243.0
+        },
+        {
+          "depto": "Caldas",
+          "count": 74,
+          "mora": 410.0
+        },
+        {
+          "depto": "Valle Del Cauca",
+          "count": 59,
+          "mora": 242.0
+        },
+        {
+          "depto": "Tolima",
+          "count": 50,
+          "mora": 303.0
         }
-      },
-      {
-        "source": "c_invasion",
-        "target": "c_forestal",
-        "value": 7,
-        "lineStyle": {
-          "width": 1,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      },
-      {
-        "source": "c_ambiental",
-        "target": "c_predial",
-        "value": 11,
-        "lineStyle": {
-          "width": 1,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      },
-      {
-        "source": "c_ambiental",
-        "target": "c_forestal",
-        "value": 37,
-        "lineStyle": {
-          "width": 1.85,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      },
-      {
-        "source": "c_predial",
-        "target": "c_forestal",
-        "value": 427,
-        "lineStyle": {
-          "width": 3.5,
-          "type": "dashed",
-          "opacity": 0.35
-        }
-      }
-    ],
-    "categories": [
-      {
-        "name": "Invasión & Servidumbre"
-      },
-      {
-        "name": "Restricción Ambiental & CAR"
-      },
-      {
-        "name": "Acceso Predial & Permisos"
-      },
-      {
-        "name": "Intervención Forestal"
-      }
-    ]
-  }
+      ],
+      "abiertos_quotes": [
+        "Gestion árboles williat125-8m revisad* r",
+        "F23-geam-gstionar tala vgetación dfs t95",
+        "Gestionar maguey y pino  t273 10,9m",
+        "F23-geam-gestiona tala de vegtción t-192"
+      ],
+      "cerrados_quotes": [
+        "Despeje de vegetación en torre 291",
+        "Mp servidumbre : talar árboles t 321",
+        "Mp servid : talar árboles t 143-144",
+        "Poda  árbol y palmas vano 4-5"
+      ]
+    }
+  ]
 }
