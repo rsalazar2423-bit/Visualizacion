@@ -1,10 +1,11 @@
 /**
- * nlpTriageEngine.ts — Motor puro de filtrado y gráfico de barras apiladas SLA
- * para el Triaje Operativo del Coordinador.
+ * nlpTriageEngine.ts — Motor puro de filtrado y barras apiladas SLA
+ * para Abiertos, Cerrados (vencidos vs a tiempo) y Panorama Total por Causal.
  */
 import type * as echarts from 'echarts';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
 import type {
+  NlpEstadoFilter,
   NlpGraphPayload,
   NlpHorizonFilter,
   NlpRouteId,
@@ -13,6 +14,7 @@ import type {
 } from '../../types/nlpGraph';
 
 export interface TriageFilters {
+  estado: NlpEstadoFilter;
   cte: string | null;
   depto: string | null;
   municipio: string | null;
@@ -20,13 +22,41 @@ export interface TriageFilters {
   horizonte: NlpHorizonFilter;
 }
 
+export const ESTADO_OPTS: Array<{ id: NlpEstadoFilter; label: string }> = [
+  { id: 'abiertos', label: 'Abiertos Hoy' },
+  { id: 'cerrados', label: 'Cerrados Hist.' },
+  { id: 'ambos', label: 'Total (Abiertos + Cerrados)' },
+];
+
+export const URGENCY_OPTS: Array<{ id: NlpUrgencyFilter; label: string; cls?: string }> = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'vencido', label: 'Vencidos / Fuera Plazo', cls: 'danger' },
+  { id: 'proximo', label: 'Próximos (≤90d)', cls: 'warn' },
+  { id: 'en_plazo', label: 'A Tiempo / En Plazo', cls: 'ok' },
+];
+
+export const HORIZON_OPTS: Array<{ id: NlpHorizonFilter; label: string }> = [
+  { id: 'todas', label: 'Toda Prioridad' },
+  { id: 'corto', label: '≤1 Año' },
+  { id: 'largo', label: '2–6 Años' },
+];
+
+function medianOf(nums: number[]): number {
+  if (!nums.length) return 0;
+  const sorted = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
 export function computeTriageSummaries(
   payload: NlpGraphPayload,
   filters: TriageFilters,
 ): NlpRouteSummary[] {
-  const { cte, depto, municipio, urgencia, horizonte } = filters;
+  const { estado, cte, depto, municipio, urgencia, horizonte } = filters;
 
-  const geoFiltered = payload.open_tickets.filter((t) => {
+  const baseFiltered = payload.tickets.filter((t) => {
+    if (estado === 'abiertos' && t.estado !== 'abierto') return false;
+    if (estado === 'cerrados' && t.estado !== 'cerrado') return false;
     if (cte && cte !== 'Todos' && t.cte !== cte) return false;
     if (depto && depto !== 'Todos' && t.depto !== depto) return false;
     if (municipio && municipio !== 'Todos' && t.mpio !== municipio) return false;
@@ -34,31 +64,29 @@ export function computeTriageSummaries(
     return true;
   });
 
-  const closedFiltered = payload.closed_stats.filter((s) => {
-    if (cte && cte !== 'Todos' && s.cte !== cte) return false;
-    if (depto && depto !== 'Todos' && s.depto !== depto) return false;
-    return true;
-  });
-
   const groupGeoByMpio = Boolean(depto && depto !== 'Todos');
 
   return payload.routes.map((route) => {
-    const routeAllUrgencies = geoFiltered.filter((t) => t.ruta === route.id);
-    const routeTickets =
-      urgencia === 'todos'
-        ? routeAllUrgencies
-        : routeAllUrgencies.filter((t) => t.urgencia === urgencia);
+    const routeBase = baseFiltered.filter((t) => t.ruta === route.id);
+    const baseOverdue = routeBase.filter((t) => t.urgencia === 'vencido').length;
+    const vencimiento_pct =
+      routeBase.length > 0 ? Math.round((baseOverdue / routeBase.length) * 1000) / 10 : 0;
 
-    let vencidos = 0;
-    let proximos = 0;
-    let en_plazo = 0;
+    const visible =
+      urgencia === 'todos' ? routeBase : routeBase.filter((t) => t.urgencia === urgencia);
+
+    let ab_vencidos = 0, ab_proximos = 0, ab_en_plazo = 0, ce_vencidos = 0, ce_a_tiempo = 0;
     const geoCounts = new Map<string, { total: number; vencidos: number }>();
 
-    for (const t of routeTickets) {
-      if (t.urgencia === 'vencido') vencidos++;
-      else if (t.urgencia === 'proximo') proximos++;
-      else en_plazo++;
-
+    for (const t of visible) {
+      if (t.estado === 'abierto') {
+        if (t.urgencia === 'vencido') ab_vencidos++;
+        else if (t.urgencia === 'proximo') ab_proximos++;
+        else ab_en_plazo++;
+      } else {
+        if (t.urgencia === 'vencido') ce_vencidos++;
+        else ce_a_tiempo++;
+      }
       const gKey = groupGeoByMpio ? t.mpio : t.depto;
       const prev = geoCounts.get(gKey) ?? { total: 0, vencidos: 0 };
       prev.total++;
@@ -66,42 +94,66 @@ export function computeTriageSummaries(
       geoCounts.set(gKey, prev);
     }
 
-    const cRows = closedFiltered.filter((s) => s.ruta === route.id);
-    const cerrados_hist = cRows.reduce((acc, s) => acc + s.count, 0);
-    const weightedMed =
-      cerrados_hist > 0
-        ? Math.round(cRows.reduce((acc, s) => acc + s.mediana_dias * s.count, 0) / cerrados_hist)
-        : 0;
-    const denom = routeAllUrgencies.length + cerrados_hist;
-    const tasa_exito_pct = denom > 0 ? Math.round((cerrados_hist / denom) * 1000) / 10 : 0;
-
     const top_territories = Array.from(geoCounts.entries())
       .map(([name, v]) => ({ name, total: v.total, vencidos: v.vencidos }))
-      .sort((a, b) => b.total - a.total)
+      .sort((a, b) => b.vencidos - a.vencidos || b.total - a.total)
       .slice(0, 6);
 
     return {
       ...route,
-      total: routeTickets.length,
-      vencidos,
-      proximos,
-      en_plazo,
-      cerrados_hist,
-      tasa_exito_pct,
-      mediana_cierre_dias: weightedMed,
+      total: visible.length,
+      vencidos_total: ab_vencidos + ce_vencidos,
+      vencimiento_pct,
+      ab_vencidos,
+      ab_proximos,
+      ab_en_plazo,
+      ce_vencidos,
+      ce_a_tiempo,
+      mediana_dias: medianOf(visible.map((t) => t.dias_abierto)),
       top_territories,
-      tickets: routeTickets,
+      tickets: visible,
     };
   });
 }
 
 export function buildTriageBarOption(
   summaries: NlpRouteSummary[],
+  estado: NlpEstadoFilter,
   selectedId: NlpRouteId,
   isDark: boolean,
 ): echarts.EChartsOption {
   const tokens = getEChartsThemeTokens(isDark);
   const rows = [...summaries].reverse();
+  const endLabel = {
+    show: true,
+    position: 'right' as const,
+    color: tokens.textColor,
+    fontSize: 10.5,
+    fontWeight: 700,
+    formatter: (p: any) => {
+      const r = rows[p.dataIndex];
+      return r ? `${r.total.toLocaleString()} (${r.vencimiento_pct}% venc.)` : '';
+    },
+  };
+
+  const series: echarts.SeriesOption[] =
+    estado === 'abiertos'
+      ? [
+          { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
+          { name: 'Próximos (≤90d)', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ab_proximos) },
+          { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ab_en_plazo) },
+        ]
+      : estado === 'cerrados'
+        ? [
+            { name: 'Cerrados Fuera de Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
+          ]
+        : [
+            { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
+            { name: 'Cerrados Fuera de Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: '#fb7185' }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ab_proximos + r.ab_en_plazo) },
+            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
+          ];
 
   return {
     backgroundColor: 'transparent',
@@ -112,26 +164,17 @@ export function buildTriageBarOption(
       borderColor: tokens.tooltipBorder,
       textStyle: { color: tokens.textColor, fontSize: 11.5 },
       formatter: (params: any) => {
-        const idx = params?.[0]?.dataIndex ?? 0;
-        const r = rows[idx];
+        const r = rows[params?.[0]?.dataIndex ?? 0];
         if (!r) return '';
-        return `<div style="font-weight:700;margin-bottom:4px;">${r.name}</div>
-          <div>🔴 Vencidos: <b>${r.vencidos}</b></div>
-          <div>🟠 Próximos (≤90d): <b>${r.proximos}</b></div>
-          <div>🟢 En Plazo: <b>${r.en_plazo}</b></div>
-          <div style="margin-top:4px;padding-top:4px;border-top:1px solid ${tokens.gridColor};font-size:10.5px;color:${tokens.textSecondary};">
-            Histórico: <b>${r.tasa_exito_pct}% resuelto</b> (~${r.mediana_cierre_dias} d)
+        const lines = params.map((p: any) => `<div>${p.marker} ${p.seriesName}: <b>${Number(p.value).toLocaleString()}</b></div>`).join('');
+        return `<div style="font-weight:700;margin-bottom:4px;">${r.name}</div>${lines}
+          <div style="margin-top:4px;padding-top:4px;border-top:1px solid ${tokens.gridColor};font-size:10.5px;">
+            Tasa de vencimiento: <b>${r.vencimiento_pct}%</b> · Mediana: <b>${r.mediana_dias} d</b>
           </div>`;
       },
     },
-    legend: {
-      top: 4,
-      right: 8,
-      itemWidth: 10,
-      itemHeight: 10,
-      textStyle: { color: tokens.textSecondary, fontSize: 11 },
-    },
-    grid: { top: 34, left: 12, right: 64, bottom: 18, containLabel: true },
+    legend: { top: 2, right: 6, itemWidth: 10, itemHeight: 10, textStyle: { color: tokens.textSecondary, fontSize: 10.5 } },
+    grid: { top: 34, left: 10, right: 118, bottom: 16, containLabel: true },
     xAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: tokens.gridColor, type: 'dashed' } },
@@ -142,45 +185,8 @@ export function buildTriageBarOption(
       data: rows.map((r) => (r.id === selectedId ? `▸ ${r.short_name}` : r.short_name)),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: {
-        color: tokens.textColor,
-        fontSize: 11.5,
-        fontWeight: 700,
-      },
+      axisLabel: { color: tokens.textColor, fontSize: 11.5, fontWeight: 700 },
     },
-    series: [
-      {
-        name: 'Vencidos',
-        type: 'bar',
-        stack: 'sla',
-        barMaxWidth: 28,
-        itemStyle: { color: tokens.sla.excede, borderRadius: [4, 0, 0, 4] },
-        data: rows.map((r) => r.vencidos),
-      },
-      {
-        name: 'Próximos (≤90d)',
-        type: 'bar',
-        stack: 'sla',
-        barMaxWidth: 28,
-        itemStyle: { color: tokens.sla.warning },
-        data: rows.map((r) => r.proximos),
-      },
-      {
-        name: 'En Plazo',
-        type: 'bar',
-        stack: 'sla',
-        barMaxWidth: 28,
-        itemStyle: { color: tokens.sla.cumple, borderRadius: [0, 4, 4, 0] },
-        label: {
-          show: true,
-          position: 'right',
-          color: tokens.textColor,
-          fontSize: 11,
-          fontWeight: 700,
-          formatter: (p: any) => `${rows[p.dataIndex]?.total ?? 0}`,
-        },
-        data: rows.map((r) => r.en_plazo),
-      },
-    ],
+    series,
   };
 }

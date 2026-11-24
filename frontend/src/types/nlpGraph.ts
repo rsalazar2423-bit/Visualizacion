@@ -1,8 +1,10 @@
 /**
- * nlpGraph.ts — Tipos para el Triaje Operativo NLP del Coordinador.
+ * nlpGraph.ts — Tipos para Triaje Operativo y Análisis de Vencimiento por Causal (NLP).
  */
 
 export type NlpRouteId = 'r_campo' | 'r_predial' | 'r_ambiental' | 'r_servidumbre';
+export type NlpEstado = 'abierto' | 'cerrado';
+export type NlpEstadoFilter = 'abiertos' | 'cerrados' | 'ambos';
 export type NlpUrgency = 'vencido' | 'proximo' | 'en_plazo';
 export type NlpUrgencyFilter = 'todos' | NlpUrgency;
 export type NlpHorizon = 'corto' | 'largo';
@@ -15,16 +17,9 @@ export interface NlpRouteMeta {
   action: string;
 }
 
-export interface NlpClosedStat {
-  ruta: NlpRouteId;
-  cte: string;
-  depto: string;
-  count: number;
-  mediana_dias: number;
-}
-
-export interface NlpOpenTicket {
+export interface NlpTicket {
   aviso: string;
+  estado: NlpEstado;
   ruta: NlpRouteId;
   urgencia: NlpUrgency;
   horizonte: NlpHorizon;
@@ -47,22 +42,23 @@ export interface NlpGeoRankItem {
 
 export interface NlpRouteSummary extends NlpRouteMeta {
   total: number;
-  vencidos: number;
-  proximos: number;
-  en_plazo: number;
-  cerrados_hist: number;
-  tasa_exito_pct: number;
-  mediana_cierre_dias: number;
+  vencidos_total: number;
+  vencimiento_pct: number;
+  ab_vencidos: number;
+  ab_proximos: number;
+  ab_en_plazo: number;
+  ce_vencidos: number;
+  ce_a_tiempo: number;
+  mediana_dias: number;
   top_territories: NlpGeoRankItem[];
-  tickets: NlpOpenTicket[];
+  tickets: NlpTicket[];
 }
 
 export interface NlpGraphPayload {
   metadata: {
     title: string;
-    total_abiertos: number;
+    total: number;
   };
   routes: NlpRouteMeta[];
-  closed_stats: NlpClosedStat[];
-  open_tickets: NlpOpenTicket[];
+  tickets: NlpTicket[];
 }

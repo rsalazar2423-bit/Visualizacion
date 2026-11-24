@@ -4,30 +4,30 @@ import * as echarts from 'echarts';
 import { useThemeStore } from '../../stores/themeStore';
 import { useTerritoryStore } from '../../stores/territoryStore';
 import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
-import { computeTriageSummaries, buildTriageBarOption } from '../../services/analytics/nlpTriageEngine';
-import type { NlpGraphPayload, NlpHorizonFilter, NlpRouteId, NlpUrgencyFilter } from '../../types/nlpGraph';
+import {
+  computeTriageSummaries,
+  buildTriageBarOption,
+  ESTADO_OPTS,
+  URGENCY_OPTS,
+  HORIZON_OPTS,
+} from '../../services/analytics/nlpTriageEngine';
+import type {
+  NlpEstadoFilter,
+  NlpGraphPayload,
+  NlpHorizonFilter,
+  NlpRouteId,
+  NlpUrgencyFilter,
+} from '../../types/nlpGraph';
 import NlpActionTray from '../territory/NlpActionTray.vue';
-
-const URGENCY_OPTS: Array<{ id: NlpUrgencyFilter; label: string; cls?: string }> = [
-  { id: 'todos', label: 'Todos' },
-  { id: 'vencido', label: 'Vencidos', cls: 'danger' },
-  { id: 'proximo', label: 'Próximos (≤90d)', cls: 'warn' },
-  { id: 'en_plazo', label: 'En Plazo', cls: 'ok' },
-];
-
-const HORIZON_OPTS: Array<{ id: NlpHorizonFilter; label: string }> = [
-  { id: 'todas', label: 'Toda Prioridad' },
-  { id: 'corto', label: 'Corto Plazo (≤1 Año)' },
-  { id: 'largo', label: 'Largo Plazo (2–6 Años)' },
-];
 
 const themeStore = useThemeStore();
 const territoryStore = useTerritoryStore();
 
 const payload = ref<NlpGraphPayload | null>(null);
+const estadoFilter = ref<NlpEstadoFilter>('ambos');
 const urgenciaFilter = ref<NlpUrgencyFilter>('todos');
 const horizonteFilter = ref<NlpHorizonFilter>('todas');
-const selectedRouteId = ref<NlpRouteId>('r_campo');
+const selectedRouteId = ref<NlpRouteId>('r_servidumbre');
 
 const chartRef = ref<HTMLDivElement | null>(null);
 let chart: echarts.ECharts | null = null;
@@ -36,6 +36,7 @@ let ro: ResizeObserver | null = null;
 const summaries = computed(() => {
   if (!payload.value) return [];
   return computeTriageSummaries(payload.value, {
+    estado: estadoFilter.value,
     cte: territoryStore.selectedCte,
     depto: territoryStore.selectedDepto,
     municipio: territoryStore.selectedMunicipio,
@@ -45,6 +46,7 @@ const summaries = computed(() => {
 });
 
 const totalVisible = computed(() => summaries.value.reduce((acc, r) => acc + r.total, 0));
+const totalOverdue = computed(() => summaries.value.reduce((acc, r) => acc + r.vencidos_total, 0));
 const selectedRoute = computed(
   () => summaries.value.find((r) => r.id === selectedRouteId.value) ?? summaries.value[0] ?? null,
 );
@@ -59,7 +61,10 @@ function renderChart() {
       if (clicked) selectedRouteId.value = clicked.id;
     });
   }
-  chart.setOption(buildTriageBarOption(summaries.value, selectedRouteId.value, themeStore.isDark), true);
+  chart.setOption(
+    buildTriageBarOption(summaries.value, estadoFilter.value, selectedRouteId.value, themeStore.isDark),
+    true,
+  );
 }
 
 function handleDrillGeo(name: string) {
@@ -70,7 +75,7 @@ function handleDrillGeo(name: string) {
 onMounted(async () => {
   try {
     payload.value = await fetchNlpGraphData();
-    const firstUrgent = [...summaries.value].sort((a, b) => b.vencidos - a.vencidos)[0];
+    const firstUrgent = [...summaries.value].sort((a, b) => b.vencidos_total - a.vencidos_total)[0];
     if (firstUrgent) selectedRouteId.value = firstUrgent.id;
     renderChart();
     ro = new ResizeObserver(() => chart?.resize());
@@ -88,10 +93,14 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
   <div class="triage-layout">
     <div class="triage-toolbar card">
       <div class="toolbar-title">
-        <span class="title-main">Triaje de Tratamiento Operativo (NLP)</span>
-        <span class="count-pill">{{ totalVisible.toLocaleString() }} avisos abiertos</span>
+        <span class="title-main">Causales de Vencimiento y Tratamiento (NLP)</span>
+        <span class="count-pill">{{ totalVisible.toLocaleString() }} avisos · {{ totalOverdue.toLocaleString() }} vencidos</span>
       </div>
+
       <div class="toolbar-filters">
+        <div class="seg-group" role="group" aria-label="Estado de aviso">
+          <button v-for="opt in ESTADO_OPTS" :key="opt.id" class="seg-btn" :class="{ active: estadoFilter === opt.id }" @click="estadoFilter = opt.id">{{ opt.label }}</button>
+        </div>
         <div class="seg-group" role="group" aria-label="Urgencia de plazo">
           <button v-for="opt in URGENCY_OPTS" :key="opt.id" class="seg-btn" :class="[opt.cls, { active: urgenciaFilter === opt.id }]" @click="urgenciaFilter = opt.id">{{ opt.label }}</button>
         </div>
@@ -104,8 +113,8 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
     <div class="triage-split">
       <section class="chart-panel card">
         <header class="panel-head">
-          <h3 class="panel-title">Carga Abierta por Ruta de Tratamiento y Semáforo SLA</h3>
-          <p class="panel-sub">Haz clic en una ruta para ver cómo tratar sus avisos y dónde se concentran</p>
+          <h3 class="panel-title">Causales con Mayor Vencimiento (Abiertos vs. Cerrados Fuera de Plazo)</h3>
+          <p class="panel-sub">Haz clic en una causal para auditar sus casos vencidos, cerrados tardíos y cómo tratarla</p>
         </header>
 
         <div ref="chartRef" class="bars-canvas"></div>
@@ -120,12 +129,12 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
           >
             <div class="rmc-top">
               <span class="rmc-name">{{ r.short_name }}</span>
-              <strong class="rmc-total">{{ r.total }}</strong>
+              <strong class="rmc-total">{{ r.total.toLocaleString() }}</strong>
             </div>
             <div class="rmc-sub">
-              <span class="txt-danger">{{ r.vencidos }} venc.</span>
+              <span class="txt-danger">{{ r.vencimiento_pct }}% vencimiento ({{ r.vencidos_total.toLocaleString() }})</span>
               <span>·</span>
-              <span>Éxito hist. {{ r.tasa_exito_pct }}%</span>
+              <span>~{{ r.mediana_dias }}d</span>
             </div>
           </button>
         </div>
@@ -142,10 +151,10 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
   padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); flex-shrink: 0;
 }
-.toolbar-title, .toolbar-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.title-main { font-size: 0.86rem; font-weight: 800; color: var(--text-primary); }
+.toolbar-title, .toolbar-filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.title-main { font-size: 0.85rem; font-weight: 800; color: var(--text-primary); }
 .count-pill {
-  font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+  font-size: 0.71rem; font-weight: 700; padding: 2px 9px; border-radius: 999px;
   background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--color-brand, #0f766e);
 }
 .seg-group {
@@ -154,7 +163,7 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
 }
 .seg-btn {
   border: none; background: transparent; color: var(--text-secondary);
-  font-size: 0.72rem; font-weight: 600; padding: 4px 9px; border-radius: 4px; cursor: pointer;
+  font-size: 0.7rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }
 .seg-btn.active { background: var(--bg-card); color: var(--color-brand, #0f766e); font-weight: 700; box-shadow: var(--shadow-sm); }
 .seg-btn.danger.active { color: #be123c; }

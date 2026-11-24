@@ -1,7 +1,7 @@
-"""build_nlp_graph.py — Motor de clasificación NLP de Rutas de Tratamiento Operativo.
+"""build_nlp_graph.py — Clasificación NLP de Causales y Rutas de Tratamiento (3.118 avisos).
 
-Clasifica el 100% de los avisos en 4 Rutas de Tratamiento accionables para el
-Coordinador y exporta los avisos abiertos individuales + benchmarks históricos.
+Clasifica el 100% de avisos (Abiertos y Cerrados) en 4 causales/rutas operativas,
+permitiendo analizar tanto el triaje abierto como las causales de mayor vencimiento histórico.
 """
 
 from __future__ import annotations
@@ -75,72 +75,62 @@ def _classify_route(row: pd.Series) -> str:
     return "r_campo"
 
 
-def _clean_str(val: object, fallback: str = "Sin dato") -> str:
+def _clean_str(val: object, fallback: str = "-") -> str:
     s = str(val or "").strip()
     return fallback if not s or s in ("nan", "None", "No Identificado") else s
 
 
 def main() -> None:
     from backend.src.data.data_loader import load_data
-    print("⏳ Clasificando rutas operativas NLP para el Coordinador...")
+    print("⏳ Generando dataset NLP completo (Abiertos + Cerrados con estado de vencimiento)...")
     _, _, df = load_data(force_reload=True)
     df = df.copy()
     df["ruta"] = df.apply(_classify_route, axis=1)
+    df = df.sort_values("Cumple prioridad días", ascending=True)
 
-    # Estadísticas históricas de cerrados por (ruta, cte, depto) para benchmark dinámico
-    ce = df[df["Estado aviso"] == "Cerrado"]
-    closed_stats = []
-    for (ruta, cte, depto), grp in ce.groupby(["ruta", "CTE", "Departamento"], dropna=False):
-        closed_stats.append({
-            "ruta": str(ruta),
-            "cte": _clean_str(cte, "Sin Asignar"),
-            "depto": _clean_str(depto, "Sin Asignar"),
-            "count": int(len(grp)),
-            "mediana_dias": round(float(grp["Días abierto"].median()), 0),
-        })
-
-    # Avisos abiertos individuales enriquecidos para triaje en tiempo real
-    ab = df[df["Estado aviso"] == "Abierto"].sort_values("Cumple prioridad días", ascending=True)
-    open_tickets = []
-    for _, r in ab.iterrows():
+    tickets = []
+    for _, r in df.iterrows():
+        estado_raw = str(r.get("Estado aviso", "Abierto"))
+        is_open = estado_raw == "Abierto"
         rem_days = int(round(float(r.get("Cumple prioridad días", 0) or 0)))
         rem_per = float(r.get("Cumple prioridad periodos", 1.0) or 1.0)
         prio_days = int(round(float(r.get("Prioridad días", 365) or 365)))
+        excede = rem_days < 0 or str(r.get("Cumplimiento_Estado", "")) == "Excede Plazo"
 
-        if rem_days < 0 or str(r.get("Cumplimiento_Estado", "")) == "Excede Plazo":
+        if excede:
             urgencia = "vencido"
-        elif rem_days <= 90 or rem_per <= 0.25:
+        elif is_open and (rem_days <= 90 or rem_per <= 0.25):
             urgencia = "proximo"
         else:
             urgencia = "en_plazo"
 
-        open_tickets.append({
-            "aviso": _clean_str(r.get("Aviso"), "-"),
+        tickets.append({
+            "aviso": _clean_str(r.get("Aviso")),
+            "estado": "abierto" if is_open else "cerrado",
             "ruta": str(r["ruta"]),
             "urgencia": urgencia,
             "horizonte": "corto" if prio_days <= 365 else "largo",
-            "prioridad": _clean_str(r.get("Prioridad"), "-"),
+            "prioridad": _clean_str(r.get("Prioridad")),
             "dias_abierto": int(round(float(r.get("Días abierto", 0) or 0))),
             "dias_restantes": rem_days,
             "cte": _clean_str(r.get("CTE"), "Sin Asignar"),
             "depto": _clean_str(r.get("Departamento"), "Sin Asignar"),
             "mpio": _clean_str(r.get("Municipio"), "Sin Municipio"),
             "linea": _clean_str(r.get("Linea"), "Sin Línea"),
-            "torre": _clean_str(r.get("Torre") or r.get("Equipo"), "-"),
+            "torre": _clean_str(r.get("Torre") or r.get("Equipo")),
             "desc": _clean_str(r.get("Descripción"), "Sin descripción"),
         })
 
     out = {
-        "metadata": {"title": "Triaje Operativo NLP del Coordinador", "total_abiertos": len(open_tickets)},
+        "metadata": {"title": "Triaje y Vencimiento por Causal NLP", "total": len(tickets)},
         "routes": ROUTES,
-        "closed_stats": closed_stats,
-        "open_tickets": open_tickets,
+        "tickets": tickets,
     }
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     size_kb = OUTPUT_PATH.stat().st_size / 1024
-    print(f"✅ JSON generado ({len(open_tickets)} abiertos, {size_kb:.1f} KB): {OUTPUT_PATH}")
+    print(f"✅ JSON generado ({len(tickets)} avisos totales, {size_kb:.1f} KB): {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

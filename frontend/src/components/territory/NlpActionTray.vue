@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { MapPin, Compass, History } from 'lucide-vue-next';
-import type { NlpRouteSummary } from '../../types/nlpGraph';
+import { MapPin, Compass, AlertTriangle } from 'lucide-vue-next';
+import type { NlpRouteSummary, NlpTicket } from '../../types/nlpGraph';
 
 defineProps<{
   route: NlpRouteSummary | null;
@@ -11,23 +11,27 @@ const emit = defineEmits<{
   (e: 'drillGeo', name: string): void;
 }>();
 
-function formatRemaining(days: number): string {
-  if (days < 0) return `${Math.abs(days).toLocaleString()} d vencido`;
-  if (days === 0) return 'Vence hoy';
-  return `${days.toLocaleString()} d restantes`;
+function formatSlaLabel(t: NlpTicket): string {
+  if (t.estado === 'cerrado') {
+    return t.urgencia === 'vencido'
+      ? `Cerrado +${Math.abs(t.dias_restantes).toLocaleString()}d tarde`
+      : `Cerrado a tiempo (${t.dias_abierto.toLocaleString()}d)`;
+  }
+  if (t.dias_restantes < 0) return `Abierto · ${Math.abs(t.dias_restantes).toLocaleString()}d vencido`;
+  if (t.dias_restantes === 0) return 'Abierto · Vence hoy';
+  return `Abierto · ${t.dias_restantes.toLocaleString()}d rest.`;
 }
 </script>
 
 <template>
   <section class="action-tray card">
     <template v-if="route">
-      <!-- Encabezado con Guía de Tratamiento + Benchmark Histórico -->
       <header class="tray-header">
         <div class="tray-title-row">
           <h3 class="tray-title">{{ route.name }}</h3>
-          <span class="hist-badge" title="Referencia de avisos cerrados históricos en esta ruta">
-            <History :size="12" />
-            Éxito hist.: <b>{{ route.tasa_exito_pct }}%</b> · ~{{ route.mediana_cierre_dias }} d
+          <span class="overdue-rate-badge">
+            <AlertTriangle :size="12" />
+            Vencimiento causal: <b>{{ route.vencimiento_pct }}%</b> ({{ route.vencidos_total.toLocaleString() }} venc.) · ~{{ route.mediana_dias }}d
           </span>
         </div>
         <div class="action-guide">
@@ -36,14 +40,13 @@ function formatRemaining(days: number): string {
         </div>
       </header>
 
-      <!-- Concentración Territorial Rápida (clic para filtrar) -->
       <div v-if="route.top_territories.length > 0" class="geo-strip">
-        <span class="geo-strip-lbl"><MapPin :size="11" /> Focos por {{ geoLevelLabel }}:</span>
+        <span class="geo-strip-lbl"><MapPin :size="11" /> Mayor vencimiento por {{ geoLevelLabel }}:</span>
         <button
           v-for="g in route.top_territories"
           :key="g.name"
           class="geo-chip"
-          :title="`Filtrar ${g.name} (${g.vencidos} vencidos)`"
+          :title="`Filtrar ${g.name}`"
           @click="emit('drillGeo', g.name)"
         >
           <span>{{ g.name }}</span>
@@ -52,15 +55,14 @@ function formatRemaining(days: number): string {
         </button>
       </div>
 
-      <!-- Tabla Accionable de Avisos Priorizados por Urgencia -->
       <div class="tickets-scroll">
         <table v-if="route.tickets.length > 0" class="triage-table">
           <thead>
             <tr>
               <th>Aviso</th>
               <th>Ubicación / Activo</th>
-              <th>Descripción Operativa</th>
-              <th class="col-sla">Estado Plazo</th>
+              <th>Descripción de la Causal</th>
+              <th class="col-sla">Estado y Plazo</th>
             </tr>
           </thead>
           <tbody>
@@ -72,16 +74,14 @@ function formatRemaining(days: number): string {
               </td>
               <td class="desc-cell">{{ t.desc }}</td>
               <td class="col-sla">
-                <span class="sla-pill" :class="`sla-${t.urgencia}`">
-                  {{ formatRemaining(t.dias_restantes) }}
-                </span>
-                <div class="prio-sub">SLA: {{ t.prioridad }}</div>
+                <span class="sla-pill" :class="`sla-${t.urgencia}`">{{ formatSlaLabel(t) }}</span>
+                <div class="prio-sub">Prioridad: {{ t.prioridad }}</div>
               </td>
             </tr>
           </tbody>
         </table>
         <div v-else class="empty-tray">
-          No hay avisos abiertos en esta ruta con los filtros seleccionados.
+          No hay avisos en esta causal con los filtros seleccionados.
         </div>
       </div>
     </template>
@@ -97,10 +97,10 @@ function formatRemaining(days: number): string {
 .tray-header { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
 .tray-title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tray-title { margin: 0; font-size: 0.9rem; font-weight: 800; color: var(--text-primary); }
-.hist-badge {
+.overdue-rate-badge {
   display: inline-flex; align-items: center; gap: 4px; font-size: 0.71rem;
-  color: var(--text-secondary); background: var(--bg-subtle);
-  border: 1px solid var(--border-subtle); padding: 2px 8px; border-radius: 999px;
+  color: #be123c; background: rgba(190, 18, 60, 0.09);
+  border: 1px solid rgba(190, 18, 60, 0.25); padding: 2px 8px; border-radius: 999px;
 }
 .action-guide {
   display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--text-primary);
@@ -116,7 +116,7 @@ function formatRemaining(days: number): string {
   border: 1px solid var(--border-subtle); border-radius: 999px; padding: 2px 8px; cursor: pointer;
 }
 .geo-chip:hover { border-color: var(--color-brand); color: var(--color-brand); }
-.geo-overdue { color: var(--sla-danger, #be123c); font-weight: 700; font-size: 0.66rem; }
+.geo-overdue { color: #be123c; font-weight: 700; font-size: 0.66rem; }
 .tickets-scroll { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
 .triage-table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
 .triage-table th {
