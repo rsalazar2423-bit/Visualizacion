@@ -30,8 +30,10 @@ export interface NlpTicket {
   cte: string;
   depto: string;
   mpio: string;
+  vereda: string;
   linea: string;
   torre: string;
+  etapa: string;
   desc: string;
   tags: string[];
 }

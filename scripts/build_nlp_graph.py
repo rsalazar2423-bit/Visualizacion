@@ -19,7 +19,7 @@ VENV_SITE = ROOT_DIR / ".venv" / "lib" / "python3.14" / "site-packages"
 if VENV_SITE.exists() and str(VENV_SITE) not in sys.path:
     sys.path.append(str(VENV_SITE))
 
-from scripts.nlp_lexicon import ROUTES, classify_and_tag  # noqa: E402
+from scripts.nlp_lexicon import ROUTES, classify_and_tag, translate_status  # noqa: E402
 
 
 def _clean_str(val: object, fallback: str = "-") -> str:
@@ -66,8 +66,10 @@ def main() -> None:
             "cte": _clean_str(r.get("CTE"), "Sin Asignar"),
             "depto": _clean_str(r.get("Departamento"), "Sin Asignar"),
             "mpio": _clean_str(r.get("Municipio"), "Sin Municipio"),
+            "vereda": _clean_str(r.get("Vereda"), ""),
             "linea": _clean_str(r.get("Linea"), "Sin Línea"),
             "torre": _clean_str(r.get("Torre") or r.get("Equipo")),
+            "etapa": translate_status(r.get("Status usuario")),
             "desc": _clean_str(r.get("Descripción"), "Sin descripción"),
             "tags": tags,
         })

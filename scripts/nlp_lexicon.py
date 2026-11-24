@@ -103,6 +103,24 @@ def normalize_text(raw: str) -> str:
     return txt
 
 
+STATUS_LABELS: list[tuple[str, str]] = [
+    ("TAMB", "Trámite Ambiental"),
+    ("GERE", "Gestión Jurídica"),
+    ("GPRE", "Gestión Predial"),
+    ("ENPT", "En Espera / Punto"),
+    ("REAN", "Reanudar"),
+    ("PRER", "Prerrequisito"),
+    ("COND", "Condicionado"),
+    ("GEAM", "Gestión Ambiental"),
+]
+
+
+def translate_status(raw_status: object) -> str:
+    s = str(raw_status or "").upper()
+    parts = [label for code, label in STATUS_LABELS if code in s]
+    return " · ".join(parts[:2]) if parts else "Iniciado"
+
+
 def classify_and_tag(row: pd.Series) -> tuple[str, list[str], bool]:
     desc_norm = normalize_text(str(row.get("Descripción", "") or ""))
     prob_norm = normalize_text(str(row.get("Textocódproblem", "") or ""))
