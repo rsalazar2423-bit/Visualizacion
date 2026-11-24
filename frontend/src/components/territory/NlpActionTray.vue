@@ -1,24 +1,32 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { MapPin, Compass, AlertTriangle, Tag } from 'lucide-vue-next';
+import { Compass, Tag } from 'lucide-vue-next';
+import { useThemeStore } from '../../stores/themeStore';
+import { getTipoColor } from '../../constants/themeTokens';
 import type { NlpRouteSummary, NlpTicket } from '../../types/nlpGraph';
 
 const props = defineProps<{
   route: NlpRouteSummary | null;
-  geoLevelLabel: string;
   selectedTag: string | null;
 }>();
 
 const emit = defineEmits<{
-  (e: 'drillGeo', name: string): void;
   (e: 'toggleTag', tag: string): void;
 }>();
+
+const themeStore = useThemeStore();
 
 const filteredTickets = computed(() => {
   if (!props.route) return [];
   if (!props.selectedTag) return props.route.tickets;
   return props.route.tickets.filter((t) => t.tags.includes(props.selectedTag!));
 });
+
+function formatTorre(torre: string): string {
+  const clean = torre.trim();
+  if (!clean || clean === '-') return '-';
+  return /^t[-_\s]?\d/i.test(clean) ? clean : `T-${clean}`;
+}
 
 function formatSlaLabel(t: NlpTicket): string {
   if (t.estado === 'cerrado') {
@@ -31,8 +39,10 @@ function formatSlaLabel(t: NlpTicket): string {
   return `Abierto · ${t.dias_restantes.toLocaleString()}d rest.`;
 }
 
-function isRiskTag(tg: string): boolean {
-  return tg.startsWith('IVBL') || tg.startsWith('SNG') || tg.startsWith('Bajo') || tg.startsWith('Reincidente');
+function getSlaBadgeClass(t: NlpTicket): string {
+  if (t.estado === 'abierto' && t.urgencia === 'vencido') return 'sla-danger';
+  if (t.urgencia === 'vencido' || t.urgencia === 'proximo') return 'sla-warn';
+  return 'sla-ok';
 }
 </script>
 
@@ -42,45 +52,29 @@ function isRiskTag(tg: string): boolean {
       <header class="tray-header">
         <div class="tray-title-row">
           <h3 class="tray-title">{{ route.name }}</h3>
-          <span class="overdue-rate-badge">
-            <AlertTriangle :size="12" />
-            Vencimiento: <b>{{ route.vencimiento_pct }}%</b> ({{ route.vencidos_total.toLocaleString() }} venc.) · ~{{ route.mediana_dias }}d
+          <span class="meta-summary">
+            <b>{{ route.vencimiento_pct }}%</b> con vencimiento ({{ route.vencidos_total.toLocaleString() }} de {{ route.total.toLocaleString() }}) · Mediana {{ route.mediana_dias }}d
           </span>
         </div>
         <div class="action-guide">
           <Compass :size="14" class="guide-icon" />
-          <span><b>Cómo tratar:</b> {{ route.action }}</span>
+          <span><b>Acción sugerida:</b> {{ route.action }}</span>
         </div>
       </header>
 
-      <!-- Banderas / Palabras Críticas NLP extraídas de la Descripción -->
-      <div v-if="route.critical_tags.length > 0" class="geo-strip">
-        <span class="geo-strip-lbl"><Tag :size="11" /> Palabras críticas:</span>
+      <!-- Única tira limpia de Palabras Críticas NLP (tono sobrio pizarra, sin saturación roja) -->
+      <div v-if="route.critical_tags.length > 0" class="tag-strip">
+        <span class="strip-lbl"><Tag :size="11" /> Filtrar palabra clave:</span>
         <button
           v-for="ct in route.critical_tags"
           :key="ct.tag"
-          class="geo-chip"
-          :class="{ 'tag-active': selectedTag === ct.tag }"
+          class="tag-chip"
+          :class="{ active: selectedTag === ct.tag }"
           :title="`${ct.vencimiento_pct}% de vencimiento en avisos con '${ct.tag}'`"
           @click="emit('toggleTag', ct.tag)"
         >
           <span>{{ ct.tag }}</span>
-          <b>{{ ct.total }}</b>
-          <span class="geo-overdue">{{ ct.vencimiento_pct }}% venc.</span>
-        </button>
-      </div>
-
-      <div v-if="route.top_territories.length > 0" class="geo-strip">
-        <span class="geo-strip-lbl"><MapPin :size="11" /> Focos {{ geoLevelLabel }}:</span>
-        <button
-          v-for="g in route.top_territories"
-          :key="g.name"
-          class="geo-chip"
-          @click="emit('drillGeo', g.name)"
-        >
-          <span>{{ g.name }}</span>
-          <b>{{ g.total }}</b>
-          <span v-if="g.vencidos > 0" class="geo-overdue">({{ g.vencidos }} venc.)</span>
+          <span class="tag-count">{{ ct.total }}</span>
         </button>
       </div>
 
@@ -88,31 +82,31 @@ function isRiskTag(tg: string): boolean {
         <table v-if="filteredTickets.length > 0" class="triage-table">
           <thead>
             <tr>
-              <th>Aviso / Tipo</th>
+              <th>Aviso</th>
               <th>Ubicación / Activo</th>
-              <th>Descripción y Banderas NLP</th>
-              <th class="col-sla">Estado y Plazo</th>
+              <th>Descripción</th>
+              <th class="col-sla">Estado Plazo</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="t in filteredTickets.slice(0, 80)" :key="t.aviso">
               <td>
                 <div class="mono-id">{{ t.aviso }}</div>
-                <span class="tipo-pill">{{ t.tipo }}</span>
+                <span class="tipo-pill" :style="{ borderLeftColor: getTipoColor(t.tipo, themeStore.isDark) }">{{ t.tipo }}</span>
               </td>
               <td>
                 <div class="loc-primary">{{ t.mpio }} <span class="loc-sub">({{ t.depto }})</span></div>
-                <div class="loc-asset">{{ t.linea }} · T-{{ t.torre }}</div>
+                <div class="loc-asset">{{ t.linea }} · {{ formatTorre(t.torre) }}</div>
               </td>
               <td>
                 <div class="desc-cell">{{ t.desc }}</div>
                 <div v-if="t.tags.length" class="row-tags">
-                  <span v-for="tg in t.tags" :key="tg" class="mini-tag" :class="{ 'risk-tag': isRiskTag(tg) }">{{ tg }}</span>
+                  <span v-for="tg in t.tags.slice(0, 2)" :key="tg" class="mini-tag">{{ tg }}</span>
                 </div>
               </td>
               <td class="col-sla">
-                <span class="sla-pill" :class="`sla-${t.urgencia}`">{{ formatSlaLabel(t) }}</span>
-                <div class="prio-sub">Prioridad: {{ t.prioridad }}</div>
+                <span class="sla-pill" :class="getSlaBadgeClass(t)">{{ formatSlaLabel(t) }}</span>
+                <div class="prio-sub">SLA: {{ t.prioridad }}</div>
               </td>
             </tr>
           </tbody>
@@ -125,49 +119,47 @@ function isRiskTag(tg: string): boolean {
 
 <style scoped>
 .action-tray {
-  display: flex; flex-direction: column; gap: 6px; padding: 11px 13px;
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 16px;
   min-height: 0; height: 100%; overflow: hidden;
   background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
 }
-.tray-header { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
-.tray-title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.tray-title { margin: 0; font-size: 0.88rem; font-weight: 800; color: var(--text-primary); }
-.overdue-rate-badge {
-  display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem;
-  color: #be123c; background: rgba(190, 18, 60, 0.09); border: 1px solid rgba(190, 18, 60, 0.25); padding: 2px 8px; border-radius: 999px;
-}
+.tray-header { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.tray-title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tray-title { margin: 0; font-size: 0.92rem; font-weight: 800; color: var(--text-primary); }
+.meta-summary { font-size: 0.74rem; color: var(--text-secondary); }
+.meta-summary b { color: var(--text-primary); }
 .action-guide {
-  display: flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--text-primary);
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.08)); border-left: 3px solid var(--color-brand, #0f766e); padding: 5px 9px; border-radius: 4px;
+  display: flex; align-items: center; gap: 7px; font-size: 0.76rem; color: var(--text-primary);
+  background: var(--bg-subtle); border-left: 3px solid var(--color-brand); padding: 6px 10px; border-radius: 4px;
 }
-.guide-icon { color: var(--color-brand, #0f766e); flex-shrink: 0; }
-.geo-strip { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; flex-shrink: 0; }
-.geo-strip-lbl { display: inline-flex; align-items: center; gap: 3px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
-.geo-chip {
-  display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem;
-  background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 999px; padding: 2px 7px; cursor: pointer;
+.guide-icon { color: var(--color-brand); flex-shrink: 0; }
+.tag-strip { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex-shrink: 0; }
+.strip-lbl { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem;
+  background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-full); padding: 2px 9px; cursor: pointer;
 }
-.geo-chip:hover, .geo-chip.tag-active { border-color: var(--color-brand); background: var(--color-brand-soft, rgba(15, 118, 110, 0.12)); font-weight: 700; }
-.geo-overdue { color: #be123c; font-weight: 700; font-size: 0.65rem; }
+.tag-chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.tag-chip.active { background: var(--color-brand-soft); border-color: var(--color-brand); color: var(--color-brand); font-weight: 700; }
+.tag-count { font-weight: 700; color: var(--text-primary); }
 .tickets-scroll { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
-.triage-table { width: 100%; border-collapse: collapse; font-size: 0.73rem; }
+.triage-table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
 .triage-table th {
-  position: sticky; top: 0; background: var(--bg-subtle); color: var(--text-secondary);
-  text-align: left; font-size: 0.67rem; text-transform: uppercase; padding: 5px 8px; border-bottom: 1px solid var(--border-subtle);
+  position: sticky; top: 0; background: var(--bg-table-header); color: var(--text-secondary);
+  text-align: left; font-size: 0.67rem; text-transform: uppercase; padding: 7px 10px; border-bottom: 1px solid var(--border-subtle);
 }
-.triage-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
-.mono-id { font-family: ui-monospace, monospace; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
-.tipo-pill { display: inline-block; margin-top: 2px; font-size: 0.61rem; font-weight: 600; padding: 1px 5px; border-radius: 3px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; }
+.triage-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+.mono-id { font-family: var(--font-family-mono); font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.tipo-pill { display: inline-block; margin-top: 2px; font-size: 0.63rem; font-weight: 600; padding: 1px 6px; border-radius: 3px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-left-width: 3px; color: var(--text-secondary); white-space: nowrap; }
 .loc-primary { font-weight: 700; color: var(--text-primary); }
-.loc-sub, .loc-asset, .prio-sub { font-size: 0.66rem; color: var(--text-secondary); }
-.desc-cell { color: var(--text-primary); line-height: 1.25; }
-.row-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
-.mini-tag { font-size: 0.62rem; padding: 1px 5px; border-radius: 3px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--text-secondary); }
-.mini-tag.risk-tag { background: rgba(190, 18, 60, 0.09); border-color: rgba(190, 18, 60, 0.28); color: #be123c; font-weight: 700; }
+.loc-sub, .loc-asset, .prio-sub { font-size: 0.67rem; color: var(--text-secondary); }
+.desc-cell { color: var(--text-primary); line-height: 1.3; }
+.row-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.mini-tag { font-size: 0.63rem; padding: 1px 6px; border-radius: 3px; background: var(--bg-subtle); color: var(--text-secondary); }
 .col-sla { text-align: right; white-space: nowrap; }
-.sla-pill { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 0.67rem; font-weight: 700; }
-.sla-vencido { background: rgba(190, 18, 60, 0.12); color: #be123c; }
-.sla-proximo { background: rgba(217, 119, 6, 0.14); color: #b45309; }
-.sla-en_plazo { background: rgba(15, 118, 110, 0.12); color: #0f766e; }
-.empty-tray { padding: 24px; text-align: center; font-size: 0.78rem; color: var(--text-secondary); }
+.sla-pill { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.68rem; font-weight: 700; border: 1px solid transparent; }
+.sla-danger { background: var(--sla-danger-bg); color: var(--sla-danger); border-color: var(--sla-danger-border); }
+.sla-warn { background: var(--sla-warning-bg); color: var(--sla-warning); border-color: var(--sla-warning-border); }
+.sla-ok { background: var(--sla-success-bg); color: var(--sla-success); border-color: var(--sla-success-border); }
+.empty-tray { padding: 28px; text-align: center; font-size: 0.78rem; color: var(--text-secondary); }
 </style>
