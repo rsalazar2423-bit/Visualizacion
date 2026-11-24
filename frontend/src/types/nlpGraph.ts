@@ -1,8 +1,8 @@
 /**
- * nlpGraph.ts — Tipos para Triaje Operativo y Análisis de Vencimiento por Causal (NLP).
+ * nlpGraph.ts — Tipos para Triaje Operativo, 5 Causales y Banderas Críticas NLP.
  */
 
-export type NlpRouteId = 'r_campo' | 'r_predial' | 'r_ambiental' | 'r_servidumbre';
+export type NlpRouteId = 'r_campo' | 'r_electro' | 'r_predial' | 'r_ambiental' | 'r_servidumbre';
 export type NlpEstado = 'abierto' | 'cerrado';
 export type NlpEstadoFilter = 'abiertos' | 'cerrados' | 'ambos';
 export type NlpUrgency = 'vencido' | 'proximo' | 'en_plazo';
@@ -32,12 +32,20 @@ export interface NlpTicket {
   linea: string;
   torre: string;
   desc: string;
+  tags: string[];
 }
 
 export interface NlpGeoRankItem {
   name: string;
   total: number;
   vencidos: number;
+}
+
+export interface NlpTagStat {
+  tag: string;
+  total: number;
+  vencidos: number;
+  vencimiento_pct: number;
 }
 
 export interface NlpRouteSummary extends NlpRouteMeta {
@@ -51,6 +59,7 @@ export interface NlpRouteSummary extends NlpRouteMeta {
   ce_a_tiempo: number;
   mediana_dias: number;
   top_territories: NlpGeoRankItem[];
+  critical_tags: NlpTagStat[];
   tickets: NlpTicket[];
 }
 
@@ -58,6 +67,7 @@ export interface NlpGraphPayload {
   metadata: {
     title: string;
     total: number;
+    lexical_coverage_pct: number;
   };
   routes: NlpRouteMeta[];
   tickets: NlpTicket[];

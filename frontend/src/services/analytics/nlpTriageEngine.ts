@@ -1,6 +1,5 @@
 /**
- * nlpTriageEngine.ts — Motor puro de filtrado y barras apiladas SLA
- * para Abiertos, Cerrados (vencidos vs a tiempo) y Panorama Total por Causal.
+ * nlpTriageEngine.ts — Motor puro de filtrado, banderas críticas NLP y barras SLA.
  */
 import type * as echarts from 'echarts';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
@@ -43,9 +42,9 @@ export const HORIZON_OPTS: Array<{ id: NlpHorizonFilter; label: string }> = [
 
 function medianOf(nums: number[]): number {
   if (!nums.length) return 0;
-  const sorted = [...nums].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+  const s = [...nums].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
 }
 
 export function computeTriageSummaries(
@@ -53,7 +52,6 @@ export function computeTriageSummaries(
   filters: TriageFilters,
 ): NlpRouteSummary[] {
   const { estado, cte, depto, municipio, urgencia, horizonte } = filters;
-
   const baseFiltered = payload.tickets.filter((t) => {
     if (estado === 'abiertos' && t.estado !== 'abierto') return false;
     if (estado === 'cerrados' && t.estado !== 'cerrado') return false;
@@ -71,33 +69,44 @@ export function computeTriageSummaries(
     const baseOverdue = routeBase.filter((t) => t.urgencia === 'vencido').length;
     const vencimiento_pct =
       routeBase.length > 0 ? Math.round((baseOverdue / routeBase.length) * 1000) / 10 : 0;
-
     const visible =
       urgencia === 'todos' ? routeBase : routeBase.filter((t) => t.urgencia === urgencia);
 
     let ab_vencidos = 0, ab_proximos = 0, ab_en_plazo = 0, ce_vencidos = 0, ce_a_tiempo = 0;
     const geoCounts = new Map<string, { total: number; vencidos: number }>();
+    const tagCounts = new Map<string, { total: number; vencidos: number }>();
 
     for (const t of visible) {
       if (t.estado === 'abierto') {
         if (t.urgencia === 'vencido') ab_vencidos++;
         else if (t.urgencia === 'proximo') ab_proximos++;
         else ab_en_plazo++;
-      } else {
-        if (t.urgencia === 'vencido') ce_vencidos++;
-        else ce_a_tiempo++;
-      }
+      } else if (t.urgencia === 'vencido') ce_vencidos++;
+      else ce_a_tiempo++;
+
       const gKey = groupGeoByMpio ? t.mpio : t.depto;
-      const prev = geoCounts.get(gKey) ?? { total: 0, vencidos: 0 };
-      prev.total++;
-      if (t.urgencia === 'vencido') prev.vencidos++;
-      geoCounts.set(gKey, prev);
+      const prevG = geoCounts.get(gKey) ?? { total: 0, vencidos: 0 };
+      prevG.total++;
+      if (t.urgencia === 'vencido') prevG.vencidos++;
+      geoCounts.set(gKey, prevG);
+
+      for (const tg of t.tags) {
+        const prevT = tagCounts.get(tg) ?? { total: 0, vencidos: 0 };
+        prevT.total++;
+        if (t.urgencia === 'vencido') prevT.vencidos++;
+        tagCounts.set(tg, prevT);
+      }
     }
 
-    const top_territories = Array.from(geoCounts.entries())
-      .map(([name, v]) => ({ name, total: v.total, vencidos: v.vencidos }))
+    const critical_tags = Array.from(tagCounts.entries())
+      .map(([tag, v]) => ({
+        tag,
+        total: v.total,
+        vencidos: v.vencidos,
+        vencimiento_pct: Math.round((v.vencidos / v.total) * 1000) / 10,
+      }))
       .sort((a, b) => b.vencidos - a.vencidos || b.total - a.total)
-      .slice(0, 6);
+      .slice(0, 7);
 
     return {
       ...route,
@@ -110,7 +119,11 @@ export function computeTriageSummaries(
       ce_vencidos,
       ce_a_tiempo,
       mediana_dias: medianOf(visible.map((t) => t.dias_abierto)),
-      top_territories,
+      top_territories: Array.from(geoCounts.entries())
+        .map(([name, v]) => ({ name, total: v.total, vencidos: v.vencidos }))
+        .sort((a, b) => b.vencidos - a.vencidos || b.total - a.total)
+        .slice(0, 5),
+      critical_tags,
       tickets: visible,
     };
   });
@@ -125,34 +138,27 @@ export function buildTriageBarOption(
   const tokens = getEChartsThemeTokens(isDark);
   const rows = [...summaries].reverse();
   const endLabel = {
-    show: true,
-    position: 'right' as const,
-    color: tokens.textColor,
-    fontSize: 10.5,
-    fontWeight: 700,
-    formatter: (p: any) => {
-      const r = rows[p.dataIndex];
-      return r ? `${r.total.toLocaleString()} (${r.vencimiento_pct}% venc.)` : '';
-    },
+    show: true, position: 'right' as const, color: tokens.textColor, fontSize: 10.5, fontWeight: 700,
+    formatter: (p: any) => { const r = rows[p.dataIndex]; return r ? `${r.total.toLocaleString()} (${r.vencimiento_pct}% venc.)` : ''; },
   };
 
   const series: echarts.SeriesOption[] =
     estado === 'abiertos'
       ? [
-          { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
-          { name: 'Próximos (≤90d)', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ab_proximos) },
-          { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ab_en_plazo) },
+          { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
+          { name: 'Próximos (≤90d)', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ab_proximos) },
+          { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ab_en_plazo) },
         ]
       : estado === 'cerrados'
         ? [
-            { name: 'Cerrados Fuera de Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ce_vencidos) },
-            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
+            { name: 'Cerrados Fuera de Plazo', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
           ]
         : [
-            { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
-            { name: 'Cerrados Fuera de Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: '#fb7185' }, data: rows.map((r) => r.ce_vencidos) },
-            { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ab_proximos + r.ab_en_plazo) },
-            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
+            { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
+            { name: 'Cerrados Fuera de Plazo', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: '#fb7185' }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ab_proximos + r.ab_en_plazo) },
+            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 24, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
           ];
 
   return {
@@ -174,18 +180,14 @@ export function buildTriageBarOption(
       },
     },
     legend: { top: 2, right: 6, itemWidth: 10, itemHeight: 10, textStyle: { color: tokens.textSecondary, fontSize: 10.5 } },
-    grid: { top: 34, left: 10, right: 118, bottom: 16, containLabel: true },
-    xAxis: {
-      type: 'value',
-      splitLine: { lineStyle: { color: tokens.gridColor, type: 'dashed' } },
-      axisLabel: { color: tokens.textSecondary, fontSize: 10.5 },
-    },
+    grid: { top: 32, left: 8, right: 118, bottom: 12, containLabel: true },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: tokens.gridColor, type: 'dashed' } }, axisLabel: { color: tokens.textSecondary, fontSize: 10.5 } },
     yAxis: {
       type: 'category',
       data: rows.map((r) => (r.id === selectedId ? `▸ ${r.short_name}` : r.short_name)),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: tokens.textColor, fontSize: 11.5, fontWeight: 700 },
+      axisLabel: { color: tokens.textColor, fontSize: 11, fontWeight: 700 },
     },
     series,
   };

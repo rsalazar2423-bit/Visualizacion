@@ -1,16 +1,14 @@
-"""build_nlp_graph.py — Clasificación NLP de Causales y Rutas de Tratamiento (3.118 avisos).
+"""build_nlp_graph.py — Generador de datos NLP con 5 Causales y Banderas Críticas.
 
-Clasifica el 100% de avisos (Abiertos y Cerrados) en 4 causales/rutas operativas,
-permitiendo analizar tanto el triaje abierto como las causales de mayor vencimiento histórico.
+Ejecuta nlp_lexicon sobre los 3.118 avisos (Abiertos y Cerrados), reporta cobertura
+léxica directa sobre Descripción y exporta nlp_graph_data.json para el frontend.
 """
 
 from __future__ import annotations
 
 import json
-import re
 import sys
 from pathlib import Path
-import pandas as pd
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_PATH = ROOT_DIR / "frontend" / "public" / "data" / "nlp_graph_data.json"
@@ -21,58 +19,7 @@ VENV_SITE = ROOT_DIR / ".venv" / "lib" / "python3.14" / "site-packages"
 if VENV_SITE.exists() and str(VENV_SITE) not in sys.path:
     sys.path.append(str(VENV_SITE))
 
-ROUTES = [
-    {
-        "id": "r_campo",
-        "name": "1. Cuadrilla de Campo (Forestal / Obra)",
-        "short_name": "Cuadrilla de Campo",
-        "action": "Programar despacho directo de cuadrilla operativa (poda, tala libre o mantenimiento en torre).",
-    },
-    {
-        "id": "r_predial",
-        "name": "2. Gestión Predial Previa (Permiso Ingreso)",
-        "short_name": "Gestión Predial",
-        "action": "Asignar gestor predial/social para concertar ingreso con propietario antes de movilizar cuadrilla.",
-    },
-    {
-        "id": "r_ambiental",
-        "name": "3. Trámite Ambiental / CAR (Regulatorio)",
-        "short_name": "Trámite Ambiental / CAR",
-        "action": "Escalar expediente ambiental (Corpochivor / CAR / salvoconducto). No enviar cuadrilla sin permiso.",
-    },
-    {
-        "id": "r_servidumbre",
-        "name": "4. Jurídico / Servidumbre (Construcciones)",
-        "short_name": "Jurídico / Servidumbre",
-        "action": "Gestionar vía jurídica/policiva por ocupación o retiro de construcción en franja de servidumbre.",
-    },
-]
-
-RE_AMBIENTAL = re.compile(
-    r"\b(crpochivor|corpochivor|corpoboyaca|cvc|cam|car|corporaci[oó]n|salvoconducto|ambiental|licencia)\b"
-)
-RE_PREDIAL = re.compile(
-    r"\b(permiso|ingreso|propietario|negociar|acceso|mspat|oposici[oó]n)\b"
-)
-RE_SERVIDUMBRE = re.compile(
-    r"\b(retirar|reubicar|demoler|vivienda|casa|bodega|establo|gallinero|marranera|invasi[oó]n|construcci[oó]n)\b"
-)
-
-
-def _classify_route(row: pd.Series) -> str:
-    desc = str(row.get("Descripción", "") or "").lower()
-    prob = str(row.get("Textocódproblem", "") or "").lower()
-    status = str(row.get("Status usuario", "") or "").upper()
-    tipo = str(row.get("Tipo de aviso", "") or "")
-    txt = f"{desc} {prob}"
-
-    if "TAMB" in status or RE_AMBIENTAL.search(txt):
-        return "r_ambiental"
-    if tipo == "Permiso Ingreso" or "no permite el ingreso" in prob or RE_PREDIAL.search(txt):
-        return "r_predial"
-    if "GERE" in status or tipo in ("Construcciones", "Invasión/Explanacion") or RE_SERVIDUMBRE.search(txt):
-        return "r_servidumbre"
-    return "r_campo"
+from scripts.nlp_lexicon import ROUTES, classify_and_tag  # noqa: E402
 
 
 def _clean_str(val: object, fallback: str = "-") -> str:
@@ -82,16 +29,18 @@ def _clean_str(val: object, fallback: str = "-") -> str:
 
 def main() -> None:
     from backend.src.data.data_loader import load_data
-    print("⏳ Generando dataset NLP completo (Abiertos + Cerrados con estado de vencimiento)...")
+    print("⏳ Ejecutando motor léxico NLP sobre las 3.118 descripciones...")
     _, _, df = load_data(force_reload=True)
-    df = df.copy()
-    df["ruta"] = df.apply(_classify_route, axis=1)
     df = df.sort_values("Cumple prioridad días", ascending=True)
 
     tickets = []
+    lex_hits = 0
     for _, r in df.iterrows():
-        estado_raw = str(r.get("Estado aviso", "Abierto"))
-        is_open = estado_raw == "Abierto"
+        ruta, tags, matched_lex = classify_and_tag(r)
+        if matched_lex:
+            lex_hits += 1
+
+        is_open = str(r.get("Estado aviso", "Abierto")) == "Abierto"
         rem_days = int(round(float(r.get("Cumple prioridad días", 0) or 0)))
         rem_per = float(r.get("Cumple prioridad periodos", 1.0) or 1.0)
         prio_days = int(round(float(r.get("Prioridad días", 365) or 365)))
@@ -107,7 +56,7 @@ def main() -> None:
         tickets.append({
             "aviso": _clean_str(r.get("Aviso")),
             "estado": "abierto" if is_open else "cerrado",
-            "ruta": str(r["ruta"]),
+            "ruta": ruta,
             "urgencia": urgencia,
             "horizonte": "corto" if prio_days <= 365 else "largo",
             "prioridad": _clean_str(r.get("Prioridad")),
@@ -119,10 +68,16 @@ def main() -> None:
             "linea": _clean_str(r.get("Linea"), "Sin Línea"),
             "torre": _clean_str(r.get("Torre") or r.get("Equipo")),
             "desc": _clean_str(r.get("Descripción"), "Sin descripción"),
+            "tags": tags,
         })
 
+    cov_pct = round(lex_hits / len(tickets) * 100, 1) if tickets else 0.0
     out = {
-        "metadata": {"title": "Triaje y Vencimiento por Causal NLP", "total": len(tickets)},
+        "metadata": {
+            "title": "Triaje y Vencimiento por Causal NLP",
+            "total": len(tickets),
+            "lexical_coverage_pct": cov_pct,
+        },
         "routes": ROUTES,
         "tickets": tickets,
     }
@@ -130,7 +85,8 @@ def main() -> None:
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     size_kb = OUTPUT_PATH.stat().st_size / 1024
-    print(f"✅ JSON generado ({len(tickets)} avisos totales, {size_kb:.1f} KB): {OUTPUT_PATH}")
+    print(f"✅ Cobertura léxica directa en texto: {lex_hits}/{len(tickets)} ({cov_pct}%)")
+    print(f"✅ JSON generado ({size_kb:.1f} KB): {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

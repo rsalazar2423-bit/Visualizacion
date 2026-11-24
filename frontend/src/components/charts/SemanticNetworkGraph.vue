@@ -28,6 +28,7 @@ const estadoFilter = ref<NlpEstadoFilter>('ambos');
 const urgenciaFilter = ref<NlpUrgencyFilter>('todos');
 const horizonteFilter = ref<NlpHorizonFilter>('todas');
 const selectedRouteId = ref<NlpRouteId>('r_servidumbre');
+const selectedTag = ref<string | null>(null);
 
 const chartRef = ref<HTMLDivElement | null>(null);
 let chart: echarts.ECharts | null = null;
@@ -52,13 +53,22 @@ const selectedRoute = computed(
 );
 const geoLevelLabel = computed(() => (territoryStore.selectedDepto ? 'Municipio' : 'Departamento'));
 
+function selectRoute(id: NlpRouteId) {
+  selectedRouteId.value = id;
+  selectedTag.value = null;
+}
+
+function toggleTag(tag: string) {
+  selectedTag.value = selectedTag.value === tag ? null : tag;
+}
+
 function renderChart() {
   if (!chartRef.value || !summaries.value.length) return;
   if (!chart) {
     chart = echarts.init(chartRef.value);
     chart.on('click', (p: any) => {
       const clicked = [...summaries.value].reverse()[p.dataIndex];
-      if (clicked) selectedRouteId.value = clicked.id;
+      if (clicked) selectRoute(clicked.id);
     });
   }
   chart.setOption(
@@ -114,7 +124,7 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
       <section class="chart-panel card">
         <header class="panel-head">
           <h3 class="panel-title">Causales con Mayor Vencimiento (Abiertos vs. Cerrados Fuera de Plazo)</h3>
-          <p class="panel-sub">Haz clic en una causal para auditar sus casos vencidos, cerrados tardíos y cómo tratarla</p>
+          <p class="panel-sub">5 causales léxicas ({{ payload?.metadata.lexical_coverage_pct ?? 98 }}% cobertura de texto) · Clic para ver palabras críticas</p>
         </header>
 
         <div ref="chartRef" class="bars-canvas"></div>
@@ -125,22 +135,27 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
             :key="r.id"
             class="route-mini-card"
             :class="{ selected: selectedRoute?.id === r.id }"
-            @click="selectedRouteId = r.id"
+            @click="selectRoute(r.id)"
           >
             <div class="rmc-top">
               <span class="rmc-name">{{ r.short_name }}</span>
               <strong class="rmc-total">{{ r.total.toLocaleString() }}</strong>
             </div>
             <div class="rmc-sub">
-              <span class="txt-danger">{{ r.vencimiento_pct }}% vencimiento ({{ r.vencidos_total.toLocaleString() }})</span>
-              <span>·</span>
-              <span>~{{ r.mediana_dias }}d</span>
+              <span class="txt-danger">{{ r.vencimiento_pct }}% venc. ({{ r.vencidos_total.toLocaleString() }})</span>
+              <span>· ~{{ r.mediana_dias }}d</span>
             </div>
           </button>
         </div>
       </section>
 
-      <NlpActionTray :route="selectedRoute" :geo-level-label="geoLevelLabel" @drill-geo="handleDrillGeo" />
+      <NlpActionTray
+        :route="selectedRoute"
+        :geo-level-label="geoLevelLabel"
+        :selected-tag="selectedTag"
+        @drill-geo="handleDrillGeo"
+        @toggle-tag="toggleTag"
+      />
     </div>
   </div>
 </template>
@@ -157,36 +172,24 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
   font-size: 0.71rem; font-weight: 700; padding: 2px 9px; border-radius: 999px;
   background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--color-brand, #0f766e);
 }
-.seg-group {
-  display: inline-flex; gap: 2px; padding: 2px;
-  background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
-}
-.seg-btn {
-  border: none; background: transparent; color: var(--text-secondary);
-  font-size: 0.7rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; cursor: pointer;
-}
+.seg-group { display: inline-flex; gap: 2px; padding: 2px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
+.seg-btn { border: none; background: transparent; color: var(--text-secondary); font-size: 0.7rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
 .seg-btn.active { background: var(--bg-card); color: var(--color-brand, #0f766e); font-weight: 700; box-shadow: var(--shadow-sm); }
 .seg-btn.danger.active { color: #be123c; }
 .seg-btn.warn.active { color: #b45309; }
 .seg-btn.ok.active { color: #0f766e; }
 .triage-split { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.05fr; gap: 10px; }
-.chart-panel {
-  display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; min-height: 0;
-  background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
-}
+.chart-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; min-height: 0; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
 .panel-title { margin: 0; font-size: 0.88rem; font-weight: 800; color: var(--text-primary); }
-.panel-sub { margin: 2px 0 0; font-size: 0.72rem; color: var(--text-secondary); }
+.panel-sub { margin: 2px 0 0; font-size: 0.71rem; color: var(--text-secondary); }
 .bars-canvas { flex: 1; width: 100%; min-height: 210px; }
-.route-cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; flex-shrink: 0; }
-.route-mini-card {
-  text-align: left; padding: 7px 10px; border-radius: var(--radius-sm); cursor: pointer;
-  background: var(--bg-subtle); border: 1px solid var(--border-subtle);
-}
+.route-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 5px; flex-shrink: 0; }
+.route-mini-card { text-align: left; padding: 6px 9px; border-radius: var(--radius-sm); cursor: pointer; background: var(--bg-subtle); border: 1px solid var(--border-subtle); }
 .route-mini-card.selected { border-color: var(--color-brand, #0f766e); background: var(--bg-card); box-shadow: 0 0 0 1px var(--color-brand, #0f766e); }
-.rmc-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem; color: var(--text-primary); }
+.rmc-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.73rem; color: var(--text-primary); }
 .rmc-name { font-weight: 700; }
-.rmc-total { font-size: 0.9rem; font-weight: 800; }
-.rmc-sub { display: flex; gap: 5px; font-size: 0.68rem; color: var(--text-secondary); margin-top: 2px; }
+.rmc-total { font-size: 0.86rem; font-weight: 800; }
+.rmc-sub { display: flex; gap: 4px; font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px; }
 .txt-danger { color: #be123c; font-weight: 700; }
 @media (max-width: 1024px) { .triage-split { grid-template-columns: 1fr; } }
 </style>
