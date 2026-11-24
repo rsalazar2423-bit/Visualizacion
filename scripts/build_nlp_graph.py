@@ -55,6 +55,7 @@ def main() -> None:
 
         tickets.append({
             "aviso": _clean_str(r.get("Aviso")),
+            "tipo": _clean_str(r.get("Tipo de aviso"), "Sin Tipo"),
             "estado": "abierto" if is_open else "cerrado",
             "ruta": ruta,
             "urgencia": urgencia,

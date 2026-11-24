@@ -19,6 +19,7 @@ export interface NlpRouteMeta {
 
 export interface NlpTicket {
   aviso: string;
+  tipo: string;
   estado: NlpEstado;
   ruta: NlpRouteId;
   urgencia: NlpUrgency;

@@ -14,6 +14,7 @@ import type {
 
 export interface TriageFilters {
   estado: NlpEstadoFilter;
+  tipo: string | null;
   cte: string | null;
   depto: string | null;
   municipio: string | null;
@@ -47,14 +48,12 @@ function medianOf(nums: number[]): number {
   return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
 }
 
-export function computeTriageSummaries(
-  payload: NlpGraphPayload,
-  filters: TriageFilters,
-): NlpRouteSummary[] {
-  const { estado, cte, depto, municipio, urgencia, horizonte } = filters;
+export function computeTriageSummaries(payload: NlpGraphPayload, filters: TriageFilters): NlpRouteSummary[] {
+  const { estado, tipo, cte, depto, municipio, urgencia, horizonte } = filters;
   const baseFiltered = payload.tickets.filter((t) => {
     if (estado === 'abiertos' && t.estado !== 'abierto') return false;
     if (estado === 'cerrados' && t.estado !== 'cerrado') return false;
+    if (tipo && tipo !== 'Todos' && t.tipo !== tipo) return false;
     if (cte && cte !== 'Todos' && t.cte !== cte) return false;
     if (depto && depto !== 'Todos' && t.depto !== depto) return false;
     if (municipio && municipio !== 'Todos' && t.mpio !== municipio) return false;

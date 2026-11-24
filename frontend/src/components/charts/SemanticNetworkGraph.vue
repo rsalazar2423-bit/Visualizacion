@@ -11,13 +11,7 @@ import {
   URGENCY_OPTS,
   HORIZON_OPTS,
 } from '../../services/analytics/nlpTriageEngine';
-import type {
-  NlpEstadoFilter,
-  NlpGraphPayload,
-  NlpHorizonFilter,
-  NlpRouteId,
-  NlpUrgencyFilter,
-} from '../../types/nlpGraph';
+import type { NlpEstadoFilter, NlpGraphPayload, NlpHorizonFilter, NlpRouteId, NlpUrgencyFilter } from '../../types/nlpGraph';
 import NlpActionTray from '../territory/NlpActionTray.vue';
 
 const themeStore = useThemeStore();
@@ -25,6 +19,7 @@ const territoryStore = useTerritoryStore();
 
 const payload = ref<NlpGraphPayload | null>(null);
 const estadoFilter = ref<NlpEstadoFilter>('ambos');
+const tipoFilter = ref<string>('Todos');
 const urgenciaFilter = ref<NlpUrgencyFilter>('todos');
 const horizonteFilter = ref<NlpHorizonFilter>('todas');
 const selectedRouteId = ref<NlpRouteId>('r_servidumbre');
@@ -34,10 +29,17 @@ const chartRef = ref<HTMLDivElement | null>(null);
 let chart: echarts.ECharts | null = null;
 let ro: ResizeObserver | null = null;
 
+const tipoOptions = computed(() => {
+  if (!payload.value) return ['Todos'];
+  const set = new Set(payload.value.tickets.map((t) => t.tipo));
+  return ['Todos', ...Array.from(set).sort()];
+});
+
 const summaries = computed(() => {
   if (!payload.value) return [];
   return computeTriageSummaries(payload.value, {
     estado: estadoFilter.value,
+    tipo: tipoFilter.value,
     cte: territoryStore.selectedCte,
     depto: territoryStore.selectedDepto,
     municipio: territoryStore.selectedMunicipio,
@@ -71,10 +73,7 @@ function renderChart() {
       if (clicked) selectRoute(clicked.id);
     });
   }
-  chart.setOption(
-    buildTriageBarOption(summaries.value, estadoFilter.value, selectedRouteId.value, themeStore.isDark),
-    true,
-  );
+  chart.setOption(buildTriageBarOption(summaries.value, estadoFilter.value, selectedRouteId.value, themeStore.isDark), true);
 }
 
 function handleDrillGeo(name: string) {
@@ -108,6 +107,11 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
       </div>
 
       <div class="toolbar-filters">
+        <select v-model="tipoFilter" class="tipo-select" aria-label="Filtrar por Tipo de aviso">
+          <option v-for="tp in tipoOptions" :key="tp" :value="tp">
+            {{ tp === 'Todos' ? 'Todos los Tipos' : `Tipo: ${tp}` }}
+          </option>
+        </select>
         <div class="seg-group" role="group" aria-label="Estado de aviso">
           <button v-for="opt in ESTADO_OPTS" :key="opt.id" class="seg-btn" :class="{ active: estadoFilter === opt.id }" @click="estadoFilter = opt.id">{{ opt.label }}</button>
         </div>
@@ -124,19 +128,11 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
       <section class="chart-panel card">
         <header class="panel-head">
           <h3 class="panel-title">Causales con Mayor Vencimiento (Abiertos vs. Cerrados Fuera de Plazo)</h3>
-          <p class="panel-sub">5 causales léxicas ({{ payload?.metadata.lexical_coverage_pct ?? 98 }}% cobertura de texto) · Clic para ver palabras críticas</p>
+          <p class="panel-sub">Cruza el Tipo de aviso formal contra la causal real detectada en la descripción ({{ payload?.metadata.lexical_coverage_pct ?? 91 }}% cobertura)</p>
         </header>
-
         <div ref="chartRef" class="bars-canvas"></div>
-
         <div class="route-cards-grid">
-          <button
-            v-for="r in summaries"
-            :key="r.id"
-            class="route-mini-card"
-            :class="{ selected: selectedRoute?.id === r.id }"
-            @click="selectRoute(r.id)"
-          >
+          <button v-for="r in summaries" :key="r.id" class="route-mini-card" :class="{ selected: selectedRoute?.id === r.id }" @click="selectRoute(r.id)">
             <div class="rmc-top">
               <span class="rmc-name">{{ r.short_name }}</span>
               <strong class="rmc-total">{{ r.total.toLocaleString() }}</strong>
@@ -149,13 +145,7 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
         </div>
       </section>
 
-      <NlpActionTray
-        :route="selectedRoute"
-        :geo-level-label="geoLevelLabel"
-        :selected-tag="selectedTag"
-        @drill-geo="handleDrillGeo"
-        @toggle-tag="toggleTag"
-      />
+      <NlpActionTray :route="selectedRoute" :geo-level-label="geoLevelLabel" :selected-tag="selectedTag" @drill-geo="handleDrillGeo" @toggle-tag="toggleTag" />
     </div>
   </div>
 </template>
@@ -168,9 +158,10 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
 }
 .toolbar-title, .toolbar-filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .title-main { font-size: 0.85rem; font-weight: 800; color: var(--text-primary); }
-.count-pill {
-  font-size: 0.71rem; font-weight: 700; padding: 2px 9px; border-radius: 999px;
-  background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--color-brand, #0f766e);
+.count-pill { font-size: 0.71rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--color-brand, #0f766e); }
+.tipo-select {
+  height: 28px; padding: 0 8px; font-size: 0.72rem; font-weight: 600;
+  background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer;
 }
 .seg-group { display: inline-flex; gap: 2px; padding: 2px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
 .seg-btn { border: none; background: transparent; color: var(--text-secondary); font-size: 0.7rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; cursor: pointer; }

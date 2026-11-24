@@ -88,7 +88,7 @@ function isRiskTag(tg: string): boolean {
         <table v-if="filteredTickets.length > 0" class="triage-table">
           <thead>
             <tr>
-              <th>Aviso</th>
+              <th>Aviso / Tipo</th>
               <th>Ubicación / Activo</th>
               <th>Descripción y Banderas NLP</th>
               <th class="col-sla">Estado y Plazo</th>
@@ -96,7 +96,10 @@ function isRiskTag(tg: string): boolean {
           </thead>
           <tbody>
             <tr v-for="t in filteredTickets.slice(0, 80)" :key="t.aviso">
-              <td class="mono-id">{{ t.aviso }}</td>
+              <td>
+                <div class="mono-id">{{ t.aviso }}</div>
+                <span class="tipo-pill">{{ t.tipo }}</span>
+              </td>
               <td>
                 <div class="loc-primary">{{ t.mpio }} <span class="loc-sub">({{ t.depto }})</span></div>
                 <div class="loc-asset">{{ t.linea }} · T-{{ t.torre }}</div>
@@ -154,6 +157,7 @@ function isRiskTag(tg: string): boolean {
 }
 .triage-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
 .mono-id { font-family: ui-monospace, monospace; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.tipo-pill { display: inline-block; margin-top: 2px; font-size: 0.61rem; font-weight: 600; padding: 1px 5px; border-radius: 3px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; }
 .loc-primary { font-weight: 700; color: var(--text-primary); }
 .loc-sub, .loc-asset, .prio-sub { font-size: 0.66rem; color: var(--text-secondary); }
 .desc-cell { color: var(--text-primary); line-height: 1.25; }
