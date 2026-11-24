@@ -1,25 +1,29 @@
 /**
- * nlpTowerEngine.ts — Agregador y constructor ECharts para Torres Reincidentes.
- * Identifica torres que acumulan avisos repetidos y su historial de vencimientos.
+ * nlpTowerEngine.ts — Agregador y constructor ECharts para Torres y Líneas Críticas.
+ * Reutiliza un único agregador paramétrico (DRY) para evitar duplicar lógica.
  */
 import type * as echarts from 'echarts';
 import { getEChartsThemeTokens } from '../../constants/themeTokens';
 import type { NlpEstadoFilter, NlpTicket, NlpTowerSummary } from '../../types/nlpGraph';
 
-export function computeTopRepeatTowers(tickets: NlpTicket[], limit = 10): NlpTowerSummary[] {
+function aggregateEntities(
+  tickets: NlpTicket[],
+  getKey: (t: NlpTicket) => { key: string; label: string; sub: string } | null,
+  limit: number,
+): NlpTowerSummary[] {
   const map = new Map<string, NlpTowerSummary>();
 
   for (const t of tickets) {
-    if (!t.torre || t.torre === '-' || t.linea === 'Sin Línea') continue;
-    const key = `${t.linea}::${t.torre}`;
-    let entry = map.get(key);
+    const info = getKey(t);
+    if (!info) continue;
+    let entry = map.get(info.key);
     if (!entry) {
       entry = {
-        key,
-        label: `${t.linea} · ${t.torre}`,
+        key: info.key,
+        label: info.label,
         linea: t.linea,
         torre: t.torre,
-        mpio: t.mpio,
+        mpio: info.sub,
         total: 0,
         vencidos_total: 0,
         vencimiento_pct: 0,
@@ -29,7 +33,7 @@ export function computeTopRepeatTowers(tickets: NlpTicket[], limit = 10): NlpTow
         ce_a_tiempo: 0,
         tickets: [],
       };
-      map.set(key, entry);
+      map.set(info.key, entry);
     }
     entry.total++;
     entry.tickets.push(t);
@@ -53,15 +57,34 @@ export function computeTopRepeatTowers(tickets: NlpTicket[], limit = 10): NlpTow
     .slice(0, limit);
 }
 
+export function computeTopRepeatTowers(tickets: NlpTicket[], limit = 10): NlpTowerSummary[] {
+  return aggregateEntities(
+    tickets,
+    (t) =>
+      !t.torre || t.torre === '-' || t.linea === 'Sin Línea'
+        ? null
+        : { key: `${t.linea}::${t.torre}`, label: `${t.linea} · ${t.torre}`, sub: t.mpio },
+    limit,
+  );
+}
+
+export function computeTopLines(tickets: NlpTicket[], limit = 10): NlpTowerSummary[] {
+  return aggregateEntities(
+    tickets,
+    (t) => (t.linea === 'Sin Línea' ? null : { key: t.linea, label: t.linea, sub: t.depto }),
+    limit,
+  );
+}
+
 export function buildTowerBarOption(
-  towers: NlpTowerSummary[],
+  items: NlpTowerSummary[],
   estado: NlpEstadoFilter,
   selectedKey: string | null,
   isDark: boolean,
 ): echarts.EChartsOption {
   const tokens = getEChartsThemeTokens(isDark);
   const openOkColor = isDark ? '#38BDF8' : '#0284C7';
-  const rows = [...towers].reverse();
+  const rows = [...items].reverse();
   const endLabel = {
     show: true,
     position: 'right' as const,
@@ -105,7 +128,7 @@ export function buildTowerBarOption(
         if (!r) return '';
         const lines = params.map((p: any) => `<div>${p.marker} ${p.seriesName}: <b>${p.value}</b></div>`).join('');
         return `<div style="font-weight:700;">${r.label}</div><div style="font-size:10.5px;color:${tokens.textSecondary};margin-bottom:4px;">${r.mpio}</div>${lines}
-          <div style="margin-top:4px;padding-top:4px;border-top:1px solid ${tokens.gridColor};font-size:10.5px;">Reincidencia vencida: <b>${r.vencimiento_pct}%</b></div>`;
+          <div style="margin-top:4px;padding-top:4px;border-top:1px solid ${tokens.gridColor};font-size:10.5px;">Tasa de vencimiento: <b>${r.vencimiento_pct}%</b></div>`;
       },
     },
     legend: { top: 0, left: 0, itemWidth: 10, itemHeight: 10, textStyle: { color: tokens.textSecondary, fontSize: 10.5 } },

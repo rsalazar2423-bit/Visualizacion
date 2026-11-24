@@ -82,7 +82,7 @@ function exportCsv() {
     <template v-if="route">
       <header class="tray-header">
         <div class="tray-title-row">
-          <h3 class="tray-title">{{ tower ? `Torre ${tower.label} (${tower.mpio})` : route.name }}</h3>
+          <h3 class="tray-title">{{ tower ? `${tower.label} (${tower.mpio})` : route.name }}</h3>
           <span class="meta-summary">
             <b>{{ tower ? tower.vencimiento_pct : route.vencimiento_pct }}%</b> con vencimiento ({{ (tower ? tower.vencidos_total : route.vencidos_total).toLocaleString('es-CO') }}/{{ (tower ? tower.total : route.total).toLocaleString('es-CO') }})<template v-if="!tower"> · ~{{ route.mediana_dias }}d</template>
           </span>

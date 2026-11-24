@@ -12,7 +12,7 @@ import {
   URGENCY_OPTS,
   HORIZON_OPTS,
 } from '../../services/analytics/nlpTriageEngine';
-import { computeTopRepeatTowers, buildTowerBarOption } from '../../services/analytics/nlpTowerEngine';
+import { computeTopRepeatTowers, computeTopLines, buildTowerBarOption } from '../../services/analytics/nlpTowerEngine';
 import type { NlpEstadoFilter, NlpGraphPayload, NlpHorizonFilter, NlpRouteId, NlpUrgencyFilter } from '../../types/nlpGraph';
 import NlpActionTray from '../territory/NlpActionTray.vue';
 
@@ -20,7 +20,7 @@ const themeStore = useThemeStore();
 const territoryStore = useTerritoryStore();
 
 const payload = ref<NlpGraphPayload | null>(null);
-const chartMode = ref<'causal' | 'torre'>('causal');
+const chartMode = ref<'causal' | 'linea' | 'torre'>('causal');
 const estadoFilter = ref<NlpEstadoFilter>('ambos');
 const tipoFilter = ref<string>('Todos');
 const urgenciaFilter = ref<NlpUrgencyFilter>('todos');
@@ -53,13 +53,25 @@ const summaries = computed(() => {
 });
 
 const totalVisible = computed(() => summaries.value.reduce((acc, r) => acc + r.total, 0));
-const repeatTowers = computed(() => computeTopRepeatTowers(summaries.value.flatMap((r) => r.tickets), 10));
+const entityItems = computed(() => {
+  const all = summaries.value.flatMap((r) => r.tickets);
+  return chartMode.value === 'linea' ? computeTopLines(all, 10) : computeTopRepeatTowers(all, 10);
+});
 const selectedRoute = computed(
   () => summaries.value.find((r) => r.id === selectedRouteId.value) ?? summaries.value[0] ?? null,
 );
-const selectedTower = computed(
-  () => repeatTowers.value.find((t) => t.key === selectedTowerKey.value) ?? repeatTowers.value[0] ?? null,
+const selectedEntity = computed(
+  () => entityItems.value.find((t) => t.key === selectedTowerKey.value) ?? entityItems.value[0] ?? null,
 );
+const panelMeta = computed(() => {
+  if (chartMode.value === 'linea') {
+    return { title: 'Top 10 Líneas Críticas (Concentración Pareto)', sub: 'Corredores eléctricos que concentran la mayor mora' };
+  }
+  if (chartMode.value === 'torre') {
+    return { title: 'Top 10 Torres Reincidentes (Historial de Retrasos)', sub: 'Torres que repiten avisos y vencimientos en el tiempo' };
+  }
+  return { title: 'Distribución por Causal y Cumplimiento de Plazo', sub: 'Haz clic en cualquier barra para inspeccionar sus avisos' };
+});
 
 function selectRoute(id: NlpRouteId) {
   selectedRouteId.value = id;
@@ -79,7 +91,7 @@ function renderChart() {
         const clicked = getChartOrderedRoutes(summaries.value)[p.dataIndex];
         if (clicked) selectRoute(clicked.id);
       } else {
-        const clicked = [...repeatTowers.value].reverse()[p.dataIndex];
+        const clicked = [...entityItems.value].reverse()[p.dataIndex];
         if (clicked) selectedTowerKey.value = clicked.key;
       }
     });
@@ -87,7 +99,7 @@ function renderChart() {
   const opt =
     chartMode.value === 'causal'
       ? buildTriageBarOption(summaries.value, estadoFilter.value, selectedRouteId.value, themeStore.isDark)
-      : buildTowerBarOption(repeatTowers.value, estadoFilter.value, selectedTower.value?.key ?? null, themeStore.isDark);
+      : buildTowerBarOption(entityItems.value, estadoFilter.value, selectedEntity.value?.key ?? null, themeStore.isDark);
   chart.setOption(opt, true);
 }
 
@@ -145,15 +157,12 @@ watch([summaries, selectedRouteId, selectedTowerKey, chartMode, () => themeStore
       <section class="chart-panel card">
         <header class="panel-head-row">
           <div>
-            <h3 class="panel-title">
-              {{ chartMode === 'causal' ? 'Distribución por Causal y Cumplimiento de Plazo' : 'Top 10 Torres Reincidentes (Historial de Retrasos)' }}
-            </h3>
-            <p class="panel-sub">
-              {{ chartMode === 'causal' ? 'Haz clic en cualquier barra para inspeccionar sus avisos' : 'Torres que repiten avisos y vencimientos en el tiempo' }}
-            </p>
+            <h3 class="panel-title">{{ panelMeta.title }}</h3>
+            <p class="panel-sub">{{ panelMeta.sub }}</p>
           </div>
           <div class="seg-group" role="group" aria-label="Modo de gráfico">
             <button class="seg-btn" :class="{ active: chartMode === 'causal' }" @click="chartMode = 'causal'">Por Causal</button>
+            <button class="seg-btn" :class="{ active: chartMode === 'linea' }" @click="chartMode = 'linea'">Por Línea</button>
             <button class="seg-btn" :class="{ active: chartMode === 'torre' }" @click="chartMode = 'torre'">Por Torre</button>
           </div>
         </header>
@@ -162,7 +171,7 @@ watch([summaries, selectedRouteId, selectedTowerKey, chartMode, () => themeStore
 
       <NlpActionTray
         :route="selectedRoute"
-        :tower="chartMode === 'torre' ? selectedTower : null"
+        :tower="chartMode !== 'causal' ? selectedEntity : null"
         :selected-tag="selectedTag"
         @toggle-tag="toggleTag"
       />
