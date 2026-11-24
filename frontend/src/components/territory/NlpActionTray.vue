@@ -31,7 +31,7 @@ function formatTorre(torre: string): string {
 function formatSlaLabel(t: NlpTicket): string {
   if (t.estado === 'cerrado') {
     return t.urgencia === 'vencido'
-      ? `Cerrado +${Math.abs(t.dias_restantes).toLocaleString()}d tarde`
+      ? `Cerrado vencido (+${Math.abs(t.dias_restantes).toLocaleString()}d)`
       : `Cerrado a tiempo (${t.dias_abierto.toLocaleString()}d)`;
   }
   if (t.dias_restantes < 0) return `Abierto · ${Math.abs(t.dias_restantes).toLocaleString()}d vencido`;

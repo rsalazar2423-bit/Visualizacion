@@ -391,7 +391,7 @@ function buildMapOption(tokens: any, isDark: boolean) {
         zlevel: 3,
       },
       {
-        name: 'Cerrados con Retraso',
+        name: 'Cerrados Vencidos',
         type: 'scatter',
         coordinateSystem: 'geo',
         symbolSize: 8.5,

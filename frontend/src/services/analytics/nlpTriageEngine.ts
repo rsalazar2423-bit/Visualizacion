@@ -32,7 +32,7 @@ export const ESTADO_OPTS: Array<{ id: NlpEstadoFilter; label: string }> = [
 
 export const URGENCY_OPTS: Array<{ id: NlpUrgencyFilter; label: string }> = [
   { id: 'todos', label: 'Todos los Plazos' },
-  { id: 'vencido', label: 'Vencidos / Fuera de Plazo' },
+  { id: 'vencido', label: 'Solo Vencidos' },
   { id: 'proximo', label: 'Próximos a Vencer (≤90d)' },
   { id: 'en_plazo', label: 'A Tiempo / En Plazo' },
 ];
@@ -151,12 +151,12 @@ export function buildTriageBarOption(
         ]
       : estado === 'cerrados'
         ? [
-            { name: 'Cerrados con Retraso', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Cerrados Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ce_vencidos) },
             { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
           ]
         : [
             { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
-            { name: 'Cerrados con Retraso', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Cerrados Vencidos', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ce_vencidos) },
             { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: openOkColor }, data: rows.map((r) => r.ab_proximos + r.ab_en_plazo) },
             { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 28, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
           ];

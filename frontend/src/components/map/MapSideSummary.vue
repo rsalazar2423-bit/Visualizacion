@@ -78,8 +78,8 @@ function toggleFilter(target: MapLayerFilter) {
       >
         <span class="dot-indicator success"></span>
         <div class="metric-info">
-          <span class="metric-label">Cerrados (A Tiempo / Retraso)</span>
-          <span class="metric-sub">{{ stats.cumple.toLocaleString() }} en plazo · {{ stats.excedeCerrado.toLocaleString() }} fuera SLA</span>
+          <span class="metric-label">Cerrados (A Tiempo / Vencidos)</span>
+          <span class="metric-sub">{{ stats.cumple.toLocaleString() }} en plazo · {{ stats.excedeCerrado.toLocaleString() }} vencidos</span>
         </div>
         <b class="metric-val success-text">{{ (stats.cumple + stats.excedeCerrado).toLocaleString() }}</b>
       </button>
