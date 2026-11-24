@@ -12,6 +12,7 @@ import {
   URGENCY_OPTS,
   HORIZON_OPTS,
 } from '../../services/analytics/nlpTriageEngine';
+import { computeTopRepeatTowers, buildTowerBarOption } from '../../services/analytics/nlpTowerEngine';
 import type { NlpEstadoFilter, NlpGraphPayload, NlpHorizonFilter, NlpRouteId, NlpUrgencyFilter } from '../../types/nlpGraph';
 import NlpActionTray from '../territory/NlpActionTray.vue';
 
@@ -19,11 +20,13 @@ const themeStore = useThemeStore();
 const territoryStore = useTerritoryStore();
 
 const payload = ref<NlpGraphPayload | null>(null);
+const chartMode = ref<'causal' | 'torre'>('causal');
 const estadoFilter = ref<NlpEstadoFilter>('ambos');
 const tipoFilter = ref<string>('Todos');
 const urgenciaFilter = ref<NlpUrgencyFilter>('todos');
 const horizonteFilter = ref<NlpHorizonFilter>('todas');
 const selectedRouteId = ref<NlpRouteId>('r_servidumbre');
+const selectedTowerKey = ref<string | null>(null);
 const selectedTag = ref<string | null>(null);
 
 const chartRef = ref<HTMLDivElement | null>(null);
@@ -50,8 +53,12 @@ const summaries = computed(() => {
 });
 
 const totalVisible = computed(() => summaries.value.reduce((acc, r) => acc + r.total, 0));
+const repeatTowers = computed(() => computeTopRepeatTowers(summaries.value.flatMap((r) => r.tickets), 10));
 const selectedRoute = computed(
   () => summaries.value.find((r) => r.id === selectedRouteId.value) ?? summaries.value[0] ?? null,
+);
+const selectedTower = computed(
+  () => repeatTowers.value.find((t) => t.key === selectedTowerKey.value) ?? repeatTowers.value[0] ?? null,
 );
 
 function selectRoute(id: NlpRouteId) {
@@ -68,11 +75,20 @@ function renderChart() {
   if (!chart) {
     chart = echarts.init(chartRef.value);
     chart.on('click', (p: any) => {
-      const clicked = getChartOrderedRoutes(summaries.value)[p.dataIndex];
-      if (clicked) selectRoute(clicked.id);
+      if (chartMode.value === 'causal') {
+        const clicked = getChartOrderedRoutes(summaries.value)[p.dataIndex];
+        if (clicked) selectRoute(clicked.id);
+      } else {
+        const clicked = [...repeatTowers.value].reverse()[p.dataIndex];
+        if (clicked) selectedTowerKey.value = clicked.key;
+      }
     });
   }
-  chart.setOption(buildTriageBarOption(summaries.value, estadoFilter.value, selectedRouteId.value, themeStore.isDark), true);
+  const opt =
+    chartMode.value === 'causal'
+      ? buildTriageBarOption(summaries.value, estadoFilter.value, selectedRouteId.value, themeStore.isDark)
+      : buildTowerBarOption(repeatTowers.value, estadoFilter.value, selectedTower.value?.key ?? null, themeStore.isDark);
+  chart.setOption(opt, true);
 }
 
 onMounted(async () => {
@@ -89,7 +105,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => { ro?.disconnect(); chart?.dispose(); });
-watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart());
+watch([summaries, selectedRouteId, selectedTowerKey, chartMode, () => themeStore.isDark], () => renderChart());
 </script>
 
 <template>
@@ -124,17 +140,32 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
       </div>
     </div>
 
-    <!-- Vista 50/50 espaciosa, sin tarjetas redundantes debajo de las barras -->
+    <!-- Vista 50/50 espaciosa -->
     <div class="triage-split">
       <section class="chart-panel card">
-        <header class="panel-head">
-          <h3 class="panel-title">Distribución por Causal y Cumplimiento de Plazo</h3>
-          <p class="panel-sub">Haz clic en cualquier barra para inspeccionar sus avisos y guía de tratamiento</p>
+        <header class="panel-head-row">
+          <div>
+            <h3 class="panel-title">
+              {{ chartMode === 'causal' ? 'Distribución por Causal y Cumplimiento de Plazo' : 'Top 10 Torres Reincidentes (Historial de Retrasos)' }}
+            </h3>
+            <p class="panel-sub">
+              {{ chartMode === 'causal' ? 'Haz clic en cualquier barra para inspeccionar sus avisos' : 'Torres que repiten avisos y vencimientos en el tiempo' }}
+            </p>
+          </div>
+          <div class="seg-group" role="group" aria-label="Modo de gráfico">
+            <button class="seg-btn" :class="{ active: chartMode === 'causal' }" @click="chartMode = 'causal'">Por Causal</button>
+            <button class="seg-btn" :class="{ active: chartMode === 'torre' }" @click="chartMode = 'torre'">Por Torre</button>
+          </div>
         </header>
         <div ref="chartRef" class="bars-canvas"></div>
       </section>
 
-      <NlpActionTray :route="selectedRoute" :selected-tag="selectedTag" @toggle-tag="toggleTag" />
+      <NlpActionTray
+        :route="selectedRoute"
+        :tower="chartMode === 'torre' ? selectedTower : null"
+        :selected-tag="selectedTag"
+        @toggle-tag="toggleTag"
+      />
     </div>
   </div>
 </template>
@@ -161,6 +192,7 @@ watch([summaries, selectedRouteId, () => themeStore.isDark], () => renderChart()
 .filter-select:focus { border-color: var(--border-focus); }
 .triage-split { flex: 1; min-height: 0; display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 10px; }
 .chart-panel { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; min-height: 0; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.panel-head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
 .panel-title { margin: 0; font-size: 0.92rem; font-weight: 800; color: var(--text-primary); }
 .panel-sub { margin: 2px 0 0; font-size: 0.74rem; color: var(--text-secondary); }
 .bars-canvas { flex: 1; width: 100%; min-height: 240px; cursor: pointer; }

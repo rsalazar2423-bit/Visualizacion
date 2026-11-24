@@ -3,10 +3,11 @@ import { ref, computed } from 'vue';
 import { Compass, Tag, Search, Download } from 'lucide-vue-next';
 import { useThemeStore } from '../../stores/themeStore';
 import { getTipoColor } from '../../constants/themeTokens';
-import type { NlpRouteSummary, NlpTicket } from '../../types/nlpGraph';
+import type { NlpRouteSummary, NlpTicket, NlpTowerSummary } from '../../types/nlpGraph';
 
 const props = defineProps<{
   route: NlpRouteSummary | null;
+  tower?: NlpTowerSummary | null;
   selectedTag: string | null;
 }>();
 
@@ -18,9 +19,9 @@ const themeStore = useThemeStore();
 const searchQuery = ref('');
 
 const filteredTickets = computed(() => {
-  if (!props.route) return [];
-  let list = props.route.tickets;
-  if (props.selectedTag) {
+  const baseList = props.tower ? props.tower.tickets : props.route?.tickets ?? [];
+  let list = baseList;
+  if (!props.tower && props.selectedTag) {
     list = list.filter((t) => t.tags.includes(props.selectedTag!));
   }
   const q = searchQuery.value.trim().toLowerCase();
@@ -81,14 +82,15 @@ function exportCsv() {
     <template v-if="route">
       <header class="tray-header">
         <div class="tray-title-row">
-          <h3 class="tray-title">{{ route.name }}</h3>
+          <h3 class="tray-title">{{ tower ? `Torre ${tower.label} (${tower.mpio})` : route.name }}</h3>
           <span class="meta-summary">
-            <b>{{ route.vencimiento_pct }}%</b> con vencimiento ({{ route.vencidos_total.toLocaleString('es-CO') }}/{{ route.total.toLocaleString('es-CO') }}) · ~{{ route.mediana_dias }}d
+            <b>{{ tower ? tower.vencimiento_pct : route.vencimiento_pct }}%</b> con vencimiento ({{ (tower ? tower.vencidos_total : route.vencidos_total).toLocaleString('es-CO') }}/{{ (tower ? tower.total : route.total).toLocaleString('es-CO') }})<template v-if="!tower"> · ~{{ route.mediana_dias }}d</template>
           </span>
         </div>
         <div class="action-guide">
           <Compass :size="14" class="guide-icon" />
-          <span><b>Acción sugerida:</b> {{ route.action }}</span>
+          <span v-if="tower"><b>Historial de torre:</b> Evalúa intervención integral en esta torre para cortar la reincidencia de avisos y retrasos.</span>
+          <span v-else><b>Acción sugerida:</b> {{ route.action }}</span>
         </div>
       </header>
 
@@ -103,7 +105,7 @@ function exportCsv() {
         </button>
       </div>
 
-      <div v-if="route.critical_tags.length > 0" class="tag-strip">
+      <div v-if="!tower && route.critical_tags.length > 0" class="tag-strip">
         <span class="strip-lbl"><Tag :size="11" /> Palabra clave:</span>
         <button v-for="ct in route.critical_tags" :key="ct.tag" class="tag-chip" :class="{ active: selectedTag === ct.tag }" @click="emit('toggleTag', ct.tag)">
           <span>{{ ct.tag }}</span>

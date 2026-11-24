@@ -75,3 +75,19 @@ export interface NlpGraphPayload {
   routes: NlpRouteMeta[];
   tickets: NlpTicket[];
 }
+
+export interface NlpTowerSummary {
+  key: string;
+  label: string;
+  linea: string;
+  torre: string;
+  mpio: string;
+  total: number;
+  vencidos_total: number;
+  vencimiento_pct: number;
+  ab_vencidos: number;
+  ab_en_plazo: number;
+  ce_vencidos: number;
+  ce_a_tiempo: number;
+  tickets: NlpTicket[];
+}
