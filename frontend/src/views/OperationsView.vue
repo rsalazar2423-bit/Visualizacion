@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { TrendingUp, Target, RefreshCw } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
@@ -7,51 +7,9 @@ import StackedBarChart from '../components/charts/StackedBarChart.vue';
 import SankeyFlowChart from '../components/charts/SankeyFlowChart.vue';
 import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
-import InlineKpiStrip, { type InlineKpiItem } from '../components/common/InlineKpiStrip.vue';
 
 const opsStore = useOperationsStore();
 const activeSubView = ref<'evolution' | 'sla'>('evolution');
-
-const worstPriority = computed(() => {
-  const list = (opsStore.data?.stacked_bar || []).filter(
-    (p) => p.total > 0 && p.prioridad !== 'No asignada'
-  );
-  if (!list.length) return null;
-  const significant = list.filter((p) => p.total >= 30);
-  if (significant.length > 0) {
-    return [...significant].sort((a, b) => b.excede_pct - a.excede_pct)[0];
-  }
-  return [...list].sort((a, b) => b.excede_count - a.excede_count)[0];
-});
-
-const inlineKpis = computed<InlineKpiItem[]>(() => {
-  const k = opsStore.data?.kpis;
-  if (!k) return [];
-  return [
-    {
-      label: 'SLA',
-      value: `${k.cumplimiento_oportuno_pct ?? k.cumple_pct}%`,
-      tone: 'brand',
-      tooltip: k.cerrados_a_tiempo != null ? `${k.cerrados_a_tiempo.toLocaleString()} a tiempo · ${(k.cerrados_fuera_plazo ?? 0).toLocaleString()} vencidos` : 'Cumplimiento SLA sobre cerrados',
-    },
-    {
-      label: 'Mediana',
-      value: `${k.tiempo_tipico_mediana ?? k.dias_prom ?? 0}d`,
-      tooltip: `Promedio: ${k.dias_prom ?? 0} días`,
-    },
-    {
-      label: 'Crítica',
-      value: worstPriority.value ? worstPriority.value.prioridad : '—',
-      tooltip: worstPriority.value ? `${worstPriority.value.excede_pct}% vencidos (${worstPriority.value.total} avisos)` : '',
-    },
-    {
-      label: 'Vencidos',
-      value: k.abiertos_vencidos ?? 0,
-      tone: 'danger',
-      tooltip: 'Avisos abiertos vencidos sobre su plazo SLA',
-    },
-  ];
-});
 
 onMounted(async () => {
   await opsStore.loadFilterOptions();
@@ -108,8 +66,6 @@ onMounted(async () => {
           <RefreshCw :size="13" />
         </button>
       </div>
-
-      <InlineKpiStrip :items="inlineKpis" />
 
       <!-- Pestañas de Hoja (Exactamente 2 gráficas por hoja para máxima dedicación analítica) -->
       <nav class="subview-toggle">

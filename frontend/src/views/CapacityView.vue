@@ -1,24 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Sliders, ClipboardList, RefreshCw } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
-import InlineKpiStrip, { type InlineKpiItem } from '../components/common/InlineKpiStrip.vue';
 
 const store = useCapacityStore();
 const activeSubView = ref<'simulator' | 'coordinator'>('simulator');
-
-const inlineKpis = computed<InlineKpiItem[]>(() => {
-  const k = store.capacityData?.kpis;
-  if (!k) return [];
-  return [
-    { label: 'Carga/100T', value: k.carga_por_100_torres, tooltip: 'Densidad de avisos por cada 100 torres' },
-    { label: 'Abiertos', value: k.avisos_abiertos, tooltip: `Sobre ${k.total_torres.toLocaleString()} torres monitoreadas` },
-    { label: 'Vencidos', value: k.abiertos_vencidos, tone: 'danger', tooltip: 'Avisos abiertos vencidos en mora' },
-    { label: 'SLA', value: `${k.cumplimiento_oportuno_pct}%`, tone: 'brand', tooltip: 'Cumplimiento SLA sobre cerrados' },
-  ];
-});
 
 onMounted(() => {
   store.loadAll();
@@ -55,8 +43,6 @@ onMounted(() => {
           <RefreshCw :size="13" />
         </button>
       </div>
-
-      <InlineKpiStrip :items="inlineKpis" />
 
       <!-- Pestañas de Hojas (2 sub-vistas accionables) -->
       <nav class="subview-toggle">

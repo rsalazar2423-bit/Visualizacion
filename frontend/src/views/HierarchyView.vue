@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { Compass, FileText, Network, RefreshCw } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
 import SemanticNetworkGraph from '../components/charts/SemanticNetworkGraph.vue';
-import InlineKpiStrip, { type InlineKpiItem } from '../components/common/InlineKpiStrip.vue';
 
 const route = useRoute();
 const territoryStore = useTerritoryStore();
@@ -15,17 +14,6 @@ type SubTab = (typeof validTabs)[number];
 const rawTab = route.query.tab as string | undefined;
 const initialTab: SubTab = validTabs.includes(rawTab as SubTab) ? (rawTab as SubTab) : 'nlp';
 const activeSubView = ref<SubTab>(initialTab);
-
-const inlineKpis = computed<InlineKpiItem[]>(() => {
-  const k = territoryStore.data?.kpis;
-  if (!k) return [];
-  return [
-    { label: 'Torres', value: k.equipos, tooltip: 'Torres activas en el filtro territorial' },
-    { label: 'Mpios', value: k.mpios, tooltip: 'Municipios con cobertura' },
-    { label: 'SLA', value: `${k.cumple_pct}%`, tone: 'brand', tooltip: 'Cumplimiento dentro del plazo SLA' },
-    { label: 'Vencidos', value: k.abiertos_vencidos ?? 0, tone: 'danger', tooltip: 'Avisos abiertos vencidos' },
-  ];
-});
 
 watch(
   () => route.query.tab,
@@ -99,8 +87,6 @@ onMounted(async () => {
           <RefreshCw :size="13" />
         </button>
       </div>
-
-      <InlineKpiStrip :items="inlineKpis" />
 
       <!-- Pestañas de Hojas (1. Tratamiento NLP + 2. Mapa + 3. Auditoría) -->
       <nav class="subview-toggle">
