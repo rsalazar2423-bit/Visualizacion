@@ -1,101 +1,68 @@
 /**
- * nlpGraph.ts — Tipos para Treemaps comparativos VS de causas operativas (NLP).
+ * nlpGraph.ts — Tipos para el Triaje Operativo NLP del Coordinador.
  */
 
-export type NlpGroupMode = 'cluster' | 'depto';
-export type NlpSlaFilter = 'todos' | 'vencidos' | 'a_tiempo';
+export type NlpRouteId = 'r_campo' | 'r_predial' | 'r_ambiental' | 'r_servidumbre';
+export type NlpUrgency = 'vencido' | 'proximo' | 'en_plazo';
+export type NlpUrgencyFilter = 'todos' | NlpUrgency;
+export type NlpHorizon = 'corto' | 'largo';
+export type NlpHorizonFilter = 'todas' | NlpHorizon;
 
-export interface NlpTermFreq {
-  term: string;
-  freq: number;
+export interface NlpRouteMeta {
+  id: NlpRouteId;
+  name: string;
+  short_name: string;
+  action: string;
 }
 
-export interface NlpDeptoCount {
+export interface NlpClosedStat {
+  ruta: NlpRouteId;
+  cte: string;
   depto: string;
   count: number;
-  mora: number;
-}
-
-export interface NlpTreemapChild {
-  name: string;
-  value: number;
-  mora: number;
-  vencidos_pct: number;
-}
-
-export interface NlpTreemapNode {
-  name: string;
-  value: number;
-  mora: number;
-  vencidos_pct: number;
-  color: string;
-  children: NlpTreemapChild[];
-}
-
-export interface NlpTreemapData {
-  name: string;
-  children: NlpTreemapNode[];
-}
-
-export interface NlpClusterSummary {
-  id: string;
-  name: string;
-  color: string;
-  count: number;
-  pct: number;
   mediana_dias: number;
-  vencidos_pct: number;
+}
+
+export interface NlpOpenTicket {
+  aviso: string;
+  ruta: NlpRouteId;
+  urgencia: NlpUrgency;
+  horizonte: NlpHorizon;
+  prioridad: string;
+  dias_abierto: number;
+  dias_restantes: number;
+  cte: string;
+  depto: string;
+  mpio: string;
+  linea: string;
+  torre: string;
   desc: string;
-  top_terms: NlpTermFreq[];
-  deptos: NlpDeptoCount[];
-  quotes: string[];
 }
 
-export interface NlpModeData {
-  total_avisos: number;
-  clusters: NlpClusterSummary[];
-  treemap: NlpTreemapData;
-}
-
-export interface NlpClusterComparison {
-  id: string;
+export interface NlpGeoRankItem {
   name: string;
-  color: string;
-  abiertos_count: number;
-  abiertos_pct: number;
-  abiertos_mora: number;
-  cerrados_count: number;
-  cerrados_pct: number;
-  cerrados_atencion: number;
-  tasa_cierre: number;
-  brecha_mora_dias: number;
-  desc: string;
-  abiertos_terms: NlpTermFreq[];
-  cerrados_terms: NlpTermFreq[];
-  abiertos_deptos: NlpDeptoCount[];
-  cerrados_deptos: NlpDeptoCount[];
-  abiertos_quotes: string[];
-  cerrados_quotes: string[];
+  total: number;
+  vencidos: number;
 }
 
-export interface NlpScopeData {
-  abiertos: NlpModeData;
-  cerrados: NlpModeData;
-  comparativa_vs: NlpClusterComparison[];
-}
-
-export interface NlpSlaScopes {
-  todos: NlpScopeData;
-  vencidos: NlpScopeData;
-  a_tiempo: NlpScopeData;
+export interface NlpRouteSummary extends NlpRouteMeta {
+  total: number;
+  vencidos: number;
+  proximos: number;
+  en_plazo: number;
+  cerrados_hist: number;
+  tasa_exito_pct: number;
+  mediana_cierre_dias: number;
+  top_territories: NlpGeoRankItem[];
+  tickets: NlpOpenTicket[];
 }
 
 export interface NlpGraphPayload {
   metadata: {
     title: string;
-    total: number;
+    total_abiertos: number;
   };
-  departamentos: string[];
-  nacional: NlpSlaScopes;
-  by_depto: Record<string, NlpSlaScopes>;
+  routes: NlpRouteMeta[];
+  closed_stats: NlpClosedStat[];
+  open_tickets: NlpOpenTicket[];
 }

@@ -9,10 +9,10 @@ import SemanticNetworkGraph from '../components/charts/SemanticNetworkGraph.vue'
 
 const route = useRoute();
 const territoryStore = useTerritoryStore();
-const validTabs = ['map', 'audit', 'nlp'] as const;
+const validTabs = ['nlp', 'map', 'audit'] as const;
 type SubTab = (typeof validTabs)[number];
 const rawTab = route.query.tab as string | undefined;
-const initialTab: SubTab = validTabs.includes(rawTab as SubTab) ? (rawTab as SubTab) : 'map';
+const initialTab: SubTab = validTabs.includes(rawTab as SubTab) ? (rawTab as SubTab) : 'nlp';
 const activeSubView = ref<SubTab>(initialTab);
 
 watch(
@@ -88,8 +88,18 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (2 sub-vistas esenciales: Mapa + Auditoría) -->
+      <!-- Pestañas de Hojas (1. Tratamiento NLP + 2. Mapa + 3. Auditoría) -->
       <nav class="subview-toggle">
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'nlp' }"
+          title="Triaje de Tratamiento Operativo (NLP)"
+          @click="activeSubView = 'nlp'"
+        >
+          <Network :size="13" />
+          <span>1. Tratamiento NLP</span>
+        </button>
+
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'map' }"
@@ -97,7 +107,7 @@ onMounted(async () => {
           @click="activeSubView = 'map'"
         >
           <Compass :size="13" />
-          <span>1. Mapa</span>
+          <span>2. Mapa</span>
         </button>
 
         <button
@@ -107,17 +117,7 @@ onMounted(async () => {
           @click="activeSubView = 'audit'"
         >
           <FileText :size="13" />
-          <span>2. Auditoría</span>
-        </button>
-
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'nlp' }"
-          title="Red Semántica de Causas Operativas (NLP)"
-          @click="activeSubView = 'nlp'"
-        >
-          <Network :size="13" />
-          <span>3. Semántica NLP</span>
+          <span>3. Auditoría</span>
         </button>
       </nav>
     </header>
@@ -168,23 +168,23 @@ onMounted(async () => {
 
     <!-- ÁREA DE GRÁFICAS (VIEWPORT-FIT / CERO SCROLL) -->
     <main class="chart-viewport-stage">
-      <!-- HOJA 1: Mapa Geográfico de Torres y Red (1 Sola Gran Vista) -->
+      <!-- HOJA 1: Triaje de Tratamiento Operativo NLP (Vista principal del Coordinador) -->
+      <section v-show="activeSubView === 'nlp'" class="stage-pane single-pane">
+        <SemanticNetworkGraph />
+      </section>
+
+      <!-- HOJA 2: Mapa Geográfico de Torres y Red -->
       <section v-show="activeSubView === 'map'" class="stage-pane single-pane">
         <HistoricalMapChart />
       </section>
 
-      <!-- HOJA 2: Tabla de Auditoría (Dedicada y con scroll propio interno) -->
+      <!-- HOJA 3: Tabla de Auditoría (Dedicada y con scroll propio interno) -->
       <section v-show="activeSubView === 'audit'" class="stage-pane audit-pane card">
         <TicketsTable
           v-if="territoryStore.data"
           :tickets="territoryStore.data.tickets"
           :total-matches="territoryStore.data.total_tickets_matching"
         />
-      </section>
-
-      <!-- HOJA 3: Red Semántica NLP (Causas Raíz y Fricción Operativa) -->
-      <section v-show="activeSubView === 'nlp'" class="stage-pane single-pane">
-        <SemanticNetworkGraph />
       </section>
     </main>
   </div>
