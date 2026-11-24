@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { TrendingUp, Target, RefreshCw, CheckCircle2, Clock, AlertTriangle, AlertCircle } from 'lucide-vue-next';
+import { TrendingUp, Target, RefreshCw } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../components/charts/StackedBarChart.vue';
 import SankeyFlowChart from '../components/charts/SankeyFlowChart.vue';
 import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
+import InlineKpiStrip, { type InlineKpiItem } from '../components/common/InlineKpiStrip.vue';
 
 const opsStore = useOperationsStore();
 const activeSubView = ref<'evolution' | 'sla'>('evolution');
@@ -21,6 +22,35 @@ const worstPriority = computed(() => {
     return [...significant].sort((a, b) => b.excede_pct - a.excede_pct)[0];
   }
   return [...list].sort((a, b) => b.excede_count - a.excede_count)[0];
+});
+
+const inlineKpis = computed<InlineKpiItem[]>(() => {
+  const k = opsStore.data?.kpis;
+  if (!k) return [];
+  return [
+    {
+      label: 'SLA',
+      value: `${k.cumplimiento_oportuno_pct ?? k.cumple_pct}%`,
+      tone: 'brand',
+      tooltip: k.cerrados_a_tiempo != null ? `${k.cerrados_a_tiempo.toLocaleString()} a tiempo · ${(k.cerrados_fuera_plazo ?? 0).toLocaleString()} vencidos` : 'Cumplimiento SLA sobre cerrados',
+    },
+    {
+      label: 'Mediana',
+      value: `${k.tiempo_tipico_mediana ?? k.dias_prom ?? 0}d`,
+      tooltip: `Promedio: ${k.dias_prom ?? 0} días`,
+    },
+    {
+      label: 'Crítica',
+      value: worstPriority.value ? worstPriority.value.prioridad : '—',
+      tooltip: worstPriority.value ? `${worstPriority.value.excede_pct}% vencidos (${worstPriority.value.total} avisos)` : '',
+    },
+    {
+      label: 'Vencidos',
+      value: k.abiertos_vencidos ?? 0,
+      tone: 'danger',
+      tooltip: 'Avisos abiertos vencidos sobre su plazo SLA',
+    },
+  ];
 });
 
 onMounted(async () => {
@@ -79,6 +109,8 @@ onMounted(async () => {
         </button>
       </div>
 
+      <InlineKpiStrip :items="inlineKpis" />
+
       <!-- Pestañas de Hoja (Exactamente 2 gráficas por hoja para máxima dedicación analítica) -->
       <nav class="subview-toggle">
         <button
@@ -88,7 +120,7 @@ onMounted(async () => {
           @click="activeSubView = 'evolution'"
         >
           <TrendingUp :size="13" />
-          <span>1. Dinámica & Plazos SLA (2 Gráficas)</span>
+          <span>1. Dinámica & Plazos SLA</span>
         </button>
         <button
           class="toggle-btn"
@@ -97,59 +129,10 @@ onMounted(async () => {
           @click="activeSubView = 'sla'"
         >
           <Target :size="13" />
-          <span>2. Composición Técnica (2 Gráficas)</span>
+          <span>2. Composición Técnica</span>
         </button>
       </nav>
     </header>
-
-    <!-- KPIS EJECUTIVOS EN LÍNEA -->
-    <div v-if="opsStore.data?.kpis" class="kpi-micro-row">
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Cumplimiento SLA</span>
-          <b class="chip-val success-text">{{ opsStore.data.kpis.cumplimiento_oportuno_pct ?? opsStore.data.kpis.cumple_pct }}%</b>
-          <span class="chip-sub">
-            <template v-if="opsStore.data.kpis.cerrados_a_tiempo != null && opsStore.data.kpis.cerrados_fuera_plazo != null">
-              {{ opsStore.data.kpis.cerrados_a_tiempo.toLocaleString() }} a tiempo · {{ opsStore.data.kpis.cerrados_fuera_plazo.toLocaleString() }} fuera de plazo
-            </template>
-            <template v-else>Cerrados atendidos en plazo</template>
-          </span>
-        </div>
-        <div class="kpi-icon-box">
-          <CheckCircle2 :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Mediana vs. Promedio</span>
-          <b class="chip-val">{{ opsStore.data.kpis.tiempo_tipico_mediana ?? opsStore.data.kpis.dias_prom ?? 0 }} días</b>
-          <span class="chip-sub">Prom: {{ opsStore.data.kpis.dias_prom ?? 0 }} d · {{ (opsStore.data.kpis.avisos_cerrados ?? 0).toLocaleString() }} cerrados</span>
-        </div>
-        <div class="kpi-icon-box">
-          <Clock :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Prioridad Más Crítica</span>
-          <b class="chip-val">{{ worstPriority ? worstPriority.prioridad : '—' }}</b>
-          <span class="chip-sub">{{ worstPriority ? `${worstPriority.excede_pct}% fuera de plazo (${worstPriority.total} av.)` : 'Sin datos' }}</span>
-        </div>
-        <div class="kpi-icon-box">
-          <AlertTriangle :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip danger-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Abiertos Vencidos</span>
-          <b class="chip-val danger-text">{{ (opsStore.data.kpis.abiertos_vencidos ?? 0).toLocaleString() }}</b>
-          <span class="chip-sub">En mora sobre su SLA</span>
-        </div>
-        <div class="kpi-icon-box danger-icon">
-          <AlertCircle :size="18" />
-        </div>
-      </div>
-    </div>
 
     <!-- ÁREA DE GRÁFICAS: EXACTAMENTE 2 GRÁFICAS POR PANTALLA (CERO SCROLL) -->
     <main class="chart-viewport-stage">
@@ -221,8 +204,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  max-width: 650px;
 }
 
 .form-select-sm {
@@ -287,82 +268,6 @@ onMounted(async () => {
   color: var(--color-brand);
   font-weight: 700;
   box-shadow: var(--shadow-sm);
-}
-
-/* Micro KPIs */
-.kpi-micro-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.kpi-micro-chip {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-left: 4px solid var(--color-brand, #0f766e);
-  border-radius: var(--radius-md, 8px);
-  box-shadow: var(--shadow-sm);
-}
-
-.kpi-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.chip-label {
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.chip-val {
-  font-size: 1.65rem;
-  line-height: 1.1;
-  color: var(--text-primary);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.chip-sub {
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.kpi-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
-  color: var(--color-brand, #0f766e);
-  flex-shrink: 0;
-}
-
-.danger-chip {
-  border-color: var(--sla-danger-border);
-  border-left-color: var(--sla-danger, #be123c);
-  background: var(--sla-danger-bg);
-}
-
-.kpi-icon-box.danger-icon {
-  background: rgba(190, 18, 60, 0.14);
-  color: var(--sla-danger, #be123c);
 }
 
 /* Escenario de Gráficas */

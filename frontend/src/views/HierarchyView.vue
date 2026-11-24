@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { Compass, FileText, Network, RefreshCw, RadioTower, MapPin, CheckCircle2, AlertCircle } from 'lucide-vue-next';
+import { Compass, FileText, Network, RefreshCw } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
 import SemanticNetworkGraph from '../components/charts/SemanticNetworkGraph.vue';
+import InlineKpiStrip, { type InlineKpiItem } from '../components/common/InlineKpiStrip.vue';
 
 const route = useRoute();
 const territoryStore = useTerritoryStore();
@@ -14,6 +15,17 @@ type SubTab = (typeof validTabs)[number];
 const rawTab = route.query.tab as string | undefined;
 const initialTab: SubTab = validTabs.includes(rawTab as SubTab) ? (rawTab as SubTab) : 'nlp';
 const activeSubView = ref<SubTab>(initialTab);
+
+const inlineKpis = computed<InlineKpiItem[]>(() => {
+  const k = territoryStore.data?.kpis;
+  if (!k) return [];
+  return [
+    { label: 'Torres', value: k.equipos, tooltip: 'Torres activas en el filtro territorial' },
+    { label: 'Mpios', value: k.mpios, tooltip: 'Municipios con cobertura' },
+    { label: 'SLA', value: `${k.cumple_pct}%`, tone: 'brand', tooltip: 'Cumplimiento dentro del plazo SLA' },
+    { label: 'Vencidos', value: k.abiertos_vencidos ?? 0, tone: 'danger', tooltip: 'Avisos abiertos vencidos' },
+  ];
+});
 
 watch(
   () => route.query.tab,
@@ -88,6 +100,8 @@ onMounted(async () => {
         </button>
       </div>
 
+      <InlineKpiStrip :items="inlineKpis" />
+
       <!-- Pestañas de Hojas (1. Tratamiento NLP + 2. Mapa + 3. Auditoría) -->
       <nav class="subview-toggle">
         <button
@@ -121,50 +135,6 @@ onMounted(async () => {
         </button>
       </nav>
     </header>
-
-    <!-- KPIS EJECUTIVOS EN LÍNEA -->
-    <div v-if="territoryStore.data?.kpis" class="kpi-micro-row">
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Torres Activas</span>
-          <b class="chip-val">{{ territoryStore.data.kpis.equipos.toLocaleString() }}</b>
-          <span class="chip-sub">Activos en red eléctrica</span>
-        </div>
-        <div class="kpi-icon-box">
-          <RadioTower :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Municipios</span>
-          <b class="chip-val">{{ territoryStore.data.kpis.mpios.toLocaleString() }}</b>
-          <span class="chip-sub">Cobertura territorial</span>
-        </div>
-        <div class="kpi-icon-box">
-          <MapPin :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Cumplimiento SLA</span>
-          <b class="chip-val success-text">{{ territoryStore.data.kpis.cumple_pct }}%</b>
-          <span class="chip-sub">Atención dentro del plazo</span>
-        </div>
-        <div class="kpi-icon-box">
-          <CheckCircle2 :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip danger-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Abiertos Vencidos</span>
-          <b class="chip-val danger-text">{{ (territoryStore.data.kpis.abiertos_vencidos ?? 0).toLocaleString() }}</b>
-          <span class="chip-sub">Requieren intervención priorizada</span>
-        </div>
-        <div class="kpi-icon-box danger-icon">
-          <AlertCircle :size="18" />
-        </div>
-      </div>
-    </div>
 
     <!-- ÁREA DE GRÁFICAS (VIEWPORT-FIT / CERO SCROLL) -->
     <main class="chart-viewport-stage">
@@ -221,8 +191,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  max-width: 650px;
 }
 
 .form-select-sm {
@@ -287,82 +255,6 @@ onMounted(async () => {
   color: var(--color-brand);
   font-weight: 700;
   box-shadow: var(--shadow-sm);
-}
-
-/* Micro KPIs */
-.kpi-micro-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.kpi-micro-chip {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-left: 4px solid var(--color-brand, #0f766e);
-  border-radius: var(--radius-md, 8px);
-  box-shadow: var(--shadow-sm);
-}
-
-.kpi-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.chip-label {
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.chip-val {
-  font-size: 1.65rem;
-  line-height: 1.1;
-  color: var(--text-primary);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.chip-sub {
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.kpi-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
-  color: var(--color-brand, #0f766e);
-  flex-shrink: 0;
-}
-
-.danger-chip {
-  border-color: var(--sla-danger-border);
-  border-left-color: var(--sla-danger, #be123c);
-  background: var(--sla-danger-bg);
-}
-
-.kpi-icon-box.danger-icon {
-  background: rgba(190, 18, 60, 0.14);
-  color: var(--sla-danger, #be123c);
 }
 
 /* Escenario de Gráficas */

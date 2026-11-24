@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Sliders, ClipboardList, RefreshCw, RadioTower, AlertCircle, Gauge, CheckCircle2 } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
+import { Sliders, ClipboardList, RefreshCw } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
+import InlineKpiStrip, { type InlineKpiItem } from '../components/common/InlineKpiStrip.vue';
 
 const store = useCapacityStore();
 const activeSubView = ref<'simulator' | 'coordinator'>('simulator');
+
+const inlineKpis = computed<InlineKpiItem[]>(() => {
+  const k = store.capacityData?.kpis;
+  if (!k) return [];
+  return [
+    { label: 'Carga/100T', value: k.carga_por_100_torres, tooltip: 'Densidad de avisos por cada 100 torres' },
+    { label: 'Abiertos', value: k.avisos_abiertos, tooltip: `Sobre ${k.total_torres.toLocaleString()} torres monitoreadas` },
+    { label: 'Vencidos', value: k.abiertos_vencidos, tone: 'danger', tooltip: 'Avisos abiertos vencidos en mora' },
+    { label: 'SLA', value: `${k.cumplimiento_oportuno_pct}%`, tone: 'brand', tooltip: 'Cumplimiento SLA sobre cerrados' },
+  ];
+});
 
 onMounted(() => {
   store.loadAll();
@@ -44,6 +56,8 @@ onMounted(() => {
         </button>
       </div>
 
+      <InlineKpiStrip :items="inlineKpis" />
+
       <!-- Pestañas de Hojas (2 sub-vistas accionables) -->
       <nav class="subview-toggle">
         <button
@@ -65,50 +79,6 @@ onMounted(() => {
         </button>
       </nav>
     </header>
-
-    <!-- KPIS EJECUTIVOS EN LÍNEA -->
-    <div v-if="store.capacityData?.kpis" class="kpi-micro-row">
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Torres Totales</span>
-          <b class="chip-val">{{ store.capacityData.kpis.total_torres.toLocaleString() }}</b>
-          <span class="chip-sub">Infraestructura monitoreada</span>
-        </div>
-        <div class="kpi-icon-box">
-          <RadioTower :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip danger-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Avisos Abiertos</span>
-          <b class="chip-val danger-text">{{ store.capacityData.kpis.avisos_abiertos.toLocaleString() }}</b>
-          <span class="chip-sub">{{ store.capacityData.kpis.abiertos_vencidos.toLocaleString() }} ya vencidos en mora</span>
-        </div>
-        <div class="kpi-icon-box danger-icon">
-          <AlertCircle :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Carga × 100 Torres</span>
-          <b class="chip-val">{{ store.capacityData.kpis.carga_por_100_torres }}</b>
-          <span class="chip-sub">Densidad operativa relativa</span>
-        </div>
-        <div class="kpi-icon-box">
-          <Gauge :size="18" />
-        </div>
-      </div>
-      <div class="kpi-micro-chip">
-        <div class="kpi-main">
-          <span class="chip-label">Cumplimiento SLA</span>
-          <b class="chip-val success-text">{{ store.capacityData.kpis.cumplimiento_oportuno_pct }}%</b>
-          <span class="chip-sub">Atención dentro del plazo</span>
-        </div>
-        <div class="kpi-icon-box">
-          <CheckCircle2 :size="18" />
-        </div>
-      </div>
-    </div>
 
     <!-- ÁREA DE CONTENIDO (VIEWPORT-FIT / CERO SCROLL) -->
     <main class="chart-viewport-stage">
@@ -159,8 +129,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  max-width: 650px;
 }
 
 .form-select-sm {
@@ -225,82 +193,6 @@ onMounted(() => {
   color: var(--color-brand);
   font-weight: 700;
   box-shadow: var(--shadow-sm);
-}
-
-/* Micro KPIs */
-.kpi-micro-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.kpi-micro-chip {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-left: 4px solid var(--color-brand, #0f766e);
-  border-radius: var(--radius-md, 8px);
-  box-shadow: var(--shadow-sm);
-}
-
-.kpi-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.chip-label {
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.chip-val {
-  font-size: 1.65rem;
-  line-height: 1.1;
-  color: var(--text-primary);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.chip-sub {
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.kpi-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-brand-soft, rgba(15, 118, 110, 0.12));
-  color: var(--color-brand, #0f766e);
-  flex-shrink: 0;
-}
-
-.danger-chip {
-  border-color: var(--sla-danger-border);
-  border-left-color: var(--sla-danger, #be123c);
-  background: var(--sla-danger-bg);
-}
-
-.kpi-icon-box.danger-icon {
-  background: rgba(190, 18, 60, 0.14);
-  color: var(--sla-danger, #be123c);
 }
 
 /* Escenario de Gráficas */
