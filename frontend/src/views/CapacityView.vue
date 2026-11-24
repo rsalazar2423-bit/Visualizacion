@@ -6,7 +6,7 @@ import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPane
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
 
 const store = useCapacityStore();
-const activeSubView = ref<'simulator' | 'coordinator'>('simulator');
+const activeSubView = ref<'coordinator' | 'simulator'>('coordinator');
 
 onMounted(() => {
   store.loadAll();
@@ -44,24 +44,24 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (2 sub-vistas accionables) -->
+      <!-- Pestañas de Hojas (1. Centro del Coordinador como principal + 2. Simulador) -->
       <nav class="subview-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'simulator' }"
-          @click="activeSubView = 'simulator'"
-        >
-          <Sliders :size="14" />
-          <span>1. Simulador de Cuadrillas</span>
-        </button>
-
         <button
           class="toggle-btn"
           :class="{ active: activeSubView === 'coordinator' }"
           @click="activeSubView = 'coordinator'"
         >
           <ClipboardList :size="14" />
-          <span>2. Centro del Coordinador</span>
+          <span>1. Centro del Coordinador</span>
+        </button>
+
+        <button
+          class="toggle-btn"
+          :class="{ active: activeSubView === 'simulator' }"
+          @click="activeSubView = 'simulator'"
+        >
+          <Sliders :size="14" />
+          <span>2. Simulador de Cuadrillas</span>
         </button>
       </nav>
     </header>

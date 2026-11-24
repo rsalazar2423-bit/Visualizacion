@@ -199,7 +199,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       left: '2%',
       right: '3%',
       bottom: '34px',
-      top: '66px', // Margen amplio para leyenda + encabezados de eje sin colisiones
+      top: '78px', // Margen amplio para leyenda de hasta 2 filas + título de eje sin roces
       containLabel: true,
     },
     xAxis: {
