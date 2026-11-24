@@ -128,6 +128,11 @@ export function computeTriageSummaries(payload: NlpGraphPayload, filters: Triage
   });
 }
 
+export function getChartOrderedRoutes(summaries: NlpRouteSummary[]): NlpRouteSummary[] {
+  // ECharts dibuja category yAxis de abajo hacia arriba: ordenamos ascendente para que la mayor quede ARRIBA (Pareto)
+  return [...summaries].sort((a, b) => a.total - b.total || a.vencidos_total - b.vencidos_total);
+}
+
 export function buildTriageBarOption(
   summaries: NlpRouteSummary[],
   estado: NlpEstadoFilter,
@@ -136,7 +141,7 @@ export function buildTriageBarOption(
 ): echarts.EChartsOption {
   const tokens = getEChartsThemeTokens(isDark);
   const openOkColor = isDark ? '#38BDF8' : '#0284C7'; // Azul Acero Institucional
-  const rows = [...summaries].reverse();
+  const rows = getChartOrderedRoutes(summaries);
   const endLabel = {
     show: true, position: 'right' as const, color: tokens.textSecondary, fontSize: 11, fontWeight: 600,
     formatter: (p: any) => { const r = rows[p.dataIndex]; return r ? `${r.total.toLocaleString()}  (${r.vencimiento_pct}% venc.)` : ''; },

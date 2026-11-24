@@ -84,11 +84,14 @@ defineEmits<{
 .timeline-bar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px 16px;
+  padding: 8px 14px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .timeline-controls {

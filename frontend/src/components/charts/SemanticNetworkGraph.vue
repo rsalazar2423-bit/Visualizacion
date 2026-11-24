@@ -7,6 +7,7 @@ import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
 import {
   computeTriageSummaries,
   buildTriageBarOption,
+  getChartOrderedRoutes,
   ESTADO_OPTS,
   URGENCY_OPTS,
   HORIZON_OPTS,
@@ -67,7 +68,7 @@ function renderChart() {
   if (!chart) {
     chart = echarts.init(chartRef.value);
     chart.on('click', (p: any) => {
-      const clicked = [...summaries.value].reverse()[p.dataIndex];
+      const clicked = getChartOrderedRoutes(summaries.value)[p.dataIndex];
       if (clicked) selectRoute(clicked.id);
     });
   }

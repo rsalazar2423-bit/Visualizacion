@@ -153,7 +153,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
           const fPlazo = pt.cerrados_fuera_plazo ?? 0;
           const pct = Math.round((aTiempo / pt.cerrados) * 100);
           html += `<div style="margin-top:6px;padding-top:4px;border-top:1px dashed ${tokens.gridColor};font-size:10.5px;color:${tokens.textSecondary};">
-            Efectividad cierres: <b style="color:${tokens.textColor};">${pct}% en plazo</b> (${aTiempo.toLocaleString()} a tiempo / ${fPlazo.toLocaleString()} fuera de plazo)
+            Efectividad cierres: <b style="color:${tokens.textColor};">${pct}% en plazo</b> (${aTiempo.toLocaleString('es-CO')} a tiempo / ${fPlazo.toLocaleString('es-CO')} vencidos)
           </div>`;
         }
         return html;
@@ -162,10 +162,10 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     legend: {
       top: 0,
       left: 'center',
-      itemGap: 14,
+      itemGap: 12,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
       selected: {
-        'Avisos Cerrados (Total)': false,
+        'Cerrados (Total)': false,
       },
     },
     // Mantiene el controlador nativo de selección de área (dataZoomSelect) activo en ECharts,
@@ -199,7 +199,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       left: '2%',
       right: '3%',
       bottom: '34px',
-      top: '56px', // Espacio limpio para leyenda superior + títulos de ejes sin colisiones
+      top: '66px', // Margen amplio para leyenda + encabezados de eje sin colisiones
       containLabel: true,
     },
     xAxis: {
@@ -242,7 +242,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     ],
     series: [
       {
-        name: 'Avisos Ingresados',
+        name: 'Ingresados',
         type: 'line',
         smooth: 0.25,
         symbol: 'circle',
@@ -268,7 +268,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         data: cerradosATiempo,
       },
       {
-        name: 'Cerrados Fuera de Plazo',
+        name: 'Cerrados Vencidos',
         type: 'line',
         smooth: 0.25,
         symbol: 'triangle',
@@ -278,7 +278,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         data: cerradosFueraPlazo,
       },
       {
-        name: 'Avisos Cerrados (Total)',
+        name: 'Cerrados (Total)',
         type: 'line',
         smooth: 0.25,
         symbol: 'none',
@@ -287,7 +287,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         data: cerrados,
       },
       {
-        name: 'Abiertos Vencidos (del periodo)',
+        name: 'Abiertos Vencidos',
         type: 'bar',
         barMaxWidth: 16,
         itemStyle: {
@@ -298,7 +298,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         data: vencidos,
       },
       {
-        name: isCumpleMode ? '% Cumplimiento Oportuno' : 'Tiempo Típico (Mediana Días)',
+        name: isCumpleMode ? '% Cumplimiento' : 'Mediana Días',
         type: 'line',
         yAxisIndex: 1,
         smooth: 0.25,
@@ -336,9 +336,9 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
           Pico de demanda: <b>{{ summaryStats.peakYear }} ({{ summaryStats.peakIngresos }} avisos)</b>
         </span>
         <span class="evo-stat">
-          Balance histórico: <b>{{ summaryStats.totalCierres.toLocaleString() }} cerrados</b>
-          ({{ summaryStats.cerradosATiempo.toLocaleString() }} a tiempo · {{ summaryStats.cerradosFueraPlazo.toLocaleString() }} fuera de plazo) de
-          <b>{{ summaryStats.totalIngresos.toLocaleString() }} ingresados</b>
+          Balance histórico: <b>{{ summaryStats.totalCierres.toLocaleString('es-CO') }} cerrados</b>
+          ({{ summaryStats.cerradosATiempo.toLocaleString('es-CO') }} a tiempo · {{ summaryStats.cerradosFueraPlazo.toLocaleString('es-CO') }} vencidos) de
+          <b>{{ summaryStats.totalIngresos.toLocaleString('es-CO') }} ingresados</b>
         </span>
       </div>
 

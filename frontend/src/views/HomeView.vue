@@ -68,21 +68,21 @@ onMounted(async () => {
           title="Total Avisos"
           :value="kpis.total_avisos"
           badge="2008–2023"
-          :subtitle="`Sobre ${kpis.total_equipos.toLocaleString()} torres en red`"
+          :subtitle="`Sobre ${kpis.total_equipos.toLocaleString('es-CO')} torres en red`"
           color="brand"
         />
         <KpiCard
           title="Cumplimiento SLA"
           :value="`${kpis.cumplimiento_oportuno_pct ?? kpis.pct_cumplimiento}%`"
           badge="Cerrados"
-          :subtitle="kpis.cerrados_a_tiempo != null && kpis.cerrados_fuera_plazo != null ? `${kpis.cerrados_a_tiempo.toLocaleString()} a tiempo · ${kpis.cerrados_fuera_plazo.toLocaleString()} fuera de plazo` : 'Cerrados en plazo (corte 2023-05-06)'"
+          :subtitle="kpis.cerrados_a_tiempo != null && kpis.cerrados_fuera_plazo != null ? `${kpis.cerrados_a_tiempo.toLocaleString('es-CO')} a tiempo · ${kpis.cerrados_fuera_plazo.toLocaleString('es-CO')} vencidos` : 'Cerrados en plazo (corte 2023-05-06)'"
           color="brand"
         />
         <KpiCard
           title="Avisos Abiertos"
           :value="kpis.avisos_abiertos ?? 0"
           badge="Pendientes"
-          :subtitle="`${(kpis.abiertos_vencidos ?? 0).toLocaleString()} ya superaron el plazo SLA`"
+          :subtitle="`${(kpis.abiertos_vencidos ?? 0).toLocaleString('es-CO')} ya superaron el plazo SLA`"
           color="danger"
         />
         <KpiCard

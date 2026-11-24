@@ -618,10 +618,6 @@ function recenterMap() {
           />
         </div>
       </div>
-
-      <p class="chart-reseña">
-        44 líneas y 5.409 torres georreferenciadas. Filtra por estado o usa la línea de tiempo inferior para auditar avisos sin saturación.
-      </p>
     </div>
 
     <!-- Lienzo del Mapa + Panel de Resumen Temporal (Componente SRP) -->
@@ -701,6 +697,8 @@ function recenterMap() {
   gap: 8px;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
+  padding: 14px 16px;
 }
 
 .header-actions-row {
@@ -737,6 +735,7 @@ function recenterMap() {
   gap: 12px;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   align-items: stretch;
 }
 
@@ -745,6 +744,7 @@ function recenterMap() {
   width: 100%;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .map-canvas {

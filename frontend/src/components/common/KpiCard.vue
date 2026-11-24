@@ -1,11 +1,17 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue';
+
+const props = defineProps<{
   title: string;
   value: string | number;
   subtitle?: string;
   badge?: string;
   color?: 'brand' | 'success' | 'info' | 'warning' | 'danger' | 'emerald' | 'mint' | 'amber' | 'terracotta' | 'cyan';
 }>();
+
+const formattedValue = computed(() =>
+  typeof props.value === 'number' ? props.value.toLocaleString('es-CO') : props.value,
+);
 </script>
 
 <template>
@@ -15,7 +21,7 @@ defineProps<{
       <span v-if="badge" class="kpi-mini-badge">{{ badge }}</span>
       <span v-else class="kpi-dot"></span>
     </div>
-    <div class="kpi-value">{{ value }}</div>
+    <div class="kpi-value">{{ formattedValue }}</div>
     <div v-if="subtitle" class="kpi-subtitle">{{ subtitle }}</div>
   </div>
 </template>

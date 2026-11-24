@@ -52,6 +52,8 @@ TYPO_MAP = [
     (re.compile(r"\bpisci\b"), "piscina"),
     (re.compile(r"\barb\b"), "árbol"),
     (re.compile(r"\b(servid|serv\.)\b"), "servidumbre"),
+    (re.compile(r"\bivb\b"), "ivbl"),
+    (re.compile(r"\bclc\b"), "slc"),
 ]
 
 RE_AMBIENTAL = re.compile(
