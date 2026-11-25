@@ -61,11 +61,6 @@ const topNavLinks = [
     </nav>
 
     <div class="navbar-right">
-      <div class="institutional-badge">
-        <span class="inst-dot"></span>
-        <span class="inst-text">Suroccidente & Centro · Transmisión</span>
-      </div>
-
       <!-- Botón de Recorrido Guiado (Storytelling) -->
       <button
         class="qr-access-btn"
