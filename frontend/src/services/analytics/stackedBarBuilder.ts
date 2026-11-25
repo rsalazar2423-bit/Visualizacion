@@ -124,7 +124,12 @@ export function buildStackedBarOption(
           fontWeight: 700,
           fontFamily: tokens.fontFamily,
         },
-        itemStyle: { borderRadius: [4, 0, 0, 4] },
+        itemStyle: {
+          borderRadius: [4, 0, 0, 4],
+          shadowBlur: 5,
+          shadowOffsetY: 2,
+          shadowColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(15, 23, 42, 0.08)',
+        },
         data: cumpleSeriesData,
       },
       {
@@ -144,7 +149,12 @@ export function buildStackedBarOption(
           fontWeight: 700,
           fontFamily: tokens.fontFamily,
         },
-        itemStyle: { borderRadius: [0, 4, 4, 0] },
+        itemStyle: {
+          borderRadius: [0, 4, 4, 0],
+          shadowBlur: 5,
+          shadowOffsetY: 2,
+          shadowColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(15, 23, 42, 0.08)',
+        },
         data: excedeSeriesData,
       },
     ],

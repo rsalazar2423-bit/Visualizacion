@@ -97,22 +97,27 @@ export function buildTowerBarOption(
     },
   };
 
+  const barShadow = {
+    shadowBlur: 5,
+    shadowOffsetY: 2,
+    shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(15, 23, 42, 0.1)',
+  };
   const series: echarts.SeriesOption[] =
     estado === 'abiertos'
       ? [
-          { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
-          { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ab_en_plazo) },
+          { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.excede, ...barShadow }, data: rows.map((r) => r.ab_vencidos) },
+          { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.cumple, borderRadius: [0, 4, 4, 0], ...barShadow }, label: endLabel, data: rows.map((r) => r.ab_en_plazo) },
         ]
       : estado === 'cerrados'
         ? [
-            { name: 'Cerrados Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ce_vencidos) },
-            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
+            { name: 'Cerrados Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.warning, ...barShadow }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.cumple, borderRadius: [0, 4, 4, 0], ...barShadow }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
           ]
         : [
-            { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.excede }, data: rows.map((r) => r.ab_vencidos) },
-            { name: 'Cerrados Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.warning }, data: rows.map((r) => r.ce_vencidos) },
-            { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: openOkColor }, data: rows.map((r) => r.ab_en_plazo) },
-            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.cumple }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
+            { name: 'Abiertos Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.excede, ...barShadow }, data: rows.map((r) => r.ab_vencidos) },
+            { name: 'Cerrados Vencidos', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.warning, ...barShadow }, data: rows.map((r) => r.ce_vencidos) },
+            { name: 'Abiertos en Plazo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: openOkColor, ...barShadow }, data: rows.map((r) => r.ab_en_plazo) },
+            { name: 'Cerrados a Tiempo', type: 'bar', stack: 's', barMaxWidth: 20, itemStyle: { color: tokens.sla.cumple, borderRadius: [0, 4, 4, 0], ...barShadow }, label: endLabel, data: rows.map((r) => r.ce_a_tiempo) },
           ];
 
   return {

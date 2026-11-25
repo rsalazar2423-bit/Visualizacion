@@ -65,19 +65,35 @@ a {
   }
 }
 
-/* Cards & Glassmorphism */
-.card {
+/* Cards & Relieve Ejecutivo Unificado */
+.card,
+.chart-panel,
+.action-tray,
+.coord-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.55);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
-.card:hover {
+[data-theme="dark"] .card,
+[data-theme="dark"] .chart-panel,
+[data-theme="dark"] .action-tray,
+[data-theme="dark"] .coord-card {
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.card {
+  padding: 20px;
+}
+
+.card:hover,
+.chart-panel:hover,
+.action-tray:hover,
+.coord-card:hover {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-header {
