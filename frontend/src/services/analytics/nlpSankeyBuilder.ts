@@ -10,6 +10,15 @@ export interface SankeyFilter {
   cte: string | null;
   depto: string | null;
   tipo: string | null;
+  includeEtapa?: boolean;
+}
+
+function normalizeEtapa(raw: string): string {
+  if (raw.includes('Jurídica')) return 'Etapa: Gestión Jurídica';
+  if (raw.includes('Predial')) return 'Etapa: Gestión Predial';
+  if (raw.includes('Espera')) return 'Etapa: En Espera / Punto';
+  if (raw.includes('Ambiental')) return 'Etapa: Gestión Ambiental';
+  return 'Etapa: Iniciado / Otros';
 }
 
 const ROUTE_COLORS: Record<string, string> = {
@@ -67,7 +76,14 @@ export function buildNlpSankeyData(payload: NlpGraphPayload, filter: SankeyFilte
     );
 
     inc(tipoNode, causalNode);
-    inc(causalNode, outcomeNode);
+    if (filter.includeEtapa) {
+      const etapaNode = normalizeEtapa(t.etapa);
+      nodeColors.set(etapaNode, isDark ? '#94A3B8' : '#64748B');
+      inc(causalNode, etapaNode);
+      inc(etapaNode, outcomeNode);
+    } else {
+      inc(causalNode, outcomeNode);
+    }
   }
 
   const nodes = Array.from(nodeColors.entries()).map(([name, color]) => ({

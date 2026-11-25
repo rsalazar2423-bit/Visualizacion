@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, inject, onMounted } from 'vue';
 import * as echarts from 'echarts';
 import { useOperationsStore } from '../../stores/operationsStore';
 import { getEChartsThemeTokens, getTipoColor, PRIO_COLORS } from '../../constants/themeTokens';
@@ -11,6 +11,7 @@ import type { NlpGraphPayload } from '../../types/nlpGraph';
 type SankeyMode = 'abiertos_nlp' | 'cerrados_nlp' | 'prioridad';
 
 const opsStore = useOperationsStore();
+const isFullscreen = inject('isChartFullscreen', ref(false));
 const chartContainer = ref<HTMLDivElement | null>(null);
 const sankeyMode = ref<SankeyMode>('abiertos_nlp');
 const nlpPayload = ref<NlpGraphPayload | null>(null);
@@ -43,6 +44,7 @@ function renderSankey(chartInstance: echarts.ECharts, isDark: boolean) {
         cte: opsStore.selectedCte,
         depto: opsStore.selectedDepto,
         tipo: opsStore.selectedTipo,
+        includeEtapa: isFullscreen.value,
       },
       isDark,
     );
@@ -111,7 +113,7 @@ onMounted(async () => {
 });
 
 watch(
-  () => [opsStore.data?.sankey_flow, opsStore.selectedCte, opsStore.selectedDepto, opsStore.selectedTipo, sankeyMode.value],
+  () => [opsStore.data?.sankey_flow, opsStore.selectedCte, opsStore.selectedDepto, opsStore.selectedTipo, sankeyMode.value, isFullscreen.value],
   () => render(),
   { deep: true },
 );

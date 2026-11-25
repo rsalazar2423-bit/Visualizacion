@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, watch, provide, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Maximize2, Minimize2, X } from 'lucide-vue-next';
 
 defineProps<{
@@ -8,6 +8,7 @@ defineProps<{
 }>();
 
 const isFullscreen = ref(false);
+provide('isChartFullscreen', isFullscreen);
 
 function setBodyScrollLock(locked: boolean) {
   const val = locked ? 'hidden' : '';
