@@ -1,61 +1,85 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import router from '../router';
+import { useOperationsStore } from './operationsStore';
+import { useTerritoryStore } from './territoryStore';
 
 export interface StoryStep {
   id: string;
   act: string;
   title: string;
   narrative: string;
-  takeaway: string;
+  actionHint: string;
   route: string;
+  selector: string;
+  apply?: () => Promise<void> | void;
 }
 
 export const STORY_STEPS: StoryStep[] = [
   {
     id: 'panorama',
-    act: 'Acto 1 · Diagnóstico Nacional',
-    title: 'La magnitud del pasivo y dónde se concentra',
+    act: 'Paso 1 · Panorama Ejecutivo',
+    title: 'Aquí ves el tamaño real del pasivo',
     narrative:
-      'De 3.118 avisos históricos sobre 5.409 torres, el cumplimiento SLA es 45.9% (1.091 a tiempo vs. 1.284 vencidos). Hoy hay 743 avisos abiertos y 344 ya superaron su plazo.',
-    takeaway: 'Cundinamarca, Boyacá y Valle del Cauca concentran el mayor backlog, liderado por Construcciones (64%).',
+      'Mira las 4 tarjetas: 45.9% de cumplimiento histórico y 344 abiertos vencidos. Debajo, la matriz muestra que Boyacá (81 en 2022) y Cundinamarca concentran la carga.',
+    actionHint: 'Haz clic en una celda oscura de Boyacá o Cundinamarca para aislar esa tipología.',
     route: '/',
+    selector: '.kpi-section',
   },
   {
     id: 'sla',
-    act: 'Acto 2 · Causa del Vencimiento',
-    title: 'Por qué fallan las prioridades cortas',
+    act: 'Paso 2 · Aislamiento de Prioridad Crítica',
+    title: 'Mira por qué fallan los plazos cortos',
     narrative:
-      'La mediana real de cierre es 383 días. Por eso los avisos con plazos cortos presentan vencimientos críticos: Semana (100%), Mes (95.3%) y Trimestre (80.6%).',
-    takeaway: 'Los picos de ingreso ocurren en mayo y septiembre, marcando cuándo reforzar capacidad preventiva.',
+      'Aislamos la prioridad "Mes" (95.3% vencidos). La mediana real de cierre es 383 días: es imposible cumplir plazos de 30 días sin cambiar la ruta de tratamiento.',
+    actionHint: 'Observa la barra roja de "Mes" resaltada; haz clic en otra barra para comparar.',
     route: '/operaciones',
+    selector: '.stage-pane.dual-charts > :nth-child(2)',
+    apply: async () => {
+      const ops = useOperationsStore();
+      await ops.fetchData();
+      if (ops.selectedPrioridad !== 'Mes') ops.setPrioridad('Mes');
+    },
   },
   {
     id: 'nlp',
-    act: 'Acto 3 · Triaje Operativo (NLP)',
-    title: 'Separar lo operable de los bloqueos legales',
+    act: 'Paso 3 · Triaje Operativo (NLP)',
+    title: 'Aísla el cuello de botella en Boyacá',
     narrative:
-      'El motor NLP clasifica el 91.3% de las descripciones: Jurídico/Servidumbre (1.989 avisos) y Gestión Predial (461) requieren gestión legal o predial previa, no cuadrilla forestal.',
-    takeaway: 'Usa los selectores Por Causal, Por Línea (5 líneas = 41.3% de la mora) y Por Torre (209 reincidentes).',
+      'Filtramos Boyacá automáticamente. Aquí ves qué avisos son despacho de campo vs. cuáles están frenados por Trámite Ambiental / CAR o Jurídico.',
+    actionHint: 'Alterna entre "Por Causal", "Por Línea" y "Por Torre", o descarga el CSV filtrado.',
     route: '/territorio?tab=nlp',
+    selector: '.triage-split',
+    apply: async () => {
+      const ops = useOperationsStore();
+      if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
+      const ter = useTerritoryStore();
+      await ter.setDepto('Boyacá');
+    },
   },
   {
     id: 'mapa',
-    act: 'Acto 4 · Georreferenciación',
-    title: 'Corredores eléctricos y evolución 2008–2023',
+    act: 'Paso 4 · Georreferenciación',
+    title: 'Ubica los corredores críticos en Boyacá',
     narrative:
-      'El mapa cruza las 44 líneas de transmisión y 5.409 torres con el estado SLA de cada aviso para visualizar agrupaciones territoriales reales.',
-    takeaway: 'Puedes reproducir la línea de tiempo inferior o filtrar por Abiertos Vencidos para ubicar focos críticos.',
+      'Con Boyacá aislado, el mapa enfoca sus torres y líneas de transmisión para ver si los avisos vencidos forman corredores continuos.',
+    actionHint: 'Usa "Abiertos Vencidos" arriba o reproduce la línea de tiempo inferior.',
     route: '/territorio?tab=map',
+    selector: '.map-body-grid',
   },
   {
     id: 'accion',
-    act: 'Acto 5 · Decisión y Capacidad',
-    title: 'De la analítica a la ejecución semanal',
+    act: 'Paso 5 · Ejecución Semanal',
+    title: 'Arma lotes de despacho y frena vencimientos',
     narrative:
-      'El Centro del Coordinador agrupa avisos en Lotes de Despacho por corredor (con dispersión en km) y activa el Radar Preventivo (152 avisos próximos a vencer).',
-    takeaway: 'Pasa a la pestaña Simulador de Cuadrillas para dimensionar cuántas cuadrillas necesitas para cerrar la brecha.',
+      'En "Centro del Coordinador", a la izquierda tienes Lotes de Despacho por corredor (en km) y a la derecha el Radar Preventivo (≥70% SLA consumido).',
+    actionHint: 'Haz clic en un lote para ver sus avisos exactos o pasa a "2. Simulador de Cuadrillas".',
     route: '/capacidad',
+    selector: '.coord-main-grid',
+    apply: async () => {
+      const ter = useTerritoryStore();
+      await ter.resetAllFilters();
+    },
   },
 ];
 
@@ -70,9 +94,9 @@ export const useStoryStore = defineStore('story', () => {
     const clamped = Math.max(0, Math.min(idx, totalSteps - 1));
     currentIndex.value = clamped;
     const step = STORY_STEPS[clamped];
-    if (step) {
-      await router.push(step.route);
-    }
+    if (!step) return;
+    await router.push(step.route);
+    if (step.apply) await step.apply();
   }
 
   async function start() {
@@ -81,21 +105,20 @@ export const useStoryStore = defineStore('story', () => {
   }
 
   async function next() {
-    if (currentIndex.value < totalSteps - 1) {
-      await goTo(currentIndex.value + 1);
-    } else {
-      close();
-    }
+    if (currentIndex.value < totalSteps - 1) await goTo(currentIndex.value + 1);
+    else await close();
   }
 
   async function prev() {
-    if (currentIndex.value > 0) {
-      await goTo(currentIndex.value - 1);
-    }
+    if (currentIndex.value > 0) await goTo(currentIndex.value - 1);
   }
 
-  function close() {
+  async function close() {
     isActive.value = false;
+    const ops = useOperationsStore();
+    if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
+    const ter = useTerritoryStore();
+    if (ter.selectedDepto) await ter.resetAllFilters();
   }
 
   return { isActive, currentIndex, currentStep, totalSteps, start, next, prev, goTo, close };

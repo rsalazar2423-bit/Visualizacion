@@ -1,9 +1,42 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { Sparkles, ChevronLeft, ChevronRight, X, CheckCircle2 } from 'lucide-vue-next';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { Sparkles, ChevronLeft, ChevronRight, X, MousePointerClick } from 'lucide-vue-next';
 import { useStoryStore, STORY_STEPS } from '../../stores/storyStore';
 
 const story = useStoryStore();
+const spotRect = ref<{ top: number; left: number; width: number; height: number } | null>(null);
+let retryTimer: number | null = null;
+
+function updateSpotlight() {
+  if (!story.isActive) {
+    spotRect.value = null;
+    return;
+  }
+  const el = document.querySelector(story.currentStep.selector) as HTMLElement | null;
+  if (!el) {
+    spotRect.value = null;
+    return;
+  }
+  const r = el.getBoundingClientRect();
+  if (r.width === 0 || r.height === 0) {
+    spotRect.value = null;
+    return;
+  }
+  spotRect.value = {
+    top: Math.max(4, r.top - 4),
+    left: Math.max(4, r.left - 4),
+    width: r.width + 8,
+    height: r.height + 8,
+  };
+}
+
+function scheduleSpotlight() {
+  if (retryTimer) window.clearTimeout(retryTimer);
+  nextTick(() => {
+    updateSpotlight();
+    retryTimer = window.setTimeout(updateSpotlight, 260);
+  });
+}
 
 function onKeydown(e: KeyboardEvent) {
   if (!story.isActive) return;
@@ -12,61 +45,92 @@ function onKeydown(e: KeyboardEvent) {
   else if (e.key === 'ArrowLeft') story.prev();
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+watch(() => [story.isActive, story.currentIndex], scheduleSpotlight);
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown);
+  window.addEventListener('resize', updateSpotlight);
+});
+onUnmounted(() => {
+  if (retryTimer) window.clearTimeout(retryTimer);
+  window.removeEventListener('keydown', onKeydown);
+  window.removeEventListener('resize', updateSpotlight);
+});
 </script>
 
 <template>
-  <transition name="story-slide">
-    <aside v-if="story.isActive" class="story-dock" role="dialog" aria-label="Recorrido guiado del tablero">
-      <div class="story-header">
-        <div class="story-act">
-          <Sparkles :size="13" class="act-ico" />
-          <span>{{ story.currentStep.act }}</span>
-        </div>
-        <div class="story-header-right">
-          <span class="step-counter">{{ story.currentIndex + 1 }} / {{ story.totalSteps }}</span>
-          <button class="btn-close-story" title="Cerrar recorrido (Esc)" @click="story.close">
-            <X :size="14" />
-          </button>
-        </div>
-      </div>
+  <teleport to="body">
+    <div
+      v-if="story.isActive && spotRect"
+      class="spotlight-ring"
+      :style="{
+        top: `${spotRect.top}px`,
+        left: `${spotRect.left}px`,
+        width: `${spotRect.width}px`,
+        height: `${spotRect.height}px`,
+      }"
+    />
 
-      <h4 class="story-title">{{ story.currentStep.title }}</h4>
-      <p class="story-body">{{ story.currentStep.narrative }}</p>
-      <div class="story-takeaway">
-        <CheckCircle2 :size="13" class="takeaway-ico" />
-        <span>{{ story.currentStep.takeaway }}</span>
-      </div>
-
-      <footer class="story-footer">
-        <div class="step-dots">
-          <button
-            v-for="(s, idx) in STORY_STEPS"
-            :key="s.id"
-            class="dot-btn"
-            :class="{ active: idx === story.currentIndex }"
-            :title="s.act"
-            @click="story.goTo(idx)"
-          />
+    <transition name="story-slide">
+      <aside v-if="story.isActive" class="story-dock" role="dialog" aria-label="Recorrido guiado del tablero">
+        <div class="story-header">
+          <div class="story-act">
+            <Sparkles :size="13" />
+            <span>{{ story.currentStep.act }}</span>
+          </div>
+          <div class="story-header-right">
+            <span class="step-counter">{{ story.currentIndex + 1 }} / {{ story.totalSteps }}</span>
+            <button class="btn-close-story" title="Cerrar recorrido (Esc)" @click="story.close">
+              <X :size="14" />
+            </button>
+          </div>
         </div>
 
-        <div class="story-actions">
-          <button class="btn-nav" :disabled="story.currentIndex === 0" @click="story.prev">
-            <ChevronLeft :size="14" />
-            <span>Anterior</span>
-          </button>
-          <button class="btn-nav primary" @click="story.next">
-            <span>{{ story.currentIndex === story.totalSteps - 1 ? 'Finalizar' : 'Siguiente' }}</span>
-            <ChevronRight v-if="story.currentIndex < story.totalSteps - 1" :size="14" />
-          </button>
+        <h4 class="story-title">{{ story.currentStep.title }}</h4>
+        <p class="story-body">{{ story.currentStep.narrative }}</p>
+        <div class="story-takeaway">
+          <MousePointerClick :size="14" class="takeaway-ico" />
+          <span>{{ story.currentStep.actionHint }}</span>
         </div>
-      </footer>
-    </aside>
-  </transition>
+
+        <footer class="story-footer">
+          <div class="step-dots">
+            <button
+              v-for="(s, idx) in STORY_STEPS"
+              :key="s.id"
+              class="dot-btn"
+              :class="{ active: idx === story.currentIndex }"
+              :title="s.act"
+              @click="story.goTo(idx)"
+            />
+          </div>
+
+          <div class="story-actions">
+            <button class="btn-nav" :disabled="story.currentIndex === 0" @click="story.prev">
+              <ChevronLeft :size="14" />
+              <span>Anterior</span>
+            </button>
+            <button class="btn-nav primary" @click="story.next">
+              <span>{{ story.currentIndex === story.totalSteps - 1 ? 'Finalizar' : 'Siguiente' }}</span>
+              <ChevronRight v-if="story.currentIndex < story.totalSteps - 1" :size="14" />
+            </button>
+          </div>
+        </footer>
+      </aside>
+    </transition>
+  </teleport>
 </template>
 
 <style scoped>
+.spotlight-ring {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+  border: 2.5px solid var(--color-brand);
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.28), 0 0 18px rgba(13, 148, 136, 0.35);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .story-dock {
   position: fixed;
   right: 18px;
@@ -86,7 +150,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 .story-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .story-act { display: inline-flex; align-items: center; gap: 5px; font-size: 0.71rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-brand); }
-.act-ico { flex-shrink: 0; }
 .story-header-right { display: flex; align-items: center; gap: 8px; }
 .step-counter { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); }
 .btn-close-story { border: none; background: var(--bg-subtle); color: var(--text-secondary); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
