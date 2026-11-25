@@ -129,10 +129,16 @@ const topNavLinks = [
   cursor: pointer;
   padding: 8px;
   border-radius: var(--radius-sm);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+}
+
+@media (max-width: 1024px) {
+  .menu-btn {
+    display: flex;
+  }
 }
 
 .menu-btn:hover {
