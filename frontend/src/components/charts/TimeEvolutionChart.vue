@@ -111,7 +111,6 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
   const cerradosATiempo = pts.map((p) => p.cerrados_a_tiempo ?? 0);
   const cerradosFueraPlazo = pts.map((p) => p.cerrados_fuera_plazo ?? 0);
   const vencidos = pts.map((p) => p.abiertos_vencidos);
-  const overlayData = pts.map((p) => p.mediana_dias);
 
   const option: echarts.EChartsOption = {
     backgroundColor: 'transparent',
@@ -203,37 +202,15 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily, fontWeight: 600 },
       axisLine: { lineStyle: { color: tokens.gridColor } },
     },
-    yAxis: [
-      {
-        type: 'value',
-        name: 'Volumen de Avisos',
-        nameLocation: 'end',
-        nameGap: 10,
-        nameTextStyle: { color: tokens.textSecondary, fontSize: 10.5, align: 'left', padding: [0, 0, 4, 0] },
-        axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
-        splitLine: { lineStyle: { color: tokens.gridColor } },
-      },
-      {
-        type: 'value',
-        name: 'Mediana (Días)',
-        nameLocation: 'end',
-        nameGap: 10,
-        nameTextStyle: {
-          color: tokens.textSecondary,
-          fontSize: 10.5,
-          fontWeight: 600,
-          align: 'right',
-          padding: [0, 2, 4, 0],
-        },
-        axisLabel: {
-          formatter: '{value} d',
-          color: tokens.textSecondary,
-          fontFamily: tokens.fontFamily,
-          fontSize: 10,
-        },
-        splitLine: { show: false },
-      },
-    ],
+    yAxis: {
+      type: 'value',
+      name: 'Volumen de Avisos',
+      nameLocation: 'end',
+      nameGap: 10,
+      nameTextStyle: { color: tokens.textSecondary, fontSize: 10.5, align: 'left', padding: [0, 0, 4, 0] },
+      axisLabel: { color: tokens.textSecondary, fontFamily: tokens.fontFamily },
+      splitLine: { lineStyle: { color: tokens.gridColor } },
+    },
     series: [
       {
         name: 'Ingresados',
@@ -290,24 +267,6 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
           opacity: 0.9,
         },
         data: vencidos,
-      },
-      {
-        name: 'Mediana Días',
-        type: 'line',
-        yAxisIndex: 1,
-        smooth: 0.25,
-        symbol: 'diamond',
-        symbolSize: 7,
-        connectNulls: true,
-        lineStyle: {
-          width: 2.2,
-          type: 'dashed',
-          color: isDark ? '#C084FC' : '#7E22CE',
-        },
-        itemStyle: {
-          color: isDark ? '#C084FC' : '#7E22CE',
-        },
-        data: overlayData,
       },
     ],
   };
