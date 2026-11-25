@@ -135,7 +135,7 @@ onUnmounted(() => {
   position: fixed;
   right: 18px;
   bottom: 18px;
-  z-index: 90;
+  z-index: 10050;
   width: min(440px, calc(100vw - 24px));
   background: var(--bg-card);
   border: 1px solid var(--border-strong);
