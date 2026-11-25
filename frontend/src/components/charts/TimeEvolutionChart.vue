@@ -7,7 +7,6 @@ import { getEChartsThemeTokens } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 
 const opsStore = useOperationsStore();
-const metricOverlay = ref<'cumplimiento' | 'mediana'>('cumplimiento');
 
 const seriesPoints = computed(() => {
   const raw = opsStore.data?.time_series || [];
@@ -112,11 +111,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
   const cerradosATiempo = pts.map((p) => p.cerrados_a_tiempo ?? 0);
   const cerradosFueraPlazo = pts.map((p) => p.cerrados_fuera_plazo ?? 0);
   const vencidos = pts.map((p) => p.abiertos_vencidos);
-  const overlayData = pts.map((p) =>
-    metricOverlay.value === 'cumplimiento' ? p.cumple_oportuno_pct : p.mediana_dias
-  );
-
-  const isCumpleMode = metricOverlay.value === 'cumplimiento';
+  const overlayData = pts.map((p) => p.mediana_dias);
 
   const option: echarts.EChartsOption = {
     backgroundColor: 'transparent',
@@ -199,7 +194,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       left: '2%',
       right: '3%',
       bottom: '34px',
-      top: '78px', // Margen amplio para leyenda de hasta 2 filas + título de eje sin roces
+      top: '56px', // Margen limpio para leyenda de 1 fila + títulos de eje
       containLabel: true,
     },
     xAxis: {
@@ -220,8 +215,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       },
       {
         type: 'value',
-        name: isCumpleMode ? '% Cumplimiento' : 'Mediana (Días)',
-        max: isCumpleMode ? 100 : undefined,
+        name: 'Mediana (Días)',
         nameLocation: 'end',
         nameGap: 10,
         nameTextStyle: {
@@ -232,7 +226,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
           padding: [0, 2, 4, 0],
         },
         axisLabel: {
-          formatter: isCumpleMode ? '{value}%' : '{value} d',
+          formatter: '{value} d',
           color: tokens.textSecondary,
           fontFamily: tokens.fontFamily,
           fontSize: 10,
@@ -298,24 +292,20 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
         data: vencidos,
       },
       {
-        name: isCumpleMode ? '% Cumplimiento' : 'Mediana Días',
+        name: 'Mediana Días',
         type: 'line',
         yAxisIndex: 1,
         smooth: 0.25,
         symbol: 'diamond',
         symbolSize: 7,
-        connectNulls: true, // Conecta elegantemente a través de años sin avisos (N=0) evitando caídas falsas a 0%
+        connectNulls: true,
         lineStyle: {
           width: 2.2,
-          type: 'dashed', // Punteada: Diferenciación inmediata de escala porcentual
-          color: isCumpleMode
-            ? (isDark ? '#60A5FA' : '#2563EB') // Azul Real / Zafiro Ejecutivo
-            : (isDark ? '#C084FC' : '#7E22CE'), // Púrpura Técnico
+          type: 'dashed',
+          color: isDark ? '#C084FC' : '#7E22CE',
         },
         itemStyle: {
-          color: isCumpleMode
-            ? (isDark ? '#60A5FA' : '#2563EB')
-            : (isDark ? '#C084FC' : '#7E22CE'),
+          color: isDark ? '#C084FC' : '#7E22CE',
         },
         data: overlayData,
       },
@@ -325,7 +315,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
   chartInstance.setOption(option, true);
 }
 
-watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true });
+watch(() => opsStore.data, () => render(), { deep: true });
 </script>
 
 <template>
@@ -343,24 +333,6 @@ watch(() => [opsStore.data, metricOverlay.value], () => render(), { deep: true }
       </div>
 
       <div class="evolution-controls-right">
-        <div class="overlay-toggle">
-          <span class="toggle-label">Eje Derecho:</span>
-          <button
-            class="btn-toggle-sm"
-            :class="{ active: metricOverlay === 'cumplimiento' }"
-            @click="metricOverlay = 'cumplimiento'"
-          >
-            % Cumplimiento
-          </button>
-          <button
-            class="btn-toggle-sm"
-            :class="{ active: metricOverlay === 'mediana' }"
-            @click="metricOverlay = 'mediana'"
-          >
-            Mediana Días
-          </button>
-        </div>
-
         <!-- Herramientas de Navegación ubicadas en el espacio vacío derecho (Cero superposición en el gráfico) -->
         <div class="zoom-tools-cluster">
           <button
