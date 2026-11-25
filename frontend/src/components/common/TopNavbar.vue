@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { Sun, Moon, Activity, Map, Sliders, Home, QrCode } from 'lucide-vue-next';
+import { Sun, Moon, Activity, Map, Sliders, Home, QrCode, Sparkles } from 'lucide-vue-next';
 import { useThemeStore } from '../../stores/themeStore';
+import { useStoryStore } from '../../stores/storyStore';
 import QrAccessModal from './QrAccessModal.vue';
 
 const props = defineProps<{
@@ -11,6 +12,7 @@ const props = defineProps<{
 
 const route = useRoute();
 const themeStore = useThemeStore();
+const storyStore = useStoryStore();
 const isQrOpen = ref(false);
 
 const topNavLinks = [
@@ -63,6 +65,17 @@ const topNavLinks = [
         <span class="inst-dot"></span>
         <span class="inst-text">Suroccidente & Centro · Transmisión</span>
       </div>
+
+      <!-- Botón de Recorrido Guiado (Storytelling) -->
+      <button
+        class="qr-access-btn"
+        :class="{ active: storyStore.isActive }"
+        title="Iniciar recorrido guiado por los hallazgos clave del tablero"
+        @click="storyStore.isActive ? storyStore.close() : storyStore.start()"
+      >
+        <Sparkles :size="15" />
+        <span class="qr-btn-text">Modo Historia</span>
+      </button>
 
       <!-- Botón de Acceso Móvil por QR -->
       <button

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import TopNavbar from './components/common/TopNavbar.vue';
 import SidebarDrawer from './components/common/SidebarDrawer.vue';
+import StoryTourOverlay from './components/common/StoryTourOverlay.vue';
 
 const isSidebarOpen = ref(false);
 
@@ -26,6 +27,7 @@ function closeSidebar() {
         </transition>
       </router-view>
     </main>
+    <StoryTourOverlay />
   </div>
 </template>
 
