@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { TrendingUp, Target, RefreshCw } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
@@ -8,8 +9,19 @@ import SankeyFlowChart from '../components/charts/SankeyFlowChart.vue';
 import TypologyPerformanceChart from '../components/charts/TypologyPerformanceChart.vue';
 import ExpandableChartCard from '../components/common/ExpandableChartCard.vue';
 
+const route = useRoute();
 const opsStore = useOperationsStore();
-const activeSubView = ref<'evolution' | 'sla'>('evolution');
+const validTabs = ['evolution', 'sla'] as const;
+type OpsTab = (typeof validTabs)[number];
+const rawTab = route.query.tab as string | undefined;
+const activeSubView = ref<OpsTab>(validTabs.includes(rawTab as OpsTab) ? (rawTab as OpsTab) : 'evolution');
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (validTabs.includes(tab as OpsTab)) activeSubView.value = tab as OpsTab;
+  },
+);
 
 onMounted(async () => {
   await opsStore.loadFilterOptions();

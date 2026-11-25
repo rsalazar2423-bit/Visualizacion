@@ -49,8 +49,22 @@ export const STORY_STEPS: StoryStep[] = [
     },
   },
   {
+    id: 'sankey',
+    act: 'Paso 3 · Flujo Técnico y Efectividad',
+    title: 'Cómo se reparte cada tipo hacia su resultado',
+    narrative:
+      'El Sankey cruza Tipo de Aviso → Causal Real (NLP) → Resultado, y a la derecha ves el % exacto de mora: Obras (70.8% venc., 550d) y Construcciones (671d).',
+    actionHint: 'Haz clic en cualquier "Tipo: ..." en el Sankey para filtrar el hilo principal y ver cómo se reparte.',
+    route: '/operaciones?tab=sla',
+    selector: '.stage-pane.dual-charts',
+    apply: async () => {
+      const ops = useOperationsStore();
+      if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
+    },
+  },
+  {
     id: 'nlp-causal',
-    act: 'Paso 3 · NLP: Causales y Bloqueos',
+    act: 'Paso 4 · NLP: Causales y Bloqueos',
     title: 'Aísla Boyacá + Abiertos Vencidos en NLP',
     narrative:
       'El motor NLP separa lo operable en campo de los bloqueos por Trámite Ambiental (CAR/Corpochivor) o Jurídico, mostrando la Vereda y etapa SAP exacta.',
@@ -67,7 +81,7 @@ export const STORY_STEPS: StoryStep[] = [
   },
   {
     id: 'nlp-pareto',
-    act: 'Paso 4 · NLP: Pareto por Línea y Torre',
+    act: 'Paso 5 · NLP: Pareto por Línea y Torre',
     title: '5 líneas concentran el 41.3% de la mora',
     narrative:
       'Al cambiar a "Por Línea" ves los corredores eléctricos críticos (CHIVSOCH2301, CHIVTORC2301, ALFESBER2301). Y en "Por Torre" detectas 209 torres reincidentes.',
@@ -82,7 +96,7 @@ export const STORY_STEPS: StoryStep[] = [
   },
   {
     id: 'mapa',
-    act: 'Paso 5 · Georreferenciación',
+    act: 'Paso 6 · Georreferenciación',
     title: 'Ubica los corredores críticos en el mapa',
     narrative:
       'El mapa cruza las 44 líneas de transmisión y 5.409 torres con el estado SLA de cada aviso para visualizar agrupaciones territoriales reales.',
@@ -92,7 +106,7 @@ export const STORY_STEPS: StoryStep[] = [
   },
   {
     id: 'accion',
-    act: 'Paso 6 · Ejecución Semanal',
+    act: 'Paso 7 · Ejecución Semanal',
     title: 'Arma lotes de despacho y frena vencimientos',
     narrative:
       'En "Centro del Coordinador", a la izquierda tienes Lotes de Despacho por corredor (en km) y a la derecha el Radar Preventivo (≥70% SLA consumido).',
