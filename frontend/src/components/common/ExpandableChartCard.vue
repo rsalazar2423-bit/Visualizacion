@@ -60,6 +60,10 @@ onBeforeUnmount(() => {
         <p v-if="subtitle" class="expandable-subtitle">{{ subtitle }}</p>
       </div>
 
+      <div v-if="isFullscreen" class="fullscreen-filters-slot">
+        <slot name="fullscreen-filters" />
+      </div>
+
       <button
         class="btn-expand-icon"
         :class="{ active: isFullscreen }"

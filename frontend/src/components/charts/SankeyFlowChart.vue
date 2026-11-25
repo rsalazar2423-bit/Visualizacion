@@ -77,7 +77,7 @@ function renderSankey(chartInstance: echarts.ECharts, isDark: boolean) {
           bottom: 10,
           nodeWidth: 14,
           nodeGap: 10,
-          draggable: false,
+          draggable: true,
           emphasis: { focus: 'adjacency' },
           data: nodes,
           links,
@@ -90,7 +90,16 @@ function renderSankey(chartInstance: echarts.ECharts, isDark: boolean) {
   );
 }
 
-const { render } = useChart(chartContainer, renderSankey);
+function handleNodeClick(params: any) {
+  if (params?.dataType !== 'node' || !params?.name) return;
+  const raw = String(params.name);
+  if (raw.startsWith('Tipo: ')) {
+    const tipo = raw.replace('Tipo: ', '').trim();
+    opsStore.setSingleTipo(opsStore.selectedTipo === tipo ? 'Todos' : tipo);
+  }
+}
+
+const { render } = useChart(chartContainer, renderSankey, handleNodeClick);
 
 onMounted(async () => {
   try {

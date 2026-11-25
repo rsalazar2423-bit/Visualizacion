@@ -115,6 +115,17 @@ onMounted(async () => {
           title="Flujo Operativo: Tipo → Prioridad SLA → Resultado"
           subtitle="Trazabilidad desde la causa del aviso hasta su cumplimiento o vencimiento de plazo"
         >
+          <template #fullscreen-filters>
+            <select :value="opsStore.selectedCte" class="form-select-sm" @change="opsStore.setCte(($event.target as HTMLSelectElement).value)">
+              <option v-for="c in opsStore.filterOptions.ctes" :key="c" :value="c">{{ c === 'Todos' ? 'Todas las CTEs' : `CTE ${c}` }}</option>
+            </select>
+            <select :value="opsStore.selectedDepto" class="form-select-sm" @change="opsStore.setDepto(($event.target as HTMLSelectElement).value)">
+              <option v-for="d in opsStore.filterOptions.departamentos" :key="d" :value="d">{{ d === 'Todos' ? 'Todos Deptos' : d }}</option>
+            </select>
+            <select :value="opsStore.selectedTipo" class="form-select-sm" @change="opsStore.setSingleTipo(($event.target as HTMLSelectElement).value)">
+              <option v-for="t in opsStore.filterOptions.tipos" :key="t" :value="t">{{ t === 'Todos' ? 'Todos los Tipos' : t }}</option>
+            </select>
+          </template>
           <SankeyFlowChart />
         </ExpandableChartCard>
 
