@@ -54,7 +54,7 @@ export const STORY_STEPS: StoryStep[] = [
     title: 'Cómo se reparte cada tipo hacia su resultado',
     narrative:
       'El Sankey cruza Tipo de Aviso → Causal Real (NLP) → Resultado, y a la derecha ves el % exacto de mora: Obras (70.8% venc., 550d) y Construcciones (671d).',
-    actionHint: 'Haz clic en cualquier "Tipo: ..." en el Sankey para filtrar el hilo principal y ver cómo se reparte.',
+    actionHint: 'Haz clic en "Tipo: ..." para filtrar o pulsa "Ampliar" para desbloquear el 4.º nivel (Etapa SAP).',
     route: '/operaciones?tab=sla',
     selector: '.stage-pane.dual-charts',
     apply: async () => {
