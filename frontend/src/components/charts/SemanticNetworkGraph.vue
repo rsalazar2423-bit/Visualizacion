@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import { useThemeStore } from '../../stores/themeStore';
 import { useTerritoryStore } from '../../stores/territoryStore';
+import { useStoryStore } from '../../stores/storyStore';
 import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
 import {
   computeTriageSummaries,
@@ -18,6 +19,7 @@ import NlpActionTray from '../territory/NlpActionTray.vue';
 
 const themeStore = useThemeStore();
 const territoryStore = useTerritoryStore();
+const storyStore = useStoryStore();
 
 const payload = ref<NlpGraphPayload | null>(null);
 const chartMode = ref<'causal' | 'linea' | 'torre'>('causal');
@@ -118,6 +120,16 @@ onMounted(async () => {
 
 onUnmounted(() => { ro?.disconnect(); chart?.dispose(); });
 watch([summaries, selectedRouteId, selectedTowerKey, chartMode, () => themeStore.isDark], () => renderChart());
+watch(
+  () => [storyStore.isActive, storyStore.currentStep.nlpPreset],
+  ([active, preset]) => {
+    if (!active || !preset || typeof preset === 'boolean') return;
+    if (preset.chartMode) chartMode.value = preset.chartMode;
+    if (preset.estado) estadoFilter.value = preset.estado;
+    if (preset.urgencia) urgenciaFilter.value = preset.urgencia;
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

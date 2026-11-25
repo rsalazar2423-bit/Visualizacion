@@ -4,6 +4,12 @@ import router from '../router';
 import { useOperationsStore } from './operationsStore';
 import { useTerritoryStore } from './territoryStore';
 
+export interface NlpTourPreset {
+  chartMode?: 'causal' | 'linea' | 'torre';
+  estado?: 'abiertos' | 'cerrados' | 'ambos';
+  urgencia?: 'todos' | 'vencido' | 'proximo' | 'en_plazo';
+}
+
 export interface StoryStep {
   id: string;
   act: string;
@@ -12,6 +18,7 @@ export interface StoryStep {
   actionHint: string;
   route: string;
   selector: string;
+  nlpPreset?: NlpTourPreset;
   apply?: () => Promise<void> | void;
 }
 
@@ -42,14 +49,15 @@ export const STORY_STEPS: StoryStep[] = [
     },
   },
   {
-    id: 'nlp',
-    act: 'Paso 3 · Triaje Operativo (NLP)',
-    title: 'Aísla el cuello de botella en Boyacá',
+    id: 'nlp-causal',
+    act: 'Paso 3 · NLP: Causales y Bloqueos',
+    title: 'Aísla Boyacá + Abiertos Vencidos en NLP',
     narrative:
-      'Filtramos Boyacá automáticamente. Aquí ves qué avisos son despacho de campo vs. cuáles están frenados por Trámite Ambiental / CAR o Jurídico.',
-    actionHint: 'Alterna entre "Por Causal", "Por Línea" y "Por Torre", o descarga el CSV filtrado.',
+      'El motor NLP separa lo operable en campo de los bloqueos por Trámite Ambiental (CAR/Corpochivor) o Jurídico, mostrando la Vereda y etapa SAP exacta.',
+    actionHint: 'Haz clic en una "Palabra clave" (ej. SNG o IVBL) o exporta el CSV filtrado.',
     route: '/territorio?tab=nlp',
-    selector: '.triage-split',
+    selector: '.action-tray',
+    nlpPreset: { chartMode: 'causal', estado: 'abiertos', urgencia: 'vencido' },
     apply: async () => {
       const ops = useOperationsStore();
       if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
@@ -58,18 +66,33 @@ export const STORY_STEPS: StoryStep[] = [
     },
   },
   {
-    id: 'mapa',
-    act: 'Paso 4 · Georreferenciación',
-    title: 'Ubica los corredores críticos en Boyacá',
+    id: 'nlp-pareto',
+    act: 'Paso 4 · NLP: Pareto por Línea y Torre',
+    title: '5 líneas concentran el 41.3% de la mora',
     narrative:
-      'Con Boyacá aislado, el mapa enfoca sus torres y líneas de transmisión para ver si los avisos vencidos forman corredores continuos.',
+      'Al cambiar a "Por Línea" ves los corredores eléctricos críticos (CHIVSOCH2301, CHIVTORC2301, ALFESBER2301). Y en "Por Torre" detectas 209 torres reincidentes.',
+    actionHint: 'Haz clic en "Por Torre" arriba del gráfico para ver torres con múltiples retrasos.',
+    route: '/territorio?tab=nlp',
+    selector: '.chart-panel',
+    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'vencido' },
+    apply: async () => {
+      const ter = useTerritoryStore();
+      await ter.resetAllFilters();
+    },
+  },
+  {
+    id: 'mapa',
+    act: 'Paso 5 · Georreferenciación',
+    title: 'Ubica los corredores críticos en el mapa',
+    narrative:
+      'El mapa cruza las 44 líneas de transmisión y 5.409 torres con el estado SLA de cada aviso para visualizar agrupaciones territoriales reales.',
     actionHint: 'Usa "Abiertos Vencidos" arriba o reproduce la línea de tiempo inferior.',
     route: '/territorio?tab=map',
     selector: '.map-body-grid',
   },
   {
     id: 'accion',
-    act: 'Paso 5 · Ejecución Semanal',
+    act: 'Paso 6 · Ejecución Semanal',
     title: 'Arma lotes de despacho y frena vencimientos',
     narrative:
       'En "Centro del Coordinador", a la izquierda tienes Lotes de Despacho por corredor (en km) y a la derecha el Radar Preventivo (≥70% SLA consumido).',
