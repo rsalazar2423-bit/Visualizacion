@@ -158,9 +158,6 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
       left: 'center',
       itemGap: 12,
       textStyle: { color: tokens.textColor, fontFamily: tokens.fontFamily, fontSize: 11, fontWeight: 600 },
-      selected: {
-        'Cerrados (Total)': false,
-      },
     },
     // Mantiene el controlador nativo de selección de área (dataZoomSelect) activo en ECharts,
     // mientras los botones visibles viven limpiamente en el toolbar HTML superior sin colisiones.
