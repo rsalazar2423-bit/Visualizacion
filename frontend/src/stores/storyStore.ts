@@ -42,7 +42,7 @@ export const STORY_STEPS: StoryStep[] = [
     actionHint: 'Alterna entre "Por Causal", "Por Línea" y "Por Torre" para aislar el foco.',
     route: '/territorio?tab=nlp',
     selector: '.chart-panel',
-    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'vencido' },
+    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'todos' },
     apply: async () => {
       const ter = useTerritoryStore();
       await ter.resetAllFilters();
