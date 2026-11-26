@@ -5,7 +5,7 @@ import { useOperationsStore } from '../../stores/operationsStore';
 import { getEChartsThemeTokens, getTipoColor, PRIO_COLORS } from '../../constants/themeTokens';
 import { useChart } from '../../composables/useChart';
 import { fetchNlpGraphData } from '../../services/analytics/nlpGraphService';
-import { buildNlpSankeyData } from '../../services/analytics/nlpSankeyBuilder';
+import { buildNlpSankeyData, buildPriorityNlpSankeyData } from '../../services/analytics/nlpSankeyBuilder';
 import type { NlpGraphPayload } from '../../types/nlpGraph';
 
 type SankeyMode = 'abiertos_nlp' | 'cerrados_nlp' | 'prioridad';
@@ -22,19 +22,29 @@ function renderSankey(chartInstance: echarts.ECharts, isDark: boolean) {
   let links: any[] = [];
 
   if (sankeyMode.value === 'prioridad') {
-    const flow = opsStore.data?.sankey_flow;
-    if (!flow?.nodes.length || !flow?.links.length) {
-      chartInstance.clear();
-      return;
+    if (isFullscreen.value && nlpPayload.value) {
+      const built = buildPriorityNlpSankeyData(
+        nlpPayload.value,
+        { cte: opsStore.selectedCte, depto: opsStore.selectedDepto, tipo: opsStore.selectedTipo },
+        isDark,
+      );
+      nodes = built.nodes;
+      links = built.links;
+    } else {
+      const flow = opsStore.data?.sankey_flow;
+      if (!flow?.nodes.length || !flow?.links.length) {
+        chartInstance.clear();
+        return;
+      }
+      nodes = flow.nodes.map((n) => {
+        let color = tokens.textSecondary;
+        if (n.category === 'tipo') color = getTipoColor(n.name, isDark);
+        else if (n.category === 'prio') color = PRIO_COLORS[n.name] || '#64748B';
+        else if (n.category === 'estado') color = n.name === 'Cumple Plazo' ? tokens.sla.cumple : tokens.sla.excede;
+        return { name: n.name, itemStyle: { color, borderColor: 'transparent' } };
+      });
+      links = flow.links;
     }
-    nodes = flow.nodes.map((n) => {
-      let color = tokens.textSecondary;
-      if (n.category === 'tipo') color = getTipoColor(n.name, isDark);
-      else if (n.category === 'prio') color = PRIO_COLORS[n.name] || '#64748B';
-      else if (n.category === 'estado') color = n.name === 'Cumple Plazo' ? tokens.sla.cumple : tokens.sla.excede;
-      return { name: n.name, itemStyle: { color, borderColor: 'transparent' } };
-    });
-    links = flow.links;
   } else {
     if (!nlpPayload.value) return;
     const built = buildNlpSankeyData(

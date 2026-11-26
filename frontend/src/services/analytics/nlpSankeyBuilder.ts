@@ -98,3 +98,52 @@ export function buildNlpSankeyData(payload: NlpGraphPayload, filter: SankeyFilte
 
   return { nodes, links, total: filtered.length };
 }
+
+export function buildPriorityNlpSankeyData(
+  payload: NlpGraphPayload,
+  filter: { cte: string | null; depto: string | null; tipo: string | null },
+  isDark: boolean,
+) {
+  const tokens = getEChartsThemeTokens(isDark);
+  const routeNames = new Map(payload.routes.map((r) => [r.id, r.short_name]));
+  const filtered = payload.tickets.filter((t) => {
+    if (filter.cte && filter.cte !== 'Todos' && t.cte !== filter.cte) return false;
+    if (filter.depto && filter.depto !== 'Todos' && t.depto !== filter.depto) return false;
+    if (filter.tipo && filter.tipo !== 'Todos' && t.tipo !== filter.tipo) return false;
+    return true;
+  });
+
+  const edgeCounts = new Map<string, number>();
+  const nodeColors = new Map<string, string>();
+  const inc = (src: string, dst: string) => {
+    const k = `${src}|||${dst}`;
+    edgeCounts.set(k, (edgeCounts.get(k) ?? 0) + 1);
+  };
+
+  for (const t of filtered) {
+    const tipoNode = `Tipo: ${t.tipo}`;
+    const prioNode = `SLA: ${t.prioridad || 'No asignada'}`;
+    const causalNode = routeNames.get(t.ruta) ?? t.ruta;
+    const outcomeNode = t.urgencia === 'vencido' ? 'Excede Plazo' : 'Cumple Plazo';
+
+    nodeColors.set(tipoNode, getTipoColor(t.tipo, isDark));
+    nodeColors.set(prioNode, isDark ? '#94A3B8' : '#475569');
+    nodeColors.set(causalNode, ROUTE_COLORS[t.ruta] ?? '#64748B');
+    nodeColors.set(outcomeNode, outcomeNode === 'Cumple Plazo' ? tokens.sla.cumple : tokens.sla.excede);
+
+    inc(tipoNode, prioNode);
+    inc(prioNode, causalNode);
+    inc(causalNode, outcomeNode);
+  }
+
+  return {
+    nodes: Array.from(nodeColors.entries()).map(([name, color]) => ({
+      name,
+      itemStyle: { color, borderColor: 'transparent' },
+    })),
+    links: Array.from(edgeCounts.entries()).map(([k, value]) => {
+      const [source, target] = k.split('|||');
+      return { source, target, value };
+    }),
+  };
+}
