@@ -24,21 +24,65 @@ export interface StoryStep {
 
 export const STORY_STEPS: StoryStep[] = [
   {
-    id: 'panorama',
-    act: 'Paso 1 · Panorama Ejecutivo',
-    title: 'Aquí ves el tamaño real del pasivo',
+    id: 'titular',
+    act: 'Paso 1 · Conclusión Ejecutiva',
+    title: 'El grueso del problema en 15 segundos',
     narrative:
-      'Mira las 4 tarjetas: 45.9% de cumplimiento histórico y 344 abiertos vencidos. Debajo, la matriz muestra que Boyacá (81 en 2022) y Cundinamarca concentran la carga.',
-    actionHint: 'Haz clic en una celda oscura de Boyacá o Cundinamarca para aislar esa tipología.',
+      'De 3.118 avisos (45.9% SLA), el atraso no es falta uniforme de cuadrillas: está concentrado en bloqueos Jurídicos/Prediales, 5 líneas (41.3% de la mora) y 344 abiertos vencidos.',
+    actionHint: 'Cundinamarca, Boyacá y Valle concentran el pasivo en Construcciones (64%).',
     route: '/',
     selector: '.kpi-section',
   },
   {
-    id: 'sla',
-    act: 'Paso 2 · Aislamiento de Prioridad Crítica',
-    title: 'Mira por qué fallan los plazos cortos',
+    id: 'nlp-pareto',
+    act: 'Paso 2 · El Corazón del Hallazgo (NLP)',
+    title: '5 líneas concentran el 41.3% de los vencidos',
     narrative:
-      'Aislamos la prioridad "Mes" (95.3% vencidos). La mediana real de cierre es 383 días: es imposible cumplir plazos de 30 días sin cambiar la ruta de tratamiento.',
+      'El motor NLP (91.3% cobertura) revela qué corredores críticos (CHIVSOCH2301, CHIVTORC2301) y qué 209 torres reincidentes explican la mora acumulada.',
+    actionHint: 'Alterna entre "Por Causal", "Por Línea" y "Por Torre" para aislar el foco.',
+    route: '/territorio?tab=nlp',
+    selector: '.chart-panel',
+    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'vencido' },
+    apply: async () => {
+      const ter = useTerritoryStore();
+      await ter.resetAllFilters();
+    },
+  },
+  {
+    id: 'nlp-causal',
+    act: 'Paso 3 · Triaje por Causal (Boyacá)',
+    title: 'Separar lo operable de bloqueos legales/CAR',
+    narrative:
+      'Al aislar Boyacá + Abiertos Vencidos, ves qué avisos son despacho de campo vs. los frenados por Trámite Ambiental (CAR/Corpochivor) o Jurídico, con Vereda y etapa SAP.',
+    actionHint: 'Haz clic en una "Palabra clave" (ej. SNG o IVBL) o exporta el CSV filtrado.',
+    route: '/territorio?tab=nlp',
+    selector: '.action-tray',
+    nlpPreset: { chartMode: 'causal', estado: 'abiertos', urgencia: 'vencido' },
+    apply: async () => {
+      const ter = useTerritoryStore();
+      await ter.setDepto('Boyacá');
+    },
+  },
+  {
+    id: 'sankey',
+    act: 'Paso 4 · Evidencia de Flujo (Sankey)',
+    title: 'Cómo se desvía cada tipo hacia su resultado',
+    narrative:
+      'El Sankey cruza Tipo de Aviso → Causal Real (NLP) → Resultado, y a la derecha ves la tasa exacta: Obras (70.8% venc., 550d) y Construcciones (671d).',
+    actionHint: 'Haz clic en "Tipo: ..." para filtrar o pulsa "Ampliar" para ver el 4.º nivel (Etapa SAP).',
+    route: '/operaciones?tab=sla',
+    selector: '.stage-pane.dual-charts',
+    apply: async () => {
+      const ter = useTerritoryStore();
+      if (ter.selectedDepto) await ter.resetAllFilters();
+    },
+  },
+  {
+    id: 'sla',
+    act: 'Paso 5 · Evidencia de Plazos',
+    title: 'Por qué fallan las prioridades cortas',
+    narrative:
+      'Aislamos la prioridad "Mes" (95.3% vencidos): la mediana real de cierre es 383 días, haciendo inviable cumplir plazos de 30 días sin cambiar la ruta de gestión.',
     actionHint: 'Observa la barra roja de "Mes" resaltada; haz clic en otra barra para comparar.',
     route: '/operaciones',
     selector: '.stage-pane.dual-charts > :nth-child(2)',
@@ -49,74 +93,28 @@ export const STORY_STEPS: StoryStep[] = [
     },
   },
   {
-    id: 'sankey',
-    act: 'Paso 3 · Flujo Técnico y Efectividad',
-    title: 'Cómo se reparte cada tipo hacia su resultado',
-    narrative:
-      'El Sankey cruza Tipo de Aviso → Causal Real (NLP) → Resultado, y a la derecha ves el % exacto de mora: Obras (70.8% venc., 550d) y Construcciones (671d).',
-    actionHint: 'Haz clic en "Tipo: ..." para filtrar o pulsa "Ampliar" para desbloquear el 4.º nivel (Etapa SAP).',
-    route: '/operaciones?tab=sla',
-    selector: '.stage-pane.dual-charts',
-    apply: async () => {
-      const ops = useOperationsStore();
-      if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
-    },
-  },
-  {
-    id: 'nlp-causal',
-    act: 'Paso 4 · NLP: Causales y Bloqueos',
-    title: 'Aísla Boyacá + Abiertos Vencidos en NLP',
-    narrative:
-      'El motor NLP separa lo operable en campo de los bloqueos por Trámite Ambiental (CAR/Corpochivor) o Jurídico, mostrando la Vereda y etapa SAP exacta.',
-    actionHint: 'Haz clic en una "Palabra clave" (ej. SNG o IVBL) o exporta el CSV filtrado.',
-    route: '/territorio?tab=nlp',
-    selector: '.action-tray',
-    nlpPreset: { chartMode: 'causal', estado: 'abiertos', urgencia: 'vencido' },
-    apply: async () => {
-      const ops = useOperationsStore();
-      if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
-      const ter = useTerritoryStore();
-      await ter.setDepto('Boyacá');
-    },
-  },
-  {
-    id: 'nlp-pareto',
-    act: 'Paso 5 · NLP: Pareto por Línea y Torre',
-    title: '5 líneas concentran el 41.3% de la mora',
-    narrative:
-      'Al cambiar a "Por Línea" ves los corredores eléctricos críticos (CHIVSOCH2301, CHIVTORC2301, ALFESBER2301). Y en "Por Torre" detectas 209 torres reincidentes.',
-    actionHint: 'Haz clic en "Por Torre" arriba del gráfico para ver torres con múltiples retrasos.',
-    route: '/territorio?tab=nlp',
-    selector: '.chart-panel',
-    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'vencido' },
-    apply: async () => {
-      const ter = useTerritoryStore();
-      await ter.resetAllFilters();
-    },
-  },
-  {
     id: 'mapa',
     act: 'Paso 6 · Georreferenciación',
-    title: 'Ubica los corredores críticos en el mapa',
+    title: 'Corredores eléctricos 2008–2023 en el mapa',
     narrative:
-      'El mapa cruza las 44 líneas de transmisión y 5.409 torres con el estado SLA de cada aviso para visualizar agrupaciones territoriales reales.',
-    actionHint: 'Usa "Abiertos Vencidos" arriba o reproduce la línea de tiempo inferior.',
+      'El mapa cruza las 44 líneas de transmisión y 5.409 torres con el estado SLA de cada aviso para confirmar agrupaciones territoriales.',
+    actionHint: 'Filtra por "Abiertos Vencidos" o reproduce la línea de tiempo inferior.',
     route: '/territorio?tab=map',
     selector: '.map-body-grid',
+    apply: async () => {
+      const ops = useOperationsStore();
+      if (ops.selectedPrioridad) ops.setPrioridad(ops.selectedPrioridad);
+    },
   },
   {
     id: 'accion',
     act: 'Paso 7 · Ejecución Semanal',
-    title: 'Arma lotes de despacho y frena vencimientos',
+    title: 'Lotes de despacho y Radar Preventivo',
     narrative:
-      'En "Centro del Coordinador", a la izquierda tienes Lotes de Despacho por corredor (en km) y a la derecha el Radar Preventivo (≥70% SLA consumido).',
-    actionHint: 'Haz clic en un lote para ver sus avisos exactos o pasa a "2. Simulador de Cuadrillas".',
+      'En "Centro del Coordinador" armas Lotes de Despacho por corredor (en km) y activas el Radar Preventivo (152 avisos próximos a vencer con ≥70% SLA consumido).',
+    actionHint: 'Haz clic en un lote para ver sus avisos o pasa a "2. Simulador de Cuadrillas".',
     route: '/capacidad',
     selector: '.coord-main-grid',
-    apply: async () => {
-      const ter = useTerritoryStore();
-      await ter.resetAllFilters();
-    },
   },
 ];
 
