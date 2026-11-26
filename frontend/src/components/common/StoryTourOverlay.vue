@@ -1,11 +1,47 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
-import { Sparkles, ChevronLeft, ChevronRight, X, MousePointerClick } from 'lucide-vue-next';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { Sparkles, ChevronLeft, ChevronRight, X, MousePointerClick, GripHorizontal } from 'lucide-vue-next';
 import { useStoryStore, STORY_STEPS } from '../../stores/storyStore';
 
 const story = useStoryStore();
 const spotRect = ref<{ top: number; left: number; width: number; height: number } | null>(null);
+const dockPos = ref<{ x: number; y: number } | null>(null);
+const dockRef = ref<HTMLElement | null>(null);
+let dragOffset = { x: 0, y: 0 };
+let isDragging = false;
 let retryTimer: number | null = null;
+
+const dockStyle = computed(() =>
+  dockPos.value
+    ? { left: `${dockPos.value.x}px`, top: `${dockPos.value.y}px`, right: 'auto', bottom: 'auto' }
+    : {},
+);
+
+function startDrag(e: PointerEvent) {
+  if ((e.target as HTMLElement)?.closest('button') || !dockRef.value) return;
+  const r = dockRef.value.getBoundingClientRect();
+  isDragging = true;
+  dragOffset = { x: e.clientX - r.left, y: e.clientY - r.top };
+  window.addEventListener('pointermove', onDrag);
+  window.addEventListener('pointerup', stopDrag);
+}
+
+function onDrag(e: PointerEvent) {
+  if (!isDragging || !dockRef.value) return;
+  const r = dockRef.value.getBoundingClientRect();
+  const maxX = Math.max(8, window.innerWidth - r.width - 8);
+  const maxY = Math.max(8, window.innerHeight - r.height - 8);
+  dockPos.value = {
+    x: Math.min(Math.max(8, e.clientX - dragOffset.x), maxX),
+    y: Math.min(Math.max(8, e.clientY - dragOffset.y), maxY),
+  };
+}
+
+function stopDrag() {
+  isDragging = false;
+  window.removeEventListener('pointermove', onDrag);
+  window.removeEventListener('pointerup', stopDrag);
+}
 
 function updateSpotlight() {
   if (!story.isActive) {
@@ -51,6 +87,7 @@ onMounted(() => {
   window.addEventListener('resize', updateSpotlight);
 });
 onUnmounted(() => {
+  stopDrag();
   if (retryTimer) window.clearTimeout(retryTimer);
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('resize', updateSpotlight);
@@ -71,9 +108,17 @@ onUnmounted(() => {
     />
 
     <transition name="story-slide">
-      <aside v-if="story.isActive" class="story-dock" role="dialog" aria-label="Recorrido guiado del tablero">
-        <div class="story-header">
+      <aside
+        v-if="story.isActive"
+        ref="dockRef"
+        class="story-dock"
+        :style="dockStyle"
+        role="dialog"
+        aria-label="Recorrido guiado del tablero"
+      >
+        <div class="story-header" title="Arrastra para mover esta ventana" @pointerdown="startDrag">
           <div class="story-act">
+            <GripHorizontal :size="13" class="drag-ico" />
             <Sparkles :size="13" />
             <span>{{ story.currentStep.act }}</span>
           </div>
@@ -148,7 +193,9 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.story-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.story-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: grab; user-select: none; }
+.story-header:active { cursor: grabbing; }
+.drag-ico { color: var(--text-muted); }
 .story-act { display: inline-flex; align-items: center; gap: 5px; font-size: 0.71rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-brand); }
 .story-header-right { display: flex; align-items: center; gap: 8px; }
 .step-counter { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); }
