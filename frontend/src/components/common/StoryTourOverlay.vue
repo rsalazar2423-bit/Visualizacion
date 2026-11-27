@@ -234,4 +234,17 @@ onUnmounted(() => {
 
 .story-slide-enter-active, .story-slide-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
 .story-slide-enter-from, .story-slide-leave-to { opacity: 0; transform: translateY(12px); }
+
+@media (max-width: 768px) {
+  .story-popover {
+    left: 12px !important;
+    right: 12px !important;
+    top: auto !important;
+    bottom: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 58vh;
+    overflow-y: auto;
+  }
+}
 </style>
