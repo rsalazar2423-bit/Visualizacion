@@ -827,8 +827,10 @@ function recenterMap() {
     grid-template-columns: 1fr;
   }
 
+  .map-canvas,
   .modal-map-canvas {
-    min-height: 360px;
+    min-height: 320px;
+    height: 320px;
   }
 }
 </style>
