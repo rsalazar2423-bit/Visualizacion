@@ -327,14 +327,13 @@ export async function computeCoordinatorWorkspace(params: {
     .sort((a, b) => b.vencidos - a.vencidos || b.abiertos - a.abiertos)
     .slice(0, 12);
 
-  // 4. Balance Ingresos vs Cierres por CTE (o por Departamento si ya hay CTE filtrada)
-  const useDepto = Boolean(params.cte && params.cte !== 'Todos');
+  // 4. Balance Ingresos vs Cierres por Departamento (desglose territorial completo)
   const balMap = new Map<
     string,
     { ing: number; cer: number; ab: number; venc: number; tipos: Map<string, number> }
   >();
   for (const a of scoped) {
-    const region = useDepto ? a.Departamento || 'No Identificado' : a.CTE || 'Sin Asignar';
+    const region = a.Departamento || a.CTE || 'Sin Asignar';
     const cur = balMap.get(region) || { ing: 0, cer: 0, ab: 0, venc: 0, tipos: new Map() };
     cur.ing += 1;
     const tipo = a['Tipo de aviso'] || 'Otro';

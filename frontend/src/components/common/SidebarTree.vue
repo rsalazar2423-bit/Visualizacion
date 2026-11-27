@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Scale,
   Gauge,
+  FileText,
 } from 'lucide-vue-next';
 
 export type SidebarMode = 'icons' | 'expanded';
@@ -69,6 +70,7 @@ const TREE_NODES: TreeNode[] = [
     children: [
       { label: 'Triaje NLP', to: '/territorio?tab=nlp', icon: Brain },
       { label: 'Mapa Histórico', to: '/territorio?tab=map', icon: MapIcon },
+      { label: 'Auditoría', to: '/territorio?tab=audit', icon: FileText },
     ],
   },
   {
