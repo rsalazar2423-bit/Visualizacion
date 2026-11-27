@@ -167,7 +167,7 @@ function navigate(to: string) {
 <style scoped>
 .sidebar-tree {
   position: fixed;
-  top: 56px;
+  top: 66px;
   left: 0;
   bottom: 0;
   z-index: 90;
@@ -181,7 +181,7 @@ function navigate(to: string) {
 }
 
 .sidebar-tree.mode-expanded {
-  width: 232px;
+  width: 248px;
 }
 
 .sidebar-tree.mode-icons {

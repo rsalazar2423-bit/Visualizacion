@@ -43,7 +43,7 @@ function setSidebarMode(m: SidebarMode) {
 }
 
 .app-layout.sidebar-expanded .main-content {
-  padding-left: 232px;
+  padding-left: 248px;
 }
 
 .main-content {
