@@ -352,9 +352,15 @@ export async function computeCoordinatorWorkspace(params: {
   }
   const cte_balance: CteBalanceItem[] = Array.from(balMap.entries())
     .map(([region, s]) => {
-      const topTipo = Array.from(s.tipos.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Mixto';
+      const sortedTipos = Array.from(s.tipos.entries()).sort((a, b) => b[1] - a[1]);
+      const totalTipos = sortedTipos.reduce((acc, [, n]) => acc + n, 0) || 1;
+      const top2 = sortedTipos
+        .slice(0, 2)
+        .filter(([, n]) => n > 0)
+        .map(([t, n]) => `${t} ${Math.round((n / totalTipos) * 100)}%`)
+        .join(' · ');
       const capAnual = Math.max(5, Math.round(s.cer / 16));
-      const carga_pct = s.ab > 0 ? Math.min(200, Math.round((s.ab / capAnual) * 100)) : 0;
+      const carga_pct = s.ab > 0 ? Math.round((s.ab / capAnual) * 100) : 0;
       return {
         region,
         ingresados: s.ing,
@@ -362,7 +368,7 @@ export async function computeCoordinatorWorkspace(params: {
         abiertos: s.ab,
         vencidos: s.venc,
         tasa_cierre_pct: s.ing > 0 ? Number(((s.cer / s.ing) * 100).toFixed(1)) : 0,
-        trabajo_principal: topTipo,
+        trabajo_principal: top2 || 'Mixto',
         carga_pct,
       };
     })
