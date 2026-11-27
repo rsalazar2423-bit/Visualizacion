@@ -329,28 +329,43 @@ export async function computeCoordinatorWorkspace(params: {
 
   // 4. Balance Ingresos vs Cierres por CTE (o por Departamento si ya hay CTE filtrada)
   const useDepto = Boolean(params.cte && params.cte !== 'Todos');
-  const balMap = new Map<string, { ing: number; cer: number; ab: number; venc: number }>();
+  const balMap = new Map<
+    string,
+    { ing: number; cer: number; ab: number; venc: number; tipos: Map<string, number> }
+  >();
   for (const a of scoped) {
     const region = useDepto ? a.Departamento || 'No Identificado' : a.CTE || 'Sin Asignar';
-    const cur = balMap.get(region) || { ing: 0, cer: 0, ab: 0, venc: 0 };
+    const cur = balMap.get(region) || { ing: 0, cer: 0, ab: 0, venc: 0, tipos: new Map() };
     cur.ing += 1;
+    const tipo = a['Tipo de aviso'] || 'Otro';
     if (a['Estado aviso'] === 'Abierto') {
       cur.ab += 1;
+      cur.tipos.set(tipo, (cur.tipos.get(tipo) || 0) + 1);
       if (a.Cumplimiento_Estado === 'Excede Plazo') cur.venc += 1;
     } else {
       cur.cer += 1;
+      if (cur.ab === 0 && !cur.tipos.has(tipo)) {
+        cur.tipos.set(tipo, 0);
+      }
     }
     balMap.set(region, cur);
   }
   const cte_balance: CteBalanceItem[] = Array.from(balMap.entries())
-    .map(([region, s]) => ({
-      region,
-      ingresados: s.ing,
-      cerrados: s.cer,
-      abiertos: s.ab,
-      vencidos: s.venc,
-      tasa_cierre_pct: s.ing > 0 ? Number(((s.cer / s.ing) * 100).toFixed(1)) : 0,
-    }))
+    .map(([region, s]) => {
+      const topTipo = Array.from(s.tipos.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Mixto';
+      const capAnual = Math.max(5, Math.round(s.cer / 16));
+      const carga_pct = s.ab > 0 ? Math.min(200, Math.round((s.ab / capAnual) * 100)) : 0;
+      return {
+        region,
+        ingresados: s.ing,
+        cerrados: s.cer,
+        abiertos: s.ab,
+        vencidos: s.venc,
+        tasa_cierre_pct: s.ing > 0 ? Number(((s.cer / s.ing) * 100).toFixed(1)) : 0,
+        trabajo_principal: topTipo,
+        carga_pct,
+      };
+    })
     .sort((a, b) => b.vencidos - a.vencidos || b.abiertos - a.abiertos);
 
   // 5. Depuración de Mora Crónica (> 3 años = > 1095 días abierto)

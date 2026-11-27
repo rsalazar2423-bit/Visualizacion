@@ -68,16 +68,21 @@
               <thead>
                 <tr>
                   <th>Región / CTE</th>
+                  <th>Trabajo Principal</th>
                   <th class="num">Ingresados</th>
                   <th class="num">Cerrados</th>
                   <th class="num">Tasa Cierre</th>
                   <th class="num">Abiertos</th>
                   <th class="num">Vencidos</th>
+                  <th>Carga Equipo</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="row in data.cte_balance" :key="row.region">
                   <td class="region-cell">{{ row.region }}</td>
+                  <td>
+                    <span class="type-pill">{{ row.trabajo_principal || 'Mixto' }}</span>
+                  </td>
                   <td class="num">{{ row.ingresados.toLocaleString('es-CO') }}</td>
                   <td class="num">{{ row.cerrados.toLocaleString('es-CO') }}</td>
                   <td class="num">
@@ -90,6 +95,23 @@
                   </td>
                   <td class="num">{{ row.abiertos.toLocaleString('es-CO') }}</td>
                   <td class="num overdue-txt">{{ row.vencidos.toLocaleString('es-CO') }}</td>
+                  <td>
+                    <div class="workload-cell" :title="`Carga estimada: ${row.carga_pct ?? 0}% respecto a su ritmo anual de cierres`">
+                      <div class="workload-track">
+                        <div
+                          class="workload-fill"
+                          :class="(row.carga_pct ?? 0) > 100 ? 'wl-bad' : (row.carga_pct ?? 0) >= 80 ? 'wl-warn' : 'wl-ok'"
+                          :style="{ width: `${Math.min(100, row.carga_pct ?? 0)}%` }"
+                        ></div>
+                      </div>
+                      <span
+                        class="workload-pct"
+                        :class="(row.carga_pct ?? 0) > 100 ? 'wl-txt-bad' : (row.carga_pct ?? 0) >= 80 ? 'wl-txt-warn' : 'wl-txt-ok'"
+                      >
+                        {{ row.carga_pct ?? 0 }}%
+                      </span>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -792,6 +814,55 @@ onMounted(() => {
   color: var(--text-primary);
   flex-shrink: 0;
 }
+
+.type-pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--bg-soft, #f1f5f9);
+  color: var(--text-secondary, #475569);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  white-space: nowrap;
+}
+
+.workload-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 96px;
+}
+
+.workload-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-soft, #e2e8f0);
+  overflow: hidden;
+}
+
+.workload-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.wl-ok { background: #10b981; }
+.wl-warn { background: #f59e0b; }
+.wl-bad { background: #e11d48; }
+
+.workload-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 34px;
+  text-align: right;
+}
+
+.wl-txt-ok { color: #059669; }
+.wl-txt-warn { color: #d97706; }
+.wl-txt-bad { color: #e11d48; }
 
 @media (max-width: 1024px) {
   .coord-workspace,

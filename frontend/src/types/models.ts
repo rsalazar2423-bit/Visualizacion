@@ -182,6 +182,8 @@ export interface CteBalanceItem {
   abiertos: number;
   vencidos: number;
   tasa_cierre_pct: number;
+  trabajo_principal?: string;
+  carga_pct?: number;
 }
 
 export interface CoordinatorWorkspaceResponse {
