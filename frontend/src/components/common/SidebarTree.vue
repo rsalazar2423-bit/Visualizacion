@@ -359,6 +359,12 @@ function navigate(to: string) {
   position: relative;
 }
 
+.tree-group + .tree-group {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
 .icon-children-rail {
   display: flex;
   flex-direction: column;
