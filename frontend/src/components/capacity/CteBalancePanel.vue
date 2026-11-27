@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Scale } from 'lucide-vue-next';
 import * as echarts from 'echarts';
-import { getCoordinatorWorkspace } from '../../services/api';
+import { apiService } from '../../services/api';
 import type { CoordinatorWorkspaceResponse } from '../../types/models';
 import { useThemeStore } from '../../stores/themeStore';
 
@@ -20,7 +20,7 @@ let chartInstance: echarts.ECharts | null = null;
 async function fetchBalance() {
   loading.value = true;
   try {
-    data.value = await getCoordinatorWorkspace({ cte: props.cte, depto: props.depto });
+    data.value = await apiService.getCoordinatorWorkspace({ cte: props.cte, depto: props.depto });
   } finally {
     loading.value = false;
   }
