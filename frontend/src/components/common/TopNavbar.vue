@@ -17,14 +17,6 @@ const isQrOpen = ref(false);
 <template>
   <header class="top-navbar">
     <div class="navbar-left">
-      <button class="nav-btn menu-btn" aria-label="Abrir Menú" @click="props.onToggleSidebar">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-
       <router-link to="/" class="brand-link" title="EcoGrid DEC · Portada">
         <img
           :src="themeStore.isDark ? '/assets/icon_dark.png' : '/assets/icon_light.png'"

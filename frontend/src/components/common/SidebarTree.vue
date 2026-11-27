@@ -9,11 +9,10 @@ import {
   ChevronRight,
   ChevronDown,
   PanelLeftClose,
-  EyeOff,
-  Menu,
+  PanelLeftOpen,
 } from 'lucide-vue-next';
 
-export type SidebarMode = 'hidden' | 'icons' | 'expanded';
+export type SidebarMode = 'icons' | 'expanded';
 
 const props = defineProps<{
   mode: SidebarMode;
@@ -99,36 +98,20 @@ function navigate(to: string) {
 
 <template>
   <aside
-    v-if="mode !== 'hidden'"
     class="sidebar-tree"
     :class="`mode-${mode}`"
     aria-label="Navegación principal en árbol"
   >
     <div class="tree-top-bar">
-      <button
-        class="mode-btn hamburger-rail-btn"
-        title="Cambiar modo de menú (Iconos / Expandido / Oculto)"
-        @click="onCycleMode"
-      >
-        <Menu :size="17" />
-      </button>
       <span v-if="mode === 'expanded'" class="tree-title">Navegación</span>
-      <div v-if="mode === 'expanded'" class="tree-mode-actions">
-        <button
-          class="mode-btn"
-          title="Cambiar a solo iconos"
-          @click="onSetMode('icons')"
-        >
-          <PanelLeftClose :size="15" />
-        </button>
-        <button
-          class="mode-btn"
-          title="Ocultar menú"
-          @click="onSetMode('hidden')"
-        >
-          <EyeOff :size="14" />
-        </button>
-      </div>
+      <button
+        class="mode-btn"
+        :title="mode === 'expanded' ? 'Contraer a iconos' : 'Expandir menú'"
+        @click="onSetMode(mode === 'expanded' ? 'icons' : 'expanded')"
+      >
+        <PanelLeftClose v-if="mode === 'expanded'" :size="15" />
+        <PanelLeftOpen v-else :size="15" />
+      </button>
     </div>
 
     <nav class="tree-nav">

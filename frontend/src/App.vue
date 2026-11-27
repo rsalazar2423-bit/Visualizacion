@@ -7,9 +7,7 @@ import StoryTourOverlay from './components/common/StoryTourOverlay.vue';
 const sidebarMode = ref<SidebarMode>('icons');
 
 function cycleSidebarMode() {
-  if (sidebarMode.value === 'hidden') sidebarMode.value = 'icons';
-  else if (sidebarMode.value === 'icons') sidebarMode.value = 'expanded';
-  else sidebarMode.value = 'hidden';
+  sidebarMode.value = sidebarMode.value === 'icons' ? 'expanded' : 'icons';
 }
 
 function setSidebarMode(m: SidebarMode) {
