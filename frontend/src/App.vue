@@ -52,11 +52,9 @@ function setSidebarMode(m: SidebarMode) {
 }
 
 @media (max-width: 768px) {
-  .app-layout.sidebar-icons .main-content,
   .app-layout.sidebar-expanded .main-content,
-  .app-layout.sidebar-icons .top-navbar,
   .app-layout.sidebar-expanded .top-navbar {
-    padding-left: 0;
+    padding-left: 56px;
   }
 }
 
