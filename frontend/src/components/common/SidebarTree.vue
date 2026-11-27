@@ -136,6 +136,23 @@ function navigate(to: string) {
         </div>
 
         <div
+          v-if="mode === 'icons' && node.children"
+          class="icon-flyout"
+        >
+          <div class="flyout-title">{{ node.label }}</div>
+          <button
+            v-for="child in node.children"
+            :key="child.to"
+            class="tree-child"
+            :class="{ active: isChildActive(child) }"
+            @click.stop="navigate(child.to)"
+          >
+            <span class="child-dot"></span>
+            <span>{{ child.label }}</span>
+          </button>
+        </div>
+
+        <div
           v-if="mode === 'expanded' && node.children && openGroups[node.id]"
           class="tree-children"
         >
@@ -328,6 +345,38 @@ function navigate(to: string) {
 .tree-child.active {
   color: var(--color-brand);
   font-weight: 700;
+}
+
+.tree-group {
+  position: relative;
+}
+
+.icon-flyout {
+  display: none;
+  position: fixed;
+  left: 56px;
+  min-width: 205px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+  z-index: 120;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tree-group:hover .icon-flyout {
+  display: flex;
+}
+
+.flyout-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 4px;
 }
 
 .child-dot {
