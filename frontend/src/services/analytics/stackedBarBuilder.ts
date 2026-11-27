@@ -50,6 +50,7 @@ export function buildStackedBarOption(
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
+      confine: true,
       axisPointer: {
         type: 'shadow',
         shadowStyle: { color: isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(15, 23, 42, 0.04)' },

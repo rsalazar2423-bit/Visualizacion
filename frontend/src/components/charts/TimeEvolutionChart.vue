@@ -116,6 +116,7 @@ function renderTimeEvolution(chartInstance: echarts.ECharts, isDark: boolean) {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
+      confine: true,
       axisPointer: { type: 'cross' },
       backgroundColor: tokens.tooltipBg,
       borderColor: tokens.tooltipBorder,
