@@ -10,6 +10,7 @@ import {
   ChevronDown,
   PanelLeftClose,
   EyeOff,
+  Menu,
 } from 'lucide-vue-next';
 
 export type SidebarMode = 'hidden' | 'icons' | 'expanded';
@@ -103,9 +104,16 @@ function navigate(to: string) {
     :class="`mode-${mode}`"
     aria-label="Navegación principal en árbol"
   >
-    <div v-if="mode === 'expanded'" class="tree-header">
-      <span class="tree-title">Navegación</span>
-      <div class="tree-mode-actions">
+    <div class="tree-top-bar">
+      <button
+        class="mode-btn hamburger-rail-btn"
+        title="Cambiar modo de menú (Iconos / Expandido / Oculto)"
+        @click="onCycleMode"
+      >
+        <Menu :size="17" />
+      </button>
+      <span v-if="mode === 'expanded'" class="tree-title">Navegación</span>
+      <div v-if="mode === 'expanded'" class="tree-mode-actions">
         <button
           class="mode-btn"
           title="Cambiar a solo iconos"
@@ -167,10 +175,10 @@ function navigate(to: string) {
 <style scoped>
 .sidebar-tree {
   position: fixed;
-  top: 66px;
+  top: 0;
   left: 0;
   bottom: 0;
-  z-index: 90;
+  z-index: 110;
   background: var(--bg-card);
   border-right: 1px solid var(--border-subtle);
   display: flex;
@@ -178,6 +186,24 @@ function navigate(to: string) {
   transition: width 0.2s ease;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.tree-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mode-icons .tree-top-bar {
+  justify-content: center;
+}
+
+.hamburger-rail-btn {
+  width: 34px;
+  height: 34px;
 }
 
 .sidebar-tree.mode-expanded {

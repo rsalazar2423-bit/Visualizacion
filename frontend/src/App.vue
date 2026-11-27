@@ -38,21 +38,26 @@ function setSidebarMode(m: SidebarMode) {
 </template>
 
 <style>
-.app-layout.sidebar-icons .main-content {
+.app-layout.sidebar-icons .main-content,
+.app-layout.sidebar-icons .top-navbar {
   padding-left: 56px;
 }
 
-.app-layout.sidebar-expanded .main-content {
+.app-layout.sidebar-expanded .main-content,
+.app-layout.sidebar-expanded .top-navbar {
   padding-left: 248px;
 }
 
-.main-content {
+.main-content,
+.top-navbar {
   transition: padding-left 0.2s ease;
 }
 
 @media (max-width: 768px) {
   .app-layout.sidebar-icons .main-content,
-  .app-layout.sidebar-expanded .main-content {
+  .app-layout.sidebar-expanded .main-content,
+  .app-layout.sidebar-icons .top-navbar,
+  .app-layout.sidebar-expanded .top-navbar {
     padding-left: 0;
   }
 }
