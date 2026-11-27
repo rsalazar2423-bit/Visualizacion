@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Sliders, ClipboardList, RefreshCw } from 'lucide-vue-next';
+import { Sliders, ClipboardList, RefreshCw, Scale } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
+import CteBalancePanel from '../components/capacity/CteBalancePanel.vue';
 
 const store = useCapacityStore();
-const activeSubView = ref<'coordinator' | 'simulator'>('coordinator');
+const activeSubView = ref<'coordinator' | 'balance' | 'simulator'>('coordinator');
 
 onMounted(() => {
   store.loadAll();
@@ -57,11 +58,20 @@ onMounted(() => {
 
         <button
           class="toggle-btn"
+          :class="{ active: activeSubView === 'balance' }"
+          @click="activeSubView = 'balance'"
+        >
+          <Scale :size="14" />
+          <span>2. Equilibrio y Carga</span>
+        </button>
+
+        <button
+          class="toggle-btn"
           :class="{ active: activeSubView === 'simulator' }"
           @click="activeSubView = 'simulator'"
         >
           <Sliders :size="14" />
-          <span>2. Simulador de Cuadrillas</span>
+          <span>3. Simulador de Cuadrillas</span>
         </button>
       </nav>
     </header>
@@ -73,7 +83,15 @@ onMounted(() => {
         <CapacitySimulatorPanel />
       </section>
 
-      <!-- HOJA 2: Centro del Coordinador (Operación Diaria) -->
+      <!-- HOJA 2: Equilibrio y Carga por CTE -->
+      <section v-show="activeSubView === 'balance'" class="stage-pane simulator-pane">
+        <CteBalancePanel
+          :cte="store.selectedCte"
+          :depto="store.selectedDepto"
+        />
+      </section>
+
+      <!-- HOJA 3: Centro del Coordinador (Operación Diaria) -->
       <section v-show="activeSubView === 'coordinator'" class="stage-pane simulator-pane">
         <CoordinatorWorkspacePanel
           :cte="store.selectedCte"
