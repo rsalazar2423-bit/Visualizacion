@@ -144,7 +144,7 @@ export function buildTriageBarOption(
   const rows = getChartOrderedRoutes(summaries);
   const endLabel = {
     show: true, position: 'right' as const, color: tokens.textSecondary, fontSize: 11, fontWeight: 600,
-    formatter: (p: any) => { const r = rows[p.dataIndex]; return r ? `${r.total.toLocaleString()}  (${r.vencimiento_pct}% venc.)` : ''; },
+    formatter: (p: any) => { const r = rows[p.dataIndex]; return r ? (r.vencimiento_pct === 100 ? `${r.total.toLocaleString()}` : `${r.total.toLocaleString()}  (${r.vencimiento_pct}% venc.)`) : ''; },
   };
 
   const barShadow = {

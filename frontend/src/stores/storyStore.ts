@@ -38,11 +38,11 @@ export const STORY_STEPS: StoryStep[] = [
     act: 'Paso 2 · El Corazón del Hallazgo',
     title: '5 corredores y 209 torres concentran la mora',
     narrative:
-      'CHIVSOCH2301 y CHIVTORC2301 lideran el Pareto (91.3% cobertura NLP). Atacar estas 5 líneas desactiva casi la mitad de los avisos abiertos vencidos.',
-    actionHint: 'Alterna entre "Por Causal", "Por Línea" y "Por Torre" para aislar el foco.',
+      'Con el filtro en Abiertos + Solo Vencidos, CHIVSOCH2301 y CHIVTORC2301 lideran el Pareto (91.3% cobertura NLP). Atacar estas 5 líneas desactiva casi la mitad de la mora abierta.',
+    actionHint: 'Filtro activo: Estado = Abiertos, Urgencia = Solo Vencidos. Cambia a "Todos" arriba si quieres ver los en plazo.',
     route: '/territorio?tab=nlp',
     selector: '.chart-panel',
-    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'todos' },
+    nlpPreset: { chartMode: 'linea', estado: 'abiertos', urgencia: 'vencido' },
     apply: async () => {
       const ter = useTerritoryStore();
       await ter.resetAllFilters();

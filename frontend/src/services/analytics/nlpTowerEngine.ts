@@ -93,7 +93,7 @@ export function buildTowerBarOption(
     fontWeight: 600,
     formatter: (p: any) => {
       const r = rows[p.dataIndex];
-      return r ? `${r.total} (${r.vencimiento_pct}% venc.)` : '';
+      return r ? (r.vencimiento_pct === 100 ? `${r.total}` : `${r.total} (${r.vencimiento_pct}% venc.)`) : '';
     },
   };
 
