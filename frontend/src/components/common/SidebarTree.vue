@@ -10,6 +10,13 @@ import {
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
+  TrendingUp,
+  GitFork,
+  Brain,
+  Map as MapIcon,
+  ClipboardList,
+  Scale,
+  Gauge,
 } from 'lucide-vue-next';
 
 export type SidebarMode = 'icons' | 'expanded';
@@ -31,6 +38,7 @@ const openGroups = ref<Record<string, boolean>>({
 interface TreeChild {
   label: string;
   to: string;
+  icon: any;
 }
 
 interface TreeNode {
@@ -49,8 +57,8 @@ const TREE_NODES: TreeNode[] = [
     icon: Activity,
     to: '/operaciones',
     children: [
-      { label: 'Dinámica & Plazos SLA', to: '/operaciones' },
-      { label: 'Composición & Sankey', to: '/operaciones?tab=sla' },
+      { label: 'Dinámica & Plazos SLA', to: '/operaciones', icon: TrendingUp },
+      { label: 'Composición & Sankey', to: '/operaciones?tab=sla', icon: GitFork },
     ],
   },
   {
@@ -59,8 +67,8 @@ const TREE_NODES: TreeNode[] = [
     icon: MapPin,
     to: '/territorio',
     children: [
-      { label: 'Triaje NLP', to: '/territorio?tab=nlp' },
-      { label: 'Mapa Histórico', to: '/territorio?tab=map' },
+      { label: 'Triaje NLP', to: '/territorio?tab=nlp', icon: Brain },
+      { label: 'Mapa Histórico', to: '/territorio?tab=map', icon: MapIcon },
     ],
   },
   {
@@ -69,9 +77,9 @@ const TREE_NODES: TreeNode[] = [
     icon: Sliders,
     to: '/capacidad',
     children: [
-      { label: 'Centro del Coordinador', to: '/capacidad?tab=coordinator' },
-      { label: 'Equilibrio y Carga', to: '/capacidad?tab=balance' },
-      { label: 'Simulador de Cuadrillas', to: '/capacidad?tab=simulator' },
+      { label: 'Centro del Coordinador', to: '/capacidad?tab=coordinator', icon: ClipboardList },
+      { label: 'Equilibrio y Carga', to: '/capacidad?tab=balance', icon: Scale },
+      { label: 'Simulador de Cuadrillas', to: '/capacidad?tab=simulator', icon: Gauge },
     ],
   },
 ];
@@ -137,18 +145,17 @@ function navigate(to: string) {
 
         <div
           v-if="mode === 'icons' && node.children"
-          class="icon-flyout"
+          class="icon-children-rail"
         >
-          <div class="flyout-title">{{ node.label }}</div>
           <button
             v-for="child in node.children"
             :key="child.to"
-            class="tree-child"
+            class="icon-child-btn"
             :class="{ active: isChildActive(child) }"
-            @click.stop="navigate(child.to)"
+            :title="child.label"
+            @click="navigate(child.to)"
           >
-            <span class="child-dot"></span>
-            <span>{{ child.label }}</span>
+            <component :is="child.icon" :size="14" />
           </button>
         </div>
 
@@ -163,7 +170,7 @@ function navigate(to: string) {
             :class="{ active: isChildActive(child) }"
             @click="navigate(child.to)"
           >
-            <span class="child-dot"></span>
+            <component :is="child.icon" :size="13" class="child-icon" />
             <span>{{ child.label }}</span>
           </button>
         </div>
@@ -352,32 +359,40 @@ function navigate(to: string) {
   position: relative;
 }
 
-.icon-flyout {
-  display: none;
-  position: fixed;
-  left: 56px;
-  min-width: 205px;
-  padding: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 0 10px 10px 0;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
-  z-index: 120;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tree-group:hover .icon-flyout {
+.icon-children-rail {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 2px;
+  padding-bottom: 4px;
 }
 
-.flyout-title {
-  font-size: 0.74rem;
-  font-weight: 700;
+.icon-child-btn {
+  width: 34px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-child-btn:hover {
+  background: var(--bg-soft, #f1f5f9);
   color: var(--text-primary);
-  padding: 4px 8px 6px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 4px;
+}
+
+.icon-child-btn.active {
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--color-brand);
+}
+
+.child-icon {
+  flex-shrink: 0;
 }
 
 .child-dot {
