@@ -212,6 +212,7 @@ function navigate(to: string) {
 
 .sidebar-tree.mode-icons {
   width: 56px;
+  overflow: visible;
 }
 
 .tree-header {
