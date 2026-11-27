@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { Sun, Moon, Activity, Map, Sliders, Home, QrCode, Sparkles } from 'lucide-vue-next';
+import { Sun, Moon, QrCode, Sparkles } from 'lucide-vue-next';
 import { useThemeStore } from '../../stores/themeStore';
 import { useStoryStore } from '../../stores/storyStore';
 import QrAccessModal from './QrAccessModal.vue';
@@ -10,17 +9,9 @@ const props = defineProps<{
   onToggleSidebar: () => void;
 }>();
 
-const route = useRoute();
 const themeStore = useThemeStore();
 const storyStore = useStoryStore();
 const isQrOpen = ref(false);
-
-const topNavLinks = [
-  { label: 'Resumen', path: '/', icon: Home },
-  { label: '01 · Seguimiento y SLA', path: '/operaciones', icon: Activity },
-  { label: '02 · Territorio y Mapa Histórico', path: '/territorio', icon: Map },
-  { label: '03 · Capacidad y Mejora', path: '/capacidad', icon: Sliders },
-];
 </script>
 
 <template>
