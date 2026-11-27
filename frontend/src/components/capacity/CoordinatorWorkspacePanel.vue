@@ -238,7 +238,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { Wrench, Scale, Route, MapPin, ShieldAlert, Archive } from 'lucide-vue-next';
+import { Wrench, Route, MapPin, ShieldAlert, Archive } from 'lucide-vue-next';
 import { apiService } from '../../services/api';
 import type { CoordinatorWorkspaceResponse, CorridorBatchItem } from '../../types/models';
 

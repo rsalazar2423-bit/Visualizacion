@@ -9,7 +9,6 @@ import {
   ChevronRight,
   ChevronDown,
   PanelLeftClose,
-  PanelLeftOpen,
   EyeOff,
 } from 'lucide-vue-next';
 
