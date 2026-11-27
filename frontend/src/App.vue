@@ -1,24 +1,30 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import TopNavbar from './components/common/TopNavbar.vue';
-import SidebarDrawer from './components/common/SidebarDrawer.vue';
+import SidebarTree, { type SidebarMode } from './components/common/SidebarTree.vue';
 import StoryTourOverlay from './components/common/StoryTourOverlay.vue';
 
-const isSidebarOpen = ref(false);
+const sidebarMode = ref<SidebarMode>('icons');
 
-function toggleSidebar() {
-  isSidebarOpen.value = !isSidebarOpen.value;
+function cycleSidebarMode() {
+  if (sidebarMode.value === 'hidden') sidebarMode.value = 'icons';
+  else if (sidebarMode.value === 'icons') sidebarMode.value = 'expanded';
+  else sidebarMode.value = 'hidden';
 }
 
-function closeSidebar() {
-  isSidebarOpen.value = false;
+function setSidebarMode(m: SidebarMode) {
+  sidebarMode.value = m;
 }
 </script>
 
 <template>
-  <div class="app-layout">
-    <SidebarDrawer :is-open="isSidebarOpen" :on-close="closeSidebar" />
-    <TopNavbar :on-toggle-sidebar="toggleSidebar" />
+  <div class="app-layout" :class="`sidebar-${sidebarMode}`">
+    <SidebarTree
+      :mode="sidebarMode"
+      :on-cycle-mode="cycleSidebarMode"
+      :on-set-mode="setSidebarMode"
+    />
+    <TopNavbar :on-toggle-sidebar="cycleSidebarMode" />
     
     <main class="main-content">
       <router-view v-slot="{ Component }">
@@ -32,6 +38,25 @@ function closeSidebar() {
 </template>
 
 <style>
+.app-layout.sidebar-icons .main-content {
+  padding-left: 56px;
+}
+
+.app-layout.sidebar-expanded .main-content {
+  padding-left: 232px;
+}
+
+.main-content {
+  transition: padding-left 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .app-layout.sidebar-icons .main-content,
+  .app-layout.sidebar-expanded .main-content {
+    padding-left: 0;
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;

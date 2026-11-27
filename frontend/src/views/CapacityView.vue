@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { Sliders, ClipboardList, RefreshCw, Scale } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
 import CteBalancePanel from '../components/capacity/CteBalancePanel.vue';
 
+const route = useRoute();
 const store = useCapacityStore();
 const activeSubView = ref<'coordinator' | 'balance' | 'simulator'>('coordinator');
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (tab === 'balance' || tab === 'simulator' || tab === 'coordinator') {
+      activeSubView.value = tab;
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(() => {
   store.loadAll();
@@ -84,7 +96,7 @@ onMounted(() => {
       </section>
 
       <!-- HOJA 2: Equilibrio y Carga por CTE -->
-      <section v-show="activeSubView === 'balance'" class="stage-pane simulator-pane">
+      <section v-if="activeSubView === 'balance'" class="stage-pane simulator-pane">
         <CteBalancePanel
           :cte="store.selectedCte"
           :depto="store.selectedDepto"
