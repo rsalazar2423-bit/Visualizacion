@@ -88,38 +88,6 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (1. Tratamiento NLP + 2. Mapa + 3. Auditoría) -->
-      <nav class="subview-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'nlp' }"
-          title="Triaje de Tratamiento Operativo (NLP)"
-          @click="activeSubView = 'nlp'"
-        >
-          <Network :size="13" />
-          <span>1. Tratamiento NLP</span>
-        </button>
-
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'map' }"
-          title="Mapa de Red Georreferenciada"
-          @click="activeSubView = 'map'"
-        >
-          <Compass :size="13" />
-          <span>2. Mapa</span>
-        </button>
-
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'audit' }"
-          title="Tabla de Detalle y Auditoría"
-          @click="activeSubView = 'audit'"
-        >
-          <FileText :size="13" />
-          <span>3. Auditoría</span>
-        </button>
-      </nav>
     </header>
 
     <!-- ÁREA DE GRÁFICAS (VIEWPORT-FIT / CERO SCROLL) -->
