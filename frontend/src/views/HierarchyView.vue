@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { Compass, FileText, Network, RefreshCw } from 'lucide-vue-next';
+import { RefreshCw } from 'lucide-vue-next';
 import { useTerritoryStore } from '../stores/territoryStore';
 import HistoricalMapChart from '../components/charts/HistoricalMapChart.vue';
 import TicketsTable from '../components/common/TicketsTable.vue';
