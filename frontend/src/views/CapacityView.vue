@@ -29,7 +29,7 @@ onMounted(() => {
           @change="store.setCte(($event.target as HTMLSelectElement).value)"
         >
           <option value="Todos">Todas las CTEs (Nacional)</option>
-          <option v-for="c in store.filterOptions.ctes" :key="c" :value="c">
+          <option v-for="c in store.filterOptions.ctes.filter((x) => x !== 'Todos')" :key="c" :value="c">
             CTE {{ c }}
           </option>
         </select>
