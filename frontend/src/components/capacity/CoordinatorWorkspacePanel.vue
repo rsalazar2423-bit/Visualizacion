@@ -389,7 +389,7 @@ onMounted(() => {
 
 .coord-top-grid {
   display: grid;
-  grid-template-columns: 1fr 1.25fr;
+  grid-template-columns: 1fr;
   gap: 10px;
   flex-shrink: 0;
 }
