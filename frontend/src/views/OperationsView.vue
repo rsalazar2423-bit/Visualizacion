@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { TrendingUp, Target, RefreshCw } from 'lucide-vue-next';
+import { RefreshCw } from 'lucide-vue-next';
 import { useOperationsStore } from '../stores/operationsStore';
 import TimeEvolutionChart from '../components/charts/TimeEvolutionChart.vue';
 import StackedBarChart from '../components/charts/StackedBarChart.vue';
@@ -79,27 +79,6 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Pestañas de Hoja (Exactamente 2 gráficas por hoja para máxima dedicación analítica) -->
-      <nav class="subview-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'evolution' }"
-          title="Evolución Histórica y Cumplimiento por Plazo SLA"
-          @click="activeSubView = 'evolution'"
-        >
-          <TrendingUp :size="13" />
-          <span>1. Dinámica & Plazos SLA</span>
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'sla' }"
-          title="Composición y Efectividad por Tipología Técnica"
-          @click="activeSubView = 'sla'"
-        >
-          <Target :size="13" />
-          <span>2. Composición Técnica</span>
-        </button>
-      </nav>
     </header>
 
     <!-- ÁREA DE GRÁFICAS: EXACTAMENTE 2 GRÁFICAS POR PANTALLA (CERO SCROLL) -->

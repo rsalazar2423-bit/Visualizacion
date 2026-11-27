@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { Sliders, ClipboardList, RefreshCw, Scale } from 'lucide-vue-next';
+import { RefreshCw } from 'lucide-vue-next';
 import { useCapacityStore } from '../stores/capacityStore';
 import CapacitySimulatorPanel from '../components/capacity/CapacitySimulatorPanel.vue';
 import CoordinatorWorkspacePanel from '../components/capacity/CoordinatorWorkspacePanel.vue';
@@ -57,35 +57,6 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- Pestañas de Hojas (1. Centro del Coordinador como principal + 2. Simulador) -->
-      <nav class="subview-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'coordinator' }"
-          @click="activeSubView = 'coordinator'"
-        >
-          <ClipboardList :size="14" />
-          <span>1. Centro del Coordinador</span>
-        </button>
-
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'balance' }"
-          @click="activeSubView = 'balance'"
-        >
-          <Scale :size="14" />
-          <span>2. Equilibrio y Carga</span>
-        </button>
-
-        <button
-          class="toggle-btn"
-          :class="{ active: activeSubView === 'simulator' }"
-          @click="activeSubView = 'simulator'"
-        >
-          <Sliders :size="14" />
-          <span>3. Simulador de Cuadrillas</span>
-        </button>
-      </nav>
     </header>
 
     <!-- ÁREA DE CONTENIDO (VIEWPORT-FIT / CERO SCROLL) -->
