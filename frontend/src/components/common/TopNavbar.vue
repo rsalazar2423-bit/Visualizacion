@@ -47,19 +47,6 @@ const topNavLinks = [
       </router-link>
     </div>
 
-    <!-- Navegación Directa de las 3 Vistas Tácticas -->
-    <nav class="navbar-center">
-      <router-link
-        v-for="item in topNavLinks"
-        :key="item.path"
-        :to="item.path"
-        :class="['top-nav-pill', { active: route.path === item.path }]"
-      >
-        <component :is="item.icon" :size="14" />
-        <span>{{ item.label }}</span>
-      </router-link>
-    </nav>
-
     <div class="navbar-right">
       <!-- Botón de Recorrido Guiado (Storytelling) -->
       <button
@@ -129,16 +116,10 @@ const topNavLinks = [
   cursor: pointer;
   padding: 8px;
   border-radius: var(--radius-sm);
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
-}
-
-@media (max-width: 1024px) {
-  .menu-btn {
-    display: flex;
-  }
 }
 
 .menu-btn:hover {
