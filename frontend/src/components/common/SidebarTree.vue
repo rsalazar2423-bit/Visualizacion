@@ -104,19 +104,17 @@ function navigate(to: string) {
     :class="`mode-${mode}`"
     aria-label="Navegación principal en árbol"
   >
-    <div class="tree-header">
-      <span v-if="mode === 'expanded'" class="tree-title">Navegación</span>
+    <div v-if="mode === 'expanded'" class="tree-header">
+      <span class="tree-title">Navegación</span>
       <div class="tree-mode-actions">
         <button
           class="mode-btn"
-          :title="mode === 'expanded' ? 'Cambiar a solo iconos' : 'Expandir menú'"
-          @click="onSetMode(mode === 'expanded' ? 'icons' : 'expanded')"
+          title="Cambiar a solo iconos"
+          @click="onSetMode('icons')"
         >
-          <PanelLeftClose v-if="mode === 'expanded'" :size="15" />
-          <PanelLeftOpen v-else :size="15" />
+          <PanelLeftClose :size="15" />
         </button>
         <button
-          v-if="mode === 'expanded'"
           class="mode-btn"
           title="Ocultar menú"
           @click="onSetMode('hidden')"
